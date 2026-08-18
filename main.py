@@ -14,6 +14,11 @@ import os
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+# ==========================================
+# НАШЕ СОБСТВЕННОЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ
+# ==========================================
+SERVER_SESSIONS = {}
+
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -22,6 +27,11 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK 
     page.window_width = 400
     page.window_height = 800
+
+    # Инициализируем хранилище для конкретного пользователя
+    if page.session_id not in SERVER_SESSIONS:
+        SERVER_SESSIONS[page.session_id] = {}
+    my_storage = SERVER_SESSIONS[page.session_id]
 
     FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 
@@ -97,18 +107,18 @@ def main(page: ft.Page):
             "ascents_history": [],
             "is_global_admin": False
         }
-        # ЗАМЕНИЛИ client_storage НА session
-        data = page.session.get("user_profile")
+        # ИСПОЛЬЗУЕМ НАШ СЛОВАРЬ ВМЕСТО FLET
+        data = my_storage.get("user_profile")
         if data:
             for k, v in default_data.items():
                 if k not in data: data[k] = v
             return data
         
-        page.session.set("user_profile", default_data)
+        my_storage["user_profile"] = default_data
         return default_data
 
     def save_profile_data(data):
-        page.session.set("user_profile", data)
+        my_storage["user_profile"] = data
         if "user_id" in data and data.get("name"):
             save_data(f"users/{data['user_id']}", {
                 "nickname": data.get('name', ''),
@@ -178,7 +188,7 @@ def main(page: ft.Page):
         page.update()
 
     def logout_click(e):
-        page.session.set("user_profile", None)
+        my_storage["user_profile"] = None
         page.drawer.open = False 
         show_auth_view()
 
@@ -502,7 +512,7 @@ def main(page: ft.Page):
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        page.session.set("user_profile", None)
+        my_storage["user_profile"] = None
         confirm_dialog.open = False
         show_auth_view()
         show_notify("Account permanently deleted.")
