@@ -1,5 +1,6 @@
 import flet as ft
 import urllib.request
+import urllib.parse
 import json
 import base64
 import uuid
@@ -15,7 +16,7 @@ import os
 # Игнорируем проверку SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Папка для временной загрузки картинок из браузера
+# Создаем папку для временной загрузки фото на сервере
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 
@@ -91,7 +92,7 @@ def main(page: ft.Page):
         threading.Thread(target=hide).start()
 
     # ==========================================
-    # ИСПРАВЛЕННОЕ ХРАНИЛИЩЕ (ЗАПОМИНАЕТ ВХОД)
+    # РАБОЧЕЕ ХРАНИЛИЩЕ БРАУЗЕРА
     # ==========================================
     def get_profile_data():
         default_data = {
@@ -139,22 +140,20 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИСПРАВЛЕННАЯ КАМЕРА И ЗАГРУЗКА ФОТО 
+    # ГЕНИАЛЬНЫЙ ФИКС КАМЕРЫ И ГАЛЕРЕИ ДЛЯ RENDER
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
     def on_upload_result(e: ft.FilePickerUploadEvent):
         nonlocal temp_avatar_b64, file_picker_context
-        # Когда файл успешно долетел до сервера
-        if e.progress == 1.0 or e.progress == 1:
+        # Как только файл успешно загружен на сервер
+        if str(e.progress) == "1.0" or str(e.progress) == "1":
             file_path = os.path.join("uploads", e.file_name)
             try:
-                # Читаем байты загруженного фото
                 with open(file_path, "rb") as img_file: 
                     b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     
-                # Обновляем нужную картинку в интерфейсе
                 if file_picker_context == "onboarding":
                     temp_avatar_b64 = b64_img
                     onboarding_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=100, height=100, fit="cover", border_radius=50)
@@ -166,24 +165,34 @@ def main(page: ft.Page):
                     image_placeholder.visible = False
                     markers_stack.visible = True
                     markers_stack.controls = [detector]
-                page.update()
                 
-                # Удаляем фото из памяти сервера, чтобы не мусорить
+                page.update()
+                show_notify("Успешно загружено!", is_error=False)
+                
+                # Сразу удаляем фото из памяти сервера
                 if os.path.exists(file_path):
                     os.remove(file_path)
             except Exception as ex:
-                show_notify(f"Error processing image", is_error=True)
+                show_notify("Ошибка обработки фото", is_error=True)
+        elif e.error:
+            show_notify(f"Ошибка: {e.error}", is_error=True)
 
     def on_file_picked(e: ft.FilePickerResultEvent):
         if e.files and len(e.files) > 0:
             f = e.files[0]
-            # В вебе путь скрыт, поэтому запускаем быструю загрузку на сервер Flet
+            # Если пути нет (это браузер/телефон), загружаем на сервер
             if not f.path: 
-                show_notify("Uploading photo...", is_error=False)
-                upload_url = page.get_upload_url(f.name, 600)
-                global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=upload_url)])
+                show_notify("Загрузка фото...", is_error=False)
+                raw_url = page.get_upload_url(f.name, 600)
+                
+                # ВОТ ЭТОТ ТРЮК ЛЕЧИТ "ТИШИНУ" ТЕЛЕФОНА:
+                # Обрезаем кривой IP-адрес Flet и заставляем браузер использовать родной домен
+                parsed = urllib.parse.urlparse(raw_url)
+                safe_upload_url = f"{parsed.path}?{parsed.query}"
+                
+                global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_upload_url)])
             else:
-                # Локальный ПК
+                # Локальный ПК (VS Code)
                 try:
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
@@ -201,21 +210,18 @@ def main(page: ft.Page):
                         markers_stack.controls = [detector]
                     page.update()
                 except Exception: 
-                    show_notify("Error local image", is_error=True)
+                    show_notify("Ошибка локального фото", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
     global_file_picker.on_upload = on_upload_result
     page.overlay.append(global_file_picker)
-    # ЖИЗНЕННО ВАЖНО: обновляем страницу, чтобы кнопки заработали
-    page.update() 
 
     def trigger_picker(context):
         nonlocal file_picker_context
         file_picker_context = context
-        # IMAGE type заставляет телефон предложить выбор: Камера или Галерея!
+        # IMAGE заставит телефон предложить выбор: Камера или Галерея!
         global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE)
-
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
