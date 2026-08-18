@@ -1,6 +1,8 @@
 import flet as ft
+import flet.fastapi as flet_fastapi
+from fastapi import FastAPI, UploadFile, File
+import uvicorn
 import urllib.request
-import urllib.parse
 import json
 import base64
 import uuid
@@ -13,13 +15,32 @@ import ssl
 import hashlib
 import os
 
-# Игнорируем проверку SSL
+# Игнорируем SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Создаем папку для загрузок на сервере
+# Создаем папку, куда будут падать файлы с телефона
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
 
+# ==========================================
+# НАШ ЛИЧНЫЙ СЕРВЕР ДЛЯ ПРИЕМА ФОТОГРАФИЙ (FASTAPI)
+# ==========================================
+app = FastAPI()
+
+@app.post("/api/upload")
+async def upload_image(file: UploadFile = File(...)):
+    try:
+        # Ловим файл напрямую и сохраняем его на сервер
+        file_location = os.path.join("uploads", file.filename)
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        return {"status": "success", "filename": file.filename}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# ==========================================
+# ТВОЕ ПРИЛОЖЕНИЕ FLET
+# ==========================================
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -136,9 +157,6 @@ def main(page: ft.Page):
             page.update()
         threading.Thread(target=hide).start()
 
-    # ==========================================
-    # ИСПРАВЛЕННАЯ СИСТЕМА ФОТО И КАМЕРЫ (АБСОЛЮТНЫЙ ФИКС ССЫЛКИ)
-    # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
@@ -172,7 +190,7 @@ def main(page: ft.Page):
                     with open(file_path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
-                    os.remove(file_path)
+                    os.remove(file_path) # Удаляем файл, чтобы сервер не забивался
             elif e.error:
                 show_notify(f"Upload failed: {e.error}", is_error=True)
         except Exception as ex:
@@ -182,14 +200,13 @@ def main(page: ft.Page):
         try:
             if e.files and len(e.files) > 0:
                 f = e.files[0]
-                show_notify("Processing file...", is_error=False)
+                show_notify("Uploading to server...", is_error=False)
                 
                 if not f.path: 
-                    raw_url = page.get_upload_url(f.name, 600)
-                    parsed = urllib.parse.urlparse(raw_url)
-                    # ТРЮК: Делаем относительную ссылку! Браузер телефона сам подставит реальный домен
-                    relative_url = f"{parsed.path}?{parsed.query}"
-                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=relative_url)])
+                    # ВОТ ОНО! Прямая отправка файла на наш собственный скрытый приемник.
+                    # Телефон больше не запутается, он бьет точно в цель.
+                    custom_upload_url = "https://spray-wall-app.onrender.com/api/upload"
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=custom_upload_url, method="POST")])
                 else:
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
@@ -208,7 +225,7 @@ def main(page: ft.Page):
             file_picker_context = context
             global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
         except Exception as e:
-            show_notify(f"Camera error: {str(e)}", is_error=True)
+            show_notify("Camera error", is_error=True)
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -358,6 +375,7 @@ def main(page: ft.Page):
     onb_last_name = ft.TextField(label="Last Name", width=250)
     onb_bio = ft.TextField(label="About Me", width=250, multiline=True)
     
+    # Кликабельная аватарка на этапе регистрации
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
         alignment=ft.Alignment(0, 0), 
@@ -467,6 +485,7 @@ def main(page: ft.Page):
         load_profile_ui(is_editing=False)
 
     profile_view_col = ft.Column([profile_name, profile_real_name, dev_badge, profile_bio, create_btn("Edit Profile", activate_edit_profile, bgcolor="#333333")], spacing=2)
+    # Убрали русскую надпись про аватарку, всё чисто и стильно
     profile_edit_col = ft.Column([edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
     profile_header = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[profile_avatar, ft.Container(width=10), profile_view_col, profile_edit_col])
     
@@ -682,7 +701,7 @@ def main(page: ft.Page):
         if not all_gyms: 
             gyms_list_col.controls.append(ft.Text("No gyms found in the world yet.", color="grey", text_align="center"))
         else:
-            gyms_list_col.controls.append(ft.Text("Explore Gyms Globally:", color="grey", size=12))
+            gyms_list_col.append(ft.Text("Explore Gyms Globally:", color="grey", size=12))
 
         for gym in reversed(all_gyms):
             if is_global:
@@ -725,7 +744,7 @@ def main(page: ft.Page):
             
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon("person")),
+                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -899,7 +918,7 @@ def main(page: ft.Page):
     op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
     
     op_private_lock = ft.Column([
-        ft.Icon("lock", size=40, color="grey"),
+        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
         ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
     
@@ -1028,7 +1047,9 @@ def main(page: ft.Page):
     save_status = ft.Text(value="", size=14, weight="bold")
     color_info = ft.Text(value=f"Mode: Placing holds ({current_color})", size=14, color="grey")
 
-    # ВЕРНУЛИ ТВОЙ КРАСИВЫЙ РАЗДЕЛЕННЫЙ ДИЗАЙН КНОПОК
+    # ==========================================
+    # ВЕРНУЛИ ТВОИ ОГРОМНЫЕ РАЗДЕЛЕННЫЕ КНОПКИ (ТЕПЕРЬ ПОЛНОСТЬЮ НА АНГЛИЙСКОМ)
+    # ==========================================
     top_upload_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Gallery", size=24, weight="bold", color="grey"), ft.Text("Upload from device", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
     bottom_camera_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Camera", size=24, weight="bold", color="grey"), ft.Text("Take a photo", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
     image_placeholder = ft.Container(width=400, height=600, bgcolor="#222222", border_radius=10, content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0))
@@ -1316,6 +1337,13 @@ def main(page: ft.Page):
     else:
         show_auth_view() 
 
+
+# ==========================================
+# 4. СВЯЗЫВАЕМ FASTAPI И FLET
+# ==========================================
+app.mount("/", flet_fastapi.app(main))
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    ft.app(target=main, host="0.0.0.0", port=port, upload_dir="uploads")
+    # Запускаем приложение через профессиональный сервер uvicorn!
+    uvicorn.run(app, host="0.0.0.0", port=port)
