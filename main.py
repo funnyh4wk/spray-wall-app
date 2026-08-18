@@ -13,13 +13,10 @@ import ssl
 import hashlib
 import os
 
-# Заставляем Flet генерировать идеальные ссылки для интернета
-os.environ["FLET_UPLOAD_URL_PREFIX"] = "https://spray-wall-app.onrender.com"
-
 # Игнорируем проверку SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Создаем папку для загрузок на сервере
+# Создаем папку для временных загрузок
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
 
@@ -35,10 +32,9 @@ def delete_from_cloudinary(image_url):
     if not image_url or "cloudinary.com" not in image_url:
         return
     try:
-        # Достаем ID картинки из ссылки (например, https://.../v123456/abcdef.jpg -> abcdef)
+        # Достаем ID картинки из ссылки
         public_id = image_url.split('/')[-1].rsplit('.', 1)[0]
         
-        # Генерируем крипто-подпись для удаления (требование безопасности)
         timestamp = str(int(time.time()))
         string_to_sign = f"public_id={public_id}&timestamp={timestamp}{CLOUDINARY_API_SECRET}"
         signature = hashlib.sha1(string_to_sign.encode()).hexdigest()
@@ -54,7 +50,6 @@ def delete_from_cloudinary(image_url):
         req = urllib.request.Request(url, data=data, method="POST")
         with urllib.request.urlopen(req) as response:
             pass # Файл успешно сожжен в облаке
-            print(f"🗑️ Файл {public_id} успешно удален из Cloudinary")
     except Exception as e:
         print("Ошибка удаления из Cloudinary:", e)
 
@@ -199,7 +194,7 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # СИСТЕМА ФОТО С ЗАЩИТОЙ ОТ МОБИЛЬНОГО СНА (SLEEP BUG FIX)
+    # ИДЕАЛЬНАЯ СИСТЕМА ФОТО (СИНХРОННАЯ И ОТНОСИТЕЛЬНАЯ)
     # ==========================================
     temp_image_url = "" 
     file_picker_context = "" 
@@ -238,38 +233,43 @@ def main(page: ft.Page):
                 show_notify("Optimizing in Cloudinary...", is_error=False)
                 file_path = os.path.join("uploads", e.file_name)
                 
-                time.sleep(1.0) 
-                
-                if os.path.exists(file_path):
-                    cloud_url = upload_to_cloudinary(file_path)
-                    apply_avatar(cloud_url)
-                    os.remove(file_path)
-                else:
-                    show_notify("File missing on server", is_error=True)
+                # Даем серверу Render время сохранить файл на жесткий диск
+                for _ in range(10):
+                    if os.path.exists(file_path):
+                        # Шлём файл в Cloudinary
+                        cloud_url = upload_to_cloudinary(file_path)
+                        # Применяем в приложение
+                        apply_avatar(cloud_url)
+                        # Стираем временный файл
+                        os.remove(file_path)
+                        return
+                    time.sleep(0.5)
+                show_notify("File missing on server", is_error=True)
         except Exception as ex:
             show_notify(f"Cloud Error: {str(ex)}", is_error=True)
 
-    def upload_worker(file_name):
-        time.sleep(2.0)
-        try:
-            upload_url = page.get_upload_url(file_name, 600)
-            global_file_picker.upload([ft.FilePickerUploadFile(file_name, upload_url=upload_url)])
-        except Exception as e:
-            show_notify(f"Upload error: {e}", is_error=True)
-
     def on_file_picked(e: ft.FilePickerResultEvent):
-        if e.files and len(e.files) > 0:
-            f = e.files[0]
-            show_notify("Preparing upload... Please wait.", is_error=False)
-            
-            if not f.path: 
-                threading.Thread(target=upload_worker, args=(f.name,)).start()
-            else:
-                try:
+        try:
+            if e.files and len(e.files) > 0:
+                f = e.files[0]
+                show_notify("Uploading... Please wait.", is_error=False)
+                
+                if not f.path: 
+                    # 1. ТЕЛЕФОН/WEB: СИНХРОННАЯ ОТПРАВКА С ОТНОСИТЕЛЬНОЙ ССЫЛКОЙ
+                    raw_url = page.get_upload_url(f.name, 600)
+                    parsed = urllib.parse.urlparse(raw_url)
+                    
+                    # Делаем ссылку относительной. Браузер телефона ей доверяет на 100%!
+                    relative_url = f"{parsed.path}?{parsed.query}"
+                    
+                    # СРАЗУ отправляем (без таймеров и фоновых потоков)
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=relative_url)])
+                else:
+                    # 2. КОМПЬЮТЕР/ЛОКАЛЬНО: Прямая загрузка
                     cloud_url = upload_to_cloudinary(f.path)
                     apply_avatar(cloud_url)
-                except Exception as ex:
-                    show_notify(f"Sys Error: {str(ex)}", is_error=True)
+        except Exception as ex:
+            show_notify(f"Sys Error: {str(ex)}", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
@@ -530,7 +530,7 @@ def main(page: ft.Page):
         user_data["last_name"] = edit_last_name_input.value
         user_data["bio"] = edit_bio_input.value
         
-        # ЕСЛИ МЫ ЗАГРУЗИЛИ НОВУЮ АВАТАРКУ, СЖИГАЕМ СТАРУЮ ИЗ ОБЛАКА!
+        # Удаляем старую аватарку из облака при смене
         if file_picker_context == "profile" and temp_image_url: 
             old_avatar = user_data.get("avatar_url")
             if old_avatar and old_avatar != temp_image_url:
@@ -1309,9 +1309,6 @@ def main(page: ft.Page):
         edit_desc_field_route.value = current_open_boulder_data.get("description", "")
         action_buttons_row.visible = False; view_title.visible = False; view_author_desc.visible = False; edit_panel_route.visible = True; page.update()
 
-    # ==========================================
-    # ВОТ ОНО: УДАЛЕНИЕ ИЗ БАЗЫ И ИЗ ОБЛАКА!
-    # ==========================================
     def delete_current_route(e):
         b_id = current_open_boulder_data.get("id")
         img_url = current_open_boulder_data.get("image_url")
@@ -1319,7 +1316,7 @@ def main(page: ft.Page):
         if b_id: 
             save_data(f"boulders/{b_id}", None, method="DELETE")
             
-        # Запускаем удаление фото из Cloudinary в фоне
+        # Удаляем фото из Cloudinary в фоне
         if img_url:
             threading.Thread(target=delete_from_cloudinary, args=(img_url,)).start()
             
