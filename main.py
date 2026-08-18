@@ -165,13 +165,13 @@ def main(page: ft.Page):
                 page.update()
             except Exception: show_notify("Error loading image", is_error=True)
 
-    global_file_picker = ft.FilePicker(on_result=on_file_picked)
+    global_file_picker = ft.FilePicker()
     page.overlay.append(global_file_picker)
 
     def trigger_picker(context):
         nonlocal file_picker_context
         file_picker_context = context
-        global_file_picker.pick_files()
+        global_file_picker.pick_files(on_result=on_file_picked)
 
     # ==========================================
     #        УТИЛИТЫ АВТОРИЗАЦИИ
