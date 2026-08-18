@@ -14,6 +14,11 @@ import os
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+# ==========================================
+# НАШЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ НА ЧИСТОМ PYTHON
+# ==========================================
+SERVER_SESSIONS = {}
+
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -22,6 +27,11 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK 
     page.window_width = 400
     page.window_height = 800
+
+    # Привязываем профиль к уникальному ID вкладки браузера
+    if page.session_id not in SERVER_SESSIONS:
+        SERVER_SESSIONS[page.session_id] = {}
+    my_storage = SERVER_SESSIONS[page.session_id]
 
     FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 
@@ -54,11 +64,6 @@ def main(page: ft.Page):
     current_tab = "official"    
     current_open_boulder_data = {} 
     current_other_user_id = None 
-
-    # ==========================================
-    # АБСОЛЮТНО НЕУБИВАЕМОЕ ХРАНИЛИЩЕ PYTHON
-    # ==========================================
-    my_profile_data = None
     
     ALL_GRADES = ["All", "1", "2", "3", "4A", "4B", "4C", "5A", "5A+", "5B", "5B+", "5C", "5C+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"]
     EDIT_GRADES = [g for g in ALL_GRADES if g != "All"]
@@ -91,7 +96,6 @@ def main(page: ft.Page):
         threading.Thread(target=hide).start()
 
     def get_profile_data():
-        nonlocal my_profile_data
         default_data = {
             "user_id": str(uuid.uuid4()), 
             "email": "",
@@ -103,19 +107,17 @@ def main(page: ft.Page):
             "ascents_history": [],
             "is_global_admin": False
         }
-        
-        if my_profile_data is None:
-            my_profile_data = default_data
-        else:
+        data = my_storage.get("user_profile")
+        if data:
             for k, v in default_data.items():
-                if k not in my_profile_data: 
-                    my_profile_data[k] = v
-                    
-        return my_profile_data
+                if k not in data: data[k] = v
+            return data
+        
+        my_storage["user_profile"] = default_data
+        return default_data
 
     def save_profile_data(data):
-        nonlocal my_profile_data
-        my_profile_data = data
+        my_storage["user_profile"] = data
         if "user_id" in data and data.get("name"):
             save_data(f"users/{data['user_id']}", {
                 "nickname": data.get('name', ''),
@@ -156,9 +158,7 @@ def main(page: ft.Page):
                 page.update()
             except Exception: show_notify("Error loading image", is_error=True)
 
-    # ==========================================
-    # ИСПРАВЛЕННЫЙ FILE PICKER БЕЗ ОШИБОК СИНТАКСИСА
-    # ==========================================
+    # ВОТ ОНО! РАЗДЕЛЕНО НА 2 СТРОКИ, ЧТОБЫ ИЗБЕЖАТЬ ОШИБКИ И КРАСНОЙ ПОЛОСЫ
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
     page.overlay.append(global_file_picker)
@@ -189,8 +189,7 @@ def main(page: ft.Page):
         page.update()
 
     def logout_click(e):
-        nonlocal my_profile_data
-        my_profile_data = None
+        my_storage["user_profile"] = None
         page.drawer.open = False 
         show_auth_view()
 
@@ -514,8 +513,7 @@ def main(page: ft.Page):
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        nonlocal my_profile_data
-        my_profile_data = None
+        my_storage["user_profile"] = None
         confirm_dialog.open = False
         show_auth_view()
         show_notify("Account permanently deleted.")
