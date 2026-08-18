@@ -20,9 +20,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
 
-# ЖЕСТКАЯ ПРИВЯЗКА ДОМЕНА (ЧТОБЫ ТЕЛЕФОН НЕ ТЕРЯЛ СЕРВЕР)
-RENDER_APP_URL = "https://spray-wall-app.onrender.com"
-
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -54,7 +51,7 @@ def main(page: ft.Page):
             with urllib.request.urlopen(req) as response:
                 pass
         except Exception as e:
-            print(f"🔥 Ошибка сохранения [{path}]:", e)
+            print(f"🔥 Save error [{path}]:", e)
 
     current_color = "green" 
     is_delete_mode = False
@@ -63,43 +60,6 @@ def main(page: ft.Page):
     current_tab = "official"    
     current_open_boulder_data = {} 
     current_other_user_id = None 
-
-    my_profile_data = None
-    
-    ALL_GRADES = ["All", "1", "2", "3", "4A", "4B", "4C", "5A", "5A+", "5B", "5B+", "5C", "5C+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"]
-    EDIT_GRADES = [g for g in ALL_GRADES if g != "All"]
-
-    def sanitize_grade(grade_str):
-        if not grade_str: return ""
-        return str(grade_str).upper().replace('А', 'A').replace('В', 'B').replace('С', 'C')
-
-    def create_btn(text, on_click, bgcolor="blue", color="white", width=None, height=40, visible=True):
-        return ft.ElevatedButton(
-            text=text,
-            on_click=on_click,
-            width=width,
-            height=height,
-            visible=visible,
-            style=ft.ButtonStyle(
-                color=color,
-                bgcolor=bgcolor,
-                shape=ft.RoundedRectangleBorder(radius=5),
-            )
-        )
-
-    notify_text = ft.Text("", color="white", weight="bold", text_align="center")
-    notify_box = ft.Container(content=notify_text, bgcolor="green", padding=10, border_radius=5, visible=False, alignment=ft.Alignment(0,0))
-
-    def show_notify(msg, is_error=False):
-        notify_text.value = msg
-        notify_box.bgcolor = "red" if is_error else "green"
-        notify_box.visible = True
-        page.update()
-        def hide():
-            time.sleep(3)
-            notify_box.visible = False
-            page.update()
-        threading.Thread(target=hide).start()
 
     def get_profile_data():
         default_data = {
@@ -145,7 +105,40 @@ def main(page: ft.Page):
         if isinstance(gyms_data, dict): return list(gyms_data.values())
         elif isinstance(gyms_data, list): return [g for g in gyms_data if g is not None]
         return []
+    
+    ALL_GRADES = ["All", "1", "2", "3", "4A", "4B", "4C", "5A", "5A+", "5B", "5B+", "5C", "5C+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"]
+    EDIT_GRADES = [g for g in ALL_GRADES if g != "All"]
 
+    def sanitize_grade(grade_str):
+        if not grade_str: return ""
+        return str(grade_str).upper().replace('А', 'A').replace('В', 'B').replace('С', 'C')
+
+    def create_btn(text, on_click, bgcolor="blue", color="white", width=None, height=40, visible=True):
+        return ft.Container(
+            content=ft.Text(text, color=color, weight="bold", text_align="center"),
+            bgcolor=bgcolor, padding=10, border_radius=5,
+            width=width, height=height,
+            alignment=ft.Alignment(0, 0),
+            on_click=on_click, ink=True, visible=visible
+        )
+
+    notify_text = ft.Text("", color="white", weight="bold", text_align="center")
+    notify_box = ft.Container(content=notify_text, bgcolor="green", padding=10, border_radius=5, visible=False, alignment=ft.Alignment(0,0))
+
+    def show_notify(msg, is_error=False):
+        notify_text.value = msg
+        notify_box.bgcolor = "red" if is_error else "green"
+        notify_box.visible = True
+        page.update()
+        def hide():
+            time.sleep(3)
+            notify_box.visible = False
+            page.update()
+        threading.Thread(target=hide).start()
+
+    # ==========================================
+    # ИСПРАВЛЕННАЯ СИСТЕМА ФОТО И КАМЕРЫ (АБСОЛЮТНЫЙ ФИКС ССЫЛКИ)
+    # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
@@ -157,7 +150,6 @@ def main(page: ft.Page):
                 onboarding_avatar.content = ft.Image(src_base64=b64_img, width=100, height=100, fit="cover", border_radius=50)
             elif file_picker_context == "profile":
                 temp_avatar_b64 = b64_img
-                # В режиме редактирования оставляем полупрозрачную иконку поверх фото
                 profile_avatar.content = ft.Stack([
                     ft.Image(src_base64=b64_img, width=80, height=80, fit="cover", border_radius=40),
                     ft.Container(width=80, height=80, border_radius=40, bgcolor=ft.colors.with_opacity(0.3, "black"), alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.CAMERA_ALT, color="white", opacity=0.8))
@@ -168,9 +160,9 @@ def main(page: ft.Page):
                 markers_stack.visible = True
                 markers_stack.controls = [detector]
             page.update()
-            show_notify("Фото успешно загружено!", is_error=False)
+            show_notify("Image loaded successfully!", is_error=False)
         except Exception as e:
-            show_notify("Ошибка отрисовки фото", is_error=True)
+            show_notify("Error rendering image", is_error=True)
 
     def on_upload_result(e: ft.FilePickerUploadEvent):
         try:
@@ -182,30 +174,28 @@ def main(page: ft.Page):
                     apply_avatar(b64_img)
                     os.remove(file_path)
             elif e.error:
-                show_notify(f"Сбой загрузки: {e.error}", is_error=True)
+                show_notify(f"Upload failed: {e.error}", is_error=True)
         except Exception as ex:
-            show_notify("Ошибка сети", is_error=True)
+            show_notify("Network error during upload", is_error=True)
 
     def on_file_picked(e: ft.FilePickerResultEvent):
         try:
             if e.files and len(e.files) > 0:
                 f = e.files[0]
-                show_notify("Обработка файла...", is_error=False)
+                show_notify("Processing file...", is_error=False)
                 
-                # Если пути нет (запуск с веба/телефона)
                 if not f.path: 
                     raw_url = page.get_upload_url(f.name, 600)
                     parsed = urllib.parse.urlparse(raw_url)
-                    # ГРУБАЯ СИЛА: жестко заставляем телефон качать файл на нужный домен!
-                    safe_url = f"{RENDER_APP_URL}{parsed.path}?{parsed.query}"
-                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url)])
+                    # ТРЮК: Делаем относительную ссылку! Браузер телефона сам подставит реальный домен
+                    relative_url = f"{parsed.path}?{parsed.query}"
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=relative_url)])
                 else:
-                    # Запуск локально (VS Code)
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
         except Exception as ex:
-            show_notify("Файл не выбран", is_error=True)
+            show_notify("File selection error", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
@@ -213,10 +203,12 @@ def main(page: ft.Page):
     page.overlay.append(global_file_picker)
 
     def trigger_picker(context):
-        nonlocal file_picker_context
-        file_picker_context = context
-        global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
-
+        try:
+            nonlocal file_picker_context
+            file_picker_context = context
+            global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
+        except Exception as e:
+            show_notify(f"Camera error: {str(e)}", is_error=True)
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -366,13 +358,12 @@ def main(page: ft.Page):
     onb_last_name = ft.TextField(label="Last Name", width=250)
     onb_bio = ft.TextField(label="About Me", width=250, multiline=True)
     
-    # КЛИКАБЕЛЬНАЯ АВАТАРКА ПРИ РЕГИСТРАЦИИ (ВМЕСТО КНОПКИ)
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
         alignment=ft.Alignment(0, 0), 
         content=ft.Icon(ft.icons.ADD_A_PHOTO, size=40, color="grey"),
         on_click=lambda _: trigger_picker("onboarding"),
-        ink=True, tooltip="Нажми, чтобы загрузить фото"
+        ink=True, tooltip="Tap to upload photo"
     )
 
     def complete_onboarding(e):
@@ -392,18 +383,17 @@ def main(page: ft.Page):
     onboarding_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=False, controls=[
         ft.Container(height=40),
         ft.Text("Welcome!", size=30, weight="bold"),
-        ft.Text("Нажми на кружок, чтобы загрузить фото", color="grey", size=14),
+        ft.Text("Tap the circle to upload a photo", color="grey", size=14),
         ft.Container(height=20),
-        onboarding_avatar, # Кнопки больше нет
+        onboarding_avatar,
         ft.Container(height=20),
         onb_nickname, onb_first_name, onb_last_name, onb_bio,
         ft.Container(height=10),
         create_btn("Let's Climb! 🚀", complete_onboarding, bgcolor="green", width=250, height=50)
     ])
 
-    # КЛИКАБЕЛЬНАЯ АВАТАРКА В ПРОФИЛЕ
     def on_profile_avatar_click(e):
-        if profile_edit_col.visible: # Разрешаем менять фото только в режиме редактирования
+        if profile_edit_col.visible:
             trigger_picker("profile")
 
     profile_avatar = ft.Container(
@@ -427,14 +417,12 @@ def main(page: ft.Page):
         user_data = get_profile_data()
         avatar_b64 = user_data.get("avatar_b64", "")
         
-        # Если режим просмотра
         if not is_editing:
             if avatar_b64: 
                 profile_avatar.content = ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40)
             else: 
                 profile_avatar.content = ft.Text("No Img", size=14, color="white")
         else:
-            # Если режим редактирования — добавляем иконку камеры поверх
             if avatar_b64:
                 profile_avatar.content = ft.Stack([
                     ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40),
@@ -479,8 +467,7 @@ def main(page: ft.Page):
         load_profile_ui(is_editing=False)
 
     profile_view_col = ft.Column([profile_name, profile_real_name, dev_badge, profile_bio, create_btn("Edit Profile", activate_edit_profile, bgcolor="#333333")], spacing=2)
-    # Кнопки Upload Photo здесь больше нет
-    profile_edit_col = ft.Column([ft.Text("Нажми на аватарку для смены", size=10, color="grey"), edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
+    profile_edit_col = ft.Column([edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
     profile_header = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[profile_avatar, ft.Container(width=10), profile_view_col, profile_edit_col])
     
     friend_requests_col = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
@@ -738,7 +725,7 @@ def main(page: ft.Page):
             
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
+                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon("person")),
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -912,7 +899,7 @@ def main(page: ft.Page):
     op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
     
     op_private_lock = ft.Column([
-        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
+        ft.Icon("lock", size=40, color="grey"),
         ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
     
@@ -1041,27 +1028,10 @@ def main(page: ft.Page):
     save_status = ft.Text(value="", size=14, weight="bold")
     color_info = ft.Text(value=f"Mode: Placing holds ({current_color})", size=14, color="grey")
 
-    # ИСПОЛЬЗУЕМ НАСТОЯЩИЕ КНОПКИ ДЛЯ КАМЕРЫ (ЧТОБЫ БРАУЗЕР ИХ НЕ БЛОКИРОВАЛ)
-    top_upload_zone = ft.ElevatedButton(
-        text="📂 Загрузить из галереи", 
-        on_click=lambda _: trigger_picker("route"), 
-        height=80, 
-        width=300,
-        style=ft.ButtonStyle(bgcolor="#333333", color="white", shape=ft.RoundedRectangleBorder(radius=10))
-    )
-    bottom_camera_zone = ft.ElevatedButton(
-        text="📷 Сделать фото", 
-        on_click=lambda _: trigger_picker("route"), 
-        height=80, 
-        width=300,
-        style=ft.ButtonStyle(bgcolor="#333333", color="white", shape=ft.RoundedRectangleBorder(radius=10))
-    )
-    
-    image_placeholder = ft.Container(
-        width=400, height=600, bgcolor="#222222", border_radius=10, 
-        content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), 
-        alignment=ft.Alignment(0, 0)
-    )
+    # ВЕРНУЛИ ТВОЙ КРАСИВЫЙ РАЗДЕЛЕННЫЙ ДИЗАЙН КНОПОК
+    top_upload_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Gallery", size=24, weight="bold", color="grey"), ft.Text("Upload from device", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
+    bottom_camera_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Camera", size=24, weight="bold", color="grey"), ft.Text("Take a photo", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
+    image_placeholder = ft.Container(width=400, height=600, bgcolor="#222222", border_radius=10, content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0))
 
     def change_color(color_name): nonlocal current_color, is_delete_mode; is_delete_mode = False; current_color = color_name; color_info.value = f"Mode: Placing holds ({current_color})"; color_info.color = "grey"; page.update()
     def enable_delete_mode(e): nonlocal is_delete_mode; is_delete_mode = True; color_info.value = "Erase mode: Click a hold to remove it"; color_info.color = "red"; page.update()
