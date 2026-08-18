@@ -1,4 +1,8 @@
 import flet as ft
+import flet.fastapi as flet_fastapi
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
 import urllib.request
 import urllib.parse
 import json
@@ -13,13 +17,49 @@ import ssl
 import hashlib
 import os
 
-# Игнорируем проверку SSL
+# Игнорируем SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # Создаем папку для загрузок на сервере
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
 
+# ЖЕСТКАЯ ПРИВЯЗКА ДОМЕНА
+RENDER_APP_URL = "https://spray-wall-app.onrender.com"
+
+# ==========================================
+# 1. НАШ СОБСТВЕННЫЙ ШЛЮЗ ДЛЯ ПРИЕМА ФОТОГРАФИЙ (FASTAPI)
+# ==========================================
+app = FastAPI()
+
+# Разрешаем телефонам кидать файлы с любых браузеров (отключаем паранойю CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.put("/api/upload/{filename}")
+async def upload_file(filename: str, request: Request):
+    try:
+        # Ловим чистые байты файла напрямую от телефона
+        body = await request.body()
+        safe_name = urllib.parse.unquote(filename)
+        filepath = os.path.join("uploads", safe_name)
+        
+        # Сохраняем на жесткий диск сервера
+        with open(filepath, "wb") as f:
+            f.write(body)
+            
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+# ==========================================
+# 2. ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ FLET
+# ==========================================
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -87,7 +127,7 @@ def main(page: ft.Page):
         page.update()
         def hide():
             time.sleep(3)
-            notify_box.visible = False
+            if notify_box: notify_box.visible = False
             page.update()
         threading.Thread(target=hide).start()
 
@@ -137,7 +177,7 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИДЕАЛЬНАЯ СИСТЕМА ФОТО И ОТЛОВ ОШИБОК
+    # ИНТЕГРАЦИЯ FLET С НАШИМ НОВЫМ FASTAPI ШЛЮЗОМ
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
@@ -158,7 +198,7 @@ def main(page: ft.Page):
                 wall_image.src_base64 = b64_img
                 markers_stack.controls = [detector]
                 
-                # ТРЮК WIZARD: Автоматически перекидываем на Шаг 2 после загрузки фото!
+                # Авто-переход на Шаг 2 (разметка) после загрузки фото
                 nonlocal create_step
                 create_step = 2
                 update_create_ui()
@@ -170,15 +210,15 @@ def main(page: ft.Page):
 
     def on_upload_result(e: ft.FilePickerUploadEvent):
         try:
+            # Когда FastAPI подтвердил прием файла
             if str(e.progress) == "1.0" or str(e.progress) == "1":
                 file_path = os.path.join("uploads", e.file_name)
-                # Ждем чуть-чуть, чтобы сервер точно успел сохранить файл
-                time.sleep(1.0) 
+                time.sleep(1.0) # Даем диску секунду на запись
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
-                    os.remove(file_path)
+                    os.remove(file_path) # Удаляем оригинал с сервера
             elif e.error:
                 show_notify(f"Upload failed: {e.error}", is_error=True)
         except Exception as ex:
@@ -191,20 +231,12 @@ def main(page: ft.Page):
                 show_notify("Uploading to server...", is_error=False)
                 
                 if not f.path: 
-                    # 1. Получаем кривую ссылку от Flet (http://0.0.0.0:8080/upload/...)
-                    raw_url = page.get_upload_url(f.name, 600)
-                    
-                    # 2. Разбиваем её на части
-                    parsed = urllib.parse.urlparse(raw_url)
-                    
-                    # 3. ГЕНИАЛЬНЫЙ ФИКС: Оставляем ТОЛЬКО путь (например, /upload/myphoto.jpg?expires=123...)
-                    # Никаких 0.0.0.0, никаких https://... Браузер сам подставит нужный домен!
-                    relative_url = f"{parsed.path}?{parsed.query}"
-                    
-                    # 4. Запускаем загрузку
-                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=relative_url, method="PUT")])
+                    # ТРЮК: МЫ БОЛЬШЕ НЕ ИСПОЛЬЗУЕМ ВНУТРЕННИЙ МЕХАНИЗМ FLET!
+                    # Мы шлем файл напрямую в наш собственный FastAPI шлюз
+                    safe_url = f"{RENDER_APP_URL}/api/upload/{urllib.parse.quote(f.name)}"
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url, method="PUT")])
                 else:
-                    # Для запуска локально с компа
+                    # Запуск с локального компа
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
@@ -220,7 +252,7 @@ def main(page: ft.Page):
         try:
             nonlocal file_picker_context
             file_picker_context = context
-            global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
+            global_file_picker.pick_files(allow_multiple=False)
         except Exception as e:
             show_notify(f"Cam error: {str(e)}", is_error=True)
 
@@ -579,6 +611,9 @@ def main(page: ft.Page):
         friends_list_col
     ])
 
+    # ==========================================
+    # ЧУЖОЙ ПРОФИЛЬ
+    # ==========================================
     op_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
     op_name = ft.Text("", size=24, weight="bold")
     op_real_name = ft.Text("", color="grey", size=14)
@@ -1408,6 +1443,12 @@ def main(page: ft.Page):
         settings_view.visible = True
         page.update()
 
+    def show_create_view():
+        hide_all_views()
+        page.appbar = main_appbar
+        create_view.visible = True
+        page.update()
+
     page.add(notify_box, login_view, onboarding_view, home_view, friends_view, gyms_list_view, gym_routes_view, create_view, route_view, other_profile_view, settings_view)
 
     saved_user = get_profile_data()
@@ -1416,6 +1457,12 @@ def main(page: ft.Page):
     else:
         show_auth_view() 
 
+# ==========================================
+# 3. ЗАПУСКАЕМ ОБА СЕРВЕРА ОДНОВРЕМЕННО
+# ==========================================
+app.mount("/", flet_fastapi.app(main))
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    ft.app(target=main, host="0.0.0.0", port=port, upload_dir="uploads")
+    # Uvicorn теперь держит на своих плечах и твой сайт (Flet), и шлюз для фоток (FastAPI)
+    uvicorn.run(app, host="0.0.0.0", port=port)
