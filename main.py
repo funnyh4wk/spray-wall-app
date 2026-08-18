@@ -14,6 +14,11 @@ import os
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+# ==========================================
+# НАШЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ НА ЧИСТОМ PYTHON
+# ==========================================
+SERVER_SESSIONS = {}
+
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -22,6 +27,11 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK 
     page.window_width = 400
     page.window_height = 800
+
+    # Привязываем профиль к уникальному ID вкладки браузера
+    if page.session_id not in SERVER_SESSIONS:
+        SERVER_SESSIONS[page.session_id] = {}
+    my_storage = SERVER_SESSIONS[page.session_id]
 
     FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 
@@ -85,9 +95,6 @@ def main(page: ft.Page):
             page.update()
         threading.Thread(target=hide).start()
 
-    # ==========================================
-    # НАШЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ НА ЧИСТОМ PYTHON
-    # ==========================================
     def get_profile_data():
         default_data = {
             "user_id": str(uuid.uuid4()), 
@@ -100,20 +107,17 @@ def main(page: ft.Page):
             "ascents_history": [],
             "is_global_admin": False
         }
+        data = my_storage.get("user_profile")
+        if data:
+            for k, v in default_data.items():
+                if k not in data: data[k] = v
+            return data
         
-        # Если переменной еще нет в объекте page, создаем её насильно
-        if not hasattr(page, "user_profile_data") or page.user_profile_data is None:
-            page.user_profile_data = default_data
-            
-        # Проверяем, что все поля на месте (на случай старых сохранений)
-        for k, v in default_data.items():
-            if k not in page.user_profile_data:
-                page.user_profile_data[k] = v
-                
-        return page.user_profile_data
+        my_storage["user_profile"] = default_data
+        return default_data
 
     def save_profile_data(data):
-        page.user_profile_data = data
+        my_storage["user_profile"] = data
         if "user_id" in data and data.get("name"):
             save_data(f"users/{data['user_id']}", {
                 "nickname": data.get('name', ''),
@@ -154,13 +158,14 @@ def main(page: ft.Page):
                 page.update()
             except Exception: show_notify("Error loading image", is_error=True)
 
-    global_file_picker = ft.FilePicker()
+    # Старый надежный способ вызова загрузчика файлов
+    global_file_picker = ft.FilePicker(on_result=on_file_picked)
     page.overlay.append(global_file_picker)
 
     def trigger_picker(context):
         nonlocal file_picker_context
         file_picker_context = context
-        global_file_picker.pick_files(on_result=on_file_picked)
+        global_file_picker.pick_files()
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -170,7 +175,7 @@ def main(page: ft.Page):
 
     def toggle_theme(e):
         page.theme_mode = ft.ThemeMode.LIGHT if page.theme_mode == ft.ThemeMode.DARK else ft.ThemeMode.DARK
-        e.control.icon = "dark_mode" if page.theme_mode == ft.ThemeMode.LIGHT else "light_mode"
+        e.control.icon = ft.icons.DARK_MODE if page.theme_mode == ft.ThemeMode.LIGHT else ft.icons.LIGHT_MODE
         page.update()
 
     def menu_changed(e):
@@ -183,7 +188,7 @@ def main(page: ft.Page):
         page.update()
 
     def logout_click(e):
-        page.user_profile_data = None
+        my_storage["user_profile"] = None
         page.drawer.open = False 
         show_auth_view()
 
@@ -193,10 +198,10 @@ def main(page: ft.Page):
             ft.Container(height=20),
             ft.Text("   Navigation", size=20, weight="bold"),
             ft.Divider(),
-            ft.NavigationDrawerDestination(label="Profile", icon="person"),
-            ft.NavigationDrawerDestination(label="Friends", icon="people"), 
-            ft.NavigationDrawerDestination(label="Climbing Gyms", icon="fitness_center"),
-            ft.NavigationDrawerDestination(label="Settings", icon="settings"),
+            ft.NavigationDrawerDestination(label="Profile", icon=ft.icons.PERSON),
+            ft.NavigationDrawerDestination(label="Friends", icon=ft.icons.PEOPLE), 
+            ft.NavigationDrawerDestination(label="Climbing Gyms", icon=ft.icons.FITNESS_CENTER),
+            ft.NavigationDrawerDestination(label="Settings", icon=ft.icons.SETTINGS),
             ft.Divider(),
             ft.Container(
                 content=ft.Text("Log Out", color="red", weight="bold"),
@@ -208,7 +213,7 @@ def main(page: ft.Page):
     main_appbar = ft.AppBar(
         title=ft.Text("Spray Wall App", weight="bold"),
         bgcolor="#111111",
-        actions=[ft.IconButton("light_mode", on_click=toggle_theme)]
+        actions=[ft.IconButton(ft.icons.LIGHT_MODE, on_click=toggle_theme)]
     )
     page.appbar = None 
 
@@ -309,7 +314,7 @@ def main(page: ft.Page):
     
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
-        alignment=ft.Alignment(0, 0), content=ft.Icon("add_a_photo", size=40, color="grey")
+        alignment=ft.Alignment(0, 0), content=ft.Icon(ft.icons.ADD_A_PHOTO, size=40, color="grey")
     )
 
     def complete_onboarding(e):
@@ -425,8 +430,8 @@ def main(page: ft.Page):
                 friend_requests_col.controls.append(
                     ft.Row([
                         ft.Text(f"@{s_name}", weight="bold", expand=True),
-                        ft.IconButton("check", icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
-                        ft.IconButton("close", icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
+                        ft.IconButton(ft.icons.CHECK, icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
+                        ft.IconButton(ft.icons.CLOSE, icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
                     ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
                 )
         page.update()
@@ -471,7 +476,7 @@ def main(page: ft.Page):
                 
                 card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=f_id, d=f_data: open_other_profile(u, d, show_friends_view), content=ft.Row([
                     ft.Row([
-                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon("person")),
+                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                         ft.Container(width=10),
                         ft.Column([
                             ft.Text(f"@{f_data.get('nickname','Unknown')}", weight="bold"),
@@ -507,7 +512,7 @@ def main(page: ft.Page):
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        page.user_profile_data = None
+        my_storage["user_profile"] = None
         confirm_dialog.open = False
         show_auth_view()
         show_notify("Account permanently deleted.")
@@ -643,7 +648,7 @@ def main(page: ft.Page):
             
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon("person")),
+                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -817,7 +822,7 @@ def main(page: ft.Page):
     op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
     
     op_private_lock = ft.Column([
-        ft.Icon("lock", size=40, color="grey"),
+        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
         ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
     
