@@ -140,7 +140,7 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИДЕАЛЬНАЯ СИСТЕМА ФОТО И ОТЛОВ ОШИБОК
+    # СИСТЕМА ФОТО И ОТЛОВ ОШИБОК
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
@@ -203,7 +203,6 @@ def main(page: ft.Page):
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
         except Exception as ex:
-            # ТЕПЕРЬ ОШИБКА БУДЕТ ВЫВОДИТЬСЯ НА ЭКРАН ПОДРОБНО
             show_notify(f"Sys Error: {str(ex)}", is_error=True)
 
     global_file_picker = ft.FilePicker()
@@ -574,6 +573,141 @@ def main(page: ft.Page):
         friends_list_col
     ])
 
+    # ==========================================
+    # ВОССТАНОВЛЕННЫЙ БЛОК ЧУЖОГО ПРОФИЛЯ
+    # ==========================================
+    op_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
+    op_name = ft.Text("", size=24, weight="bold")
+    op_real_name = ft.Text("", color="grey", size=14)
+    op_bio = ft.Text("", color="grey", size=14)
+    
+    op_action_btn = create_btn("Add Friend", lambda e: handle_op_action())
+    op_back_btn = create_btn("Back", lambda e: None, bgcolor="#333333") 
+    
+    op_stat_max = ft.Text("-", size=24, weight="bold", color="red")
+    op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
+    
+    op_private_lock = ft.Column([
+        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
+        ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
+    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
+    
+    op_grade_breakdown = ft.Text("", color="orange", weight="bold", size=16, text_align="center")
+    op_weekly_days_row = ft.Row(
+        controls=[ft.Container(content=ft.Text(d, weight="bold", color="grey"), width=35, height=35, border_radius=5, alignment=ft.Alignment(0,0), bgcolor="#333333") for d in ["M", "T", "W", "T", "F", "S", "S"]], 
+        alignment=ft.MainAxisAlignment.CENTER
+    )
+    op_private_content = ft.Column([
+        ft.Text("Grade Breakdown", color="grey", size=12), op_grade_breakdown, ft.Container(height=15),
+        ft.Text("Training This Week", color="grey", size=12), op_weekly_days_row
+    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=False)
+
+    def handle_op_action():
+        my_id = get_profile_data()["user_id"]
+        target_id = current_other_user_id
+        current_state = op_action_btn.content.value
+        
+        if current_state == "Add Friend":
+            save_data(f"friend_requests/{target_id}/{my_id}", True)
+            show_notify("Friend Request Sent!")
+        elif current_state == "Remove Friend":
+            save_data(f"friends/{my_id}/{target_id}", None, method="DELETE")
+            save_data(f"friends/{target_id}/{my_id}", None, method="DELETE")
+            show_notify("Friend Removed.")
+            
+        refresh_op_view(target_id)
+
+    def refresh_op_view(uid):
+        my_id = get_profile_data()["user_id"]
+        
+        is_friend = fetch_data(f"friends/{my_id}/{uid}")
+        sent_req = fetch_data(f"friend_requests/{uid}/{my_id}")
+        received_req = fetch_data(f"friend_requests/{my_id}/{uid}")
+        
+        if is_friend:
+            op_action_btn.content.value = "Remove Friend"
+            op_action_btn.bgcolor = "red"
+            op_private_lock.visible = False
+            op_private_content.visible = True
+        elif sent_req:
+            op_action_btn.content.value = "Request Sent"
+            op_action_btn.bgcolor = "grey"
+            op_private_lock.visible = True
+            op_private_content.visible = False
+        elif received_req:
+            op_action_btn.content.value = "Check Your Requests"
+            op_action_btn.bgcolor = "orange"
+            op_private_lock.visible = True
+            op_private_content.visible = False
+        else:
+            op_action_btn.content.value = "Add Friend"
+            op_action_btn.bgcolor = "blue"
+            op_private_lock.visible = True
+            op_private_content.visible = False
+            
+        page.update()
+
+    def open_other_profile(uid, u_data, back_func):
+        my_id = get_profile_data()["user_id"]
+        if uid == my_id:
+            show_home_view()
+            return
+            
+        nonlocal current_other_user_id
+        current_other_user_id = uid
+        
+        op_back_btn.on_click = lambda e: back_func()
+        
+        if u_data.get('avatar_b64'): op_avatar.content = ft.Image(src_base64=u_data['avatar_b64'], width=80, height=80, fit="cover", border_radius=40)
+        else: op_avatar.content = ft.Text("No Img", size=14, color="white")
+        
+        op_name.value = f"@{u_data.get('nickname', 'Unknown')}"
+        op_real_name.value = f"{u_data.get('first_name', '')} {u_data.get('last_name', '')}".strip()
+        op_bio.value = u_data.get("bio", "Climber")
+        
+        history = fetch_data(f"user_ascents/{uid}") or []
+        op_stat_total.value = str(len(history))
+        
+        grades = [a.get("grade") for a in history if a.get("grade") in ALL_GRADES]
+        op_stat_max.value = max(grades, key=lambda x: ALL_GRADES.index(x)) if grades else "-"
+        
+        counts = Counter(a.get("grade") for a in history if a.get("grade"))
+        if counts: op_grade_breakdown.value = " | ".join([f"{g}: {c}" for g, c in sorted(counts.items())])
+        else: op_grade_breakdown.value = "No ascents yet"
+            
+        today = datetime.datetime.now()
+        start_of_week = today - datetime.timedelta(days=today.weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        active_days = set()
+        for a in history:
+            ts = a.get("timestamp", 0)
+            if ts:
+                dt = datetime.datetime.fromtimestamp(ts)
+                if dt >= start_of_week: active_days.add(dt.weekday()) 
+                    
+        for i, day_container in enumerate(op_weekly_days_row.controls):
+            if i in active_days: day_container.bgcolor = "green"; day_container.content.color = "white"
+            else: day_container.bgcolor = "#333333"; day_container.content.color = "grey"
+                
+        refresh_op_view(uid)
+        hide_all_views()
+        other_profile_view.visible = True
+        page.update()
+
+    other_profile_view = ft.Column(visible=False, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[
+        ft.Row([op_back_btn]),
+        ft.Row([op_avatar, ft.Container(width=10), ft.Column([op_name, op_real_name, op_bio, op_action_btn])], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Divider(height=20),
+        ft.Row([
+            ft.Card(content=ft.Container(width=150, padding=15, content=ft.Column([ft.Text("Max Grade", size=12, color="grey"), op_stat_max], horizontal_alignment=ft.CrossAxisAlignment.CENTER))), 
+            ft.Card(content=ft.Container(width=150, padding=15, content=ft.Column([ft.Text("Total Ascents", size=12, color="grey"), op_stat_total], horizontal_alignment=ft.CrossAxisAlignment.CENTER)))
+        ], alignment=ft.MainAxisAlignment.CENTER),
+        ft.Container(height=20),
+        op_private_lock,
+        op_private_content
+    ])
+
     def close_dialog(e):
         confirm_dialog.open = False
         page.update()
@@ -918,7 +1052,6 @@ def main(page: ft.Page):
     def go_step_3(e): 
         nonlocal create_step; create_step = 3; update_create_ui()
 
-    # Поля для 3 шага (сделали на всю ширину для мобилок)
     boulder_name = ft.TextField(label="Name (optional)", width=320)
     boulder_grade = ft.Dropdown(label="Grade (e.g., 6B+) *", options=[ft.dropdown.Option(g) for g in EDIT_GRADES], width=320)
     boulder_author = ft.TextField(label="Author", width=320)
@@ -950,7 +1083,6 @@ def main(page: ft.Page):
         alignment=ft.Alignment(0, 0)
     )
 
-    # ШАГ 1: Только огромные кнопки
     step1_col = ft.Column([
         ft.Row([create_btn("Cancel", lambda e: show_gym_routes_view(), bgcolor="#333333"), ft.Text("Create Route: Step 1", size=20, weight="bold")], alignment="center"),
         ft.Container(height=10),
@@ -971,7 +1103,6 @@ def main(page: ft.Page):
         create_btn("Delete", enable_delete_mode, bgcolor="orange")
     ])
 
-    # ШАГ 2: Только разметка (Изображение + Кнопки)
     step2_col = ft.Column([
         ft.Row([create_btn("Back", go_step_1, bgcolor="#333333"), ft.Text("Step 2: Place Holds", size=20, weight="bold")], alignment="center"),
         color_buttons,
@@ -1007,7 +1138,6 @@ def main(page: ft.Page):
         markers_stack.controls = [detector]
         show_gym_routes_view() 
 
-    # ШАГ 3: Чистые детали маршрута
     step3_col = ft.Column([
         ft.Row([create_btn("Back", go_step_2, bgcolor="#333333"), ft.Text("Step 3: Details", size=20, weight="bold")], alignment="center"),
         ft.Container(height=20),
@@ -1059,9 +1189,6 @@ def main(page: ft.Page):
     detector = ft.GestureDetector(on_tap_down=on_image_tap, content=wall_image)
     markers_stack.controls = [detector]
 
-    # ==========================================
-    # ПРОСМОТР И РЕДАКТИРОВАНИЕ МАРШРУТА
-    # ==========================================
     view_title = ft.Text(value="", size=24, weight="bold")
     view_author_desc = ft.Text(value="", size=14, color="grey", italic=True)
     view_stack = ft.Stack(width=400, height=600)
@@ -1203,7 +1330,7 @@ def main(page: ft.Page):
                 dt = datetime.datetime.fromtimestamp(ts)
                 if dt >= start_of_week: active_days.add(dt.weekday()) 
                     
-        for i, day_container in enumerate(op_weekly_days_row.controls):
+        for i, day_container in enumerate(weekly_days_row.controls):
             if i in active_days:
                 day_container.bgcolor = "green"
                 day_container.content.color = "white"
