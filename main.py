@@ -20,9 +20,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
 
-# ЖЕСТКАЯ ПРИВЯЗКА ДОМЕНА 
-RENDER_APP_URL = "https://spray-wall-app.onrender.com"
-
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -63,7 +60,7 @@ def main(page: ft.Page):
     current_tab = "official"    
     current_open_boulder_data = {} 
     current_other_user_id = None 
-
+    
     ALL_GRADES = ["All", "1", "2", "3", "4A", "4B", "4C", "5A", "5A+", "5B", "5B+", "5C", "5C+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"]
     EDIT_GRADES = [g for g in ALL_GRADES if g != "All"]
 
@@ -140,7 +137,7 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИДЕАЛЬНЫЙ FILE PICKER (С ИСПРАВЛЕННЫМ URL ДЛЯ ТЕЛЕФОНА)
+    # ИДЕАЛЬНАЯ СИСТЕМА ФОТО (БЕЗ ОШИБКИ "НЕТ СВЯЗИ С САЙТОМ")
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
@@ -171,6 +168,7 @@ def main(page: ft.Page):
         try:
             if str(e.progress) == "1.0" or str(e.progress) == "1":
                 file_path = os.path.join("uploads", e.file_name)
+                time.sleep(0.5) # Даем серверу дописать файл
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
@@ -188,13 +186,15 @@ def main(page: ft.Page):
                 show_notify("Uploading to server...", is_error=False)
                 
                 if not f.path: 
-                    # Получаем базовую ссылку от Flet (которая ломается на Render)
+                    # Получаем базовую ссылку от Flet
                     raw_url = page.get_upload_url(f.name, 600)
                     parsed = urllib.parse.urlparse(raw_url)
-                    # Вытаскиваем только путь и приклеиваем наш настоящий домен
-                    safe_url = f"{RENDER_APP_URL}{parsed.path}?{parsed.query}"
-                    # Отправляем метод PUT (как и ждет Flet)
-                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url, method="PUT")])
+                    
+                    # ГЕНИАЛЬНЫЙ ФИКС: Оставляем только путь! 
+                    # Теперь браузер телефона не пугается чужих IP и отправляет файл безопасно
+                    relative_url = f"{parsed.path}?{parsed.query}"
+                    
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=relative_url, method="PUT")])
                 else:
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
@@ -211,7 +211,7 @@ def main(page: ft.Page):
         try:
             nonlocal file_picker_context
             file_picker_context = context
-            global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
+            global_file_picker.pick_files(allow_multiple=False)
         except Exception as e:
             show_notify("Camera error", is_error=True)
 
@@ -363,12 +363,13 @@ def main(page: ft.Page):
     onb_last_name = ft.TextField(label="Last Name", width=250)
     onb_bio = ft.TextField(label="About Me", width=250, multiline=True)
     
+    # Кликабельная аватарка на этапе регистрации (Английский)
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
         alignment=ft.Alignment(0, 0), 
         content=ft.Icon(ft.icons.ADD_A_PHOTO, size=40, color="grey"),
         on_click=lambda _: trigger_picker("onboarding"),
-        ink=True, tooltip="Tap to upload photo"
+        ink=True
     )
 
     def complete_onboarding(e):
@@ -471,6 +472,7 @@ def main(page: ft.Page):
         load_profile_ui(is_editing=False)
 
     profile_view_col = ft.Column([profile_name, profile_real_name, dev_badge, profile_bio, create_btn("Edit Profile", activate_edit_profile, bgcolor="#333333")], spacing=2)
+    # Кнопки загрузки больше нет. Инструкцию на русском удалил.
     profile_edit_col = ft.Column([edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
     profile_header = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[profile_avatar, ft.Container(width=10), profile_view_col, profile_edit_col])
     
@@ -686,7 +688,6 @@ def main(page: ft.Page):
         if not all_gyms: 
             gyms_list_col.controls.append(ft.Text("No gyms found in the world yet.", color="grey", text_align="center"))
         else:
-            # ИСПРАВЛЕНИЕ: ДОБАВЛЕНО .controls (БЕЗ НЕГО КРАШИЛАСЬ ВКЛАДКА ЗАЛОВ)
             gyms_list_col.controls.append(ft.Text("Explore Gyms Globally:", color="grey", size=12))
 
         for gym in reversed(all_gyms):
@@ -1034,11 +1035,35 @@ def main(page: ft.Page):
     color_info = ft.Text(value=f"Mode: Placing holds ({current_color})", size=14, color="grey")
 
     # ==========================================
-    # ВЕРНУЛИ РАЗДЕЛЕННЫЙ ДИЗАЙН (НА АНГЛИЙСКОМ)
+    # ВЕРНУЛИ РАЗДЕЛЕННЫЙ ЭКРАН НА ЧИСТОМ АНГЛИЙСКОМ
     # ==========================================
-    top_upload_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Gallery", size=24, weight="bold", color="grey"), ft.Text("Upload from device", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
-    bottom_camera_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Camera", size=24, weight="bold", color="grey"), ft.Text("Take a photo", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
-    image_placeholder = ft.Container(width=400, height=600, bgcolor="#222222", border_radius=10, content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0))
+    top_upload_zone = ft.Container(
+        expand=True, ink=True, border_radius=10, 
+        on_click=lambda _: trigger_picker("route"), 
+        content=ft.Column([
+            ft.Icon(ft.icons.PHOTO_LIBRARY, size=40, color="grey"),
+            ft.Text("Gallery", size=24, weight="bold", color="grey"), 
+            ft.Text("Upload from device", color="grey")
+        ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), 
+        alignment=ft.Alignment(0, 0)
+    )
+    
+    bottom_camera_zone = ft.Container(
+        expand=True, ink=True, border_radius=10, 
+        on_click=lambda _: trigger_picker("route"), 
+        content=ft.Column([
+            ft.Icon(ft.icons.CAMERA_ALT, size=40, color="grey"),
+            ft.Text("Camera", size=24, weight="bold", color="grey"), 
+            ft.Text("Take a photo", color="grey")
+        ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), 
+        alignment=ft.Alignment(0, 0)
+    )
+    
+    image_placeholder = ft.Container(
+        width=400, height=600, bgcolor="#222222", border_radius=10, 
+        content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0), 
+        alignment=ft.Alignment(0, 0)
+    )
 
     def change_color(color_name): nonlocal current_color, is_delete_mode; is_delete_mode = False; current_color = color_name; color_info.value = f"Mode: Placing holds ({current_color})"; color_info.color = "grey"; page.update()
     def enable_delete_mode(e): nonlocal is_delete_mode; is_delete_mode = True; color_info.value = "Erase mode: Click a hold to remove it"; color_info.color = "red"; page.update()
@@ -1325,5 +1350,4 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    # Включаем встроенный приемник файлов Flet!
     ft.app(target=main, host="0.0.0.0", port=port, upload_dir="uploads")
