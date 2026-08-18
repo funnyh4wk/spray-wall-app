@@ -10,13 +10,11 @@ import datetime
 from collections import Counter
 import ssl
 import hashlib
-import os  # <--- ДЛЯ РАБОТЫ С ОБЛАЧНЫМ СЕРВЕРОМ
+import os
 
-# ПРОБИВАЕМ БЛОКИРОВКУ WINDOWS ДЛЯ ОТПРАВКИ ДАННЫХ В ОБЛАКО
 ssl._create_default_https_context = ssl._create_unverified_context
 
 def main(page: ft.Page):
-    # Настройки окна приложения
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
@@ -25,9 +23,6 @@ def main(page: ft.Page):
     page.window_width = 400
     page.window_height = 800
 
-    # ==========================================
-    #        ОБЛАЧНАЯ БАЗА ДАННЫХ (FIREBASE)
-    # ==========================================
     FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 
     def fetch_data(path):
@@ -52,9 +47,6 @@ def main(page: ft.Page):
         except Exception as e:
             print(f"🔥 Ошибка сохранения [{path}]:", e)
 
-    # ==========================================
-    #        СОСТОЯНИЕ ПРИЛОЖЕНИЯ
-    # ==========================================
     current_color = "green" 
     is_delete_mode = False
     current_gym_id = None       
@@ -79,9 +71,6 @@ def main(page: ft.Page):
             on_click=on_click, ink=True, visible=visible
         )
 
-    # ==========================================
-    #        УВЕДОМЛЕНИЯ
-    # ==========================================
     notify_text = ft.Text("", color="white", weight="bold", text_align="center")
     notify_box = ft.Container(content=notify_text, bgcolor="green", padding=10, border_radius=5, visible=False, alignment=ft.Alignment(0,0))
 
@@ -96,9 +85,6 @@ def main(page: ft.Page):
             page.update()
         threading.Thread(target=hide).start()
 
-    # ==========================================
-    #        РАБОТА С ПРОФИЛЕМ ЮЗЕРА
-    # ==========================================
     def get_profile_data():
         default_data = {
             "user_id": str(uuid.uuid4()), 
@@ -138,9 +124,6 @@ def main(page: ft.Page):
         elif isinstance(gyms_data, list): return [g for g in gyms_data if g is not None]
         return []
 
-    # ==========================================
-    #        ГЛОБАЛЬНЫЙ FILE PICKER
-    # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
@@ -173,18 +156,12 @@ def main(page: ft.Page):
         file_picker_context = context
         global_file_picker.pick_files(on_result=on_file_picked)
 
-    # ==========================================
-    #        УТИЛИТЫ АВТОРИЗАЦИИ
-    # ==========================================
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
 
     def safe_email(email):
         return email.lower().strip().replace('.', ',')
 
-    # ==========================================
-    #        НАВИГАЦИЯ (ГАМБУРГЕР И APPBAR)
-    # ==========================================
     def toggle_theme(e):
         page.theme_mode = ft.ThemeMode.LIGHT if page.theme_mode == ft.ThemeMode.DARK else ft.ThemeMode.DARK
         e.control.icon = ft.icons.DARK_MODE if page.theme_mode == ft.ThemeMode.LIGHT else ft.icons.LIGHT_MODE
@@ -210,10 +187,10 @@ def main(page: ft.Page):
             ft.Container(height=20),
             ft.Text("   Navigation", size=20, weight="bold"),
             ft.Divider(),
-            ft.NavigationDrawerDestination(label="Profile", icon=ft.icons.person),
-            ft.NavigationDrawerDestination(label="Friends", icon=ft.icons.people), 
-            ft.NavigationDrawerDestination(label="Climbing Gyms", icon=ft.icons.fitness_center),
-            ft.NavigationDrawerDestination(label="Settings", icon=ft.icons.settings),
+            ft.NavigationDrawerDestination(label="Profile", icon=ft.icons.PERSON),
+            ft.NavigationDrawerDestination(label="Friends", icon=ft.icons.PEOPLE), 
+            ft.NavigationDrawerDestination(label="Climbing Gyms", icon=ft.icons.FITNESS_CENTER),
+            ft.NavigationDrawerDestination(label="Settings", icon=ft.icons.SETTINGS),
             ft.Divider(),
             ft.Container(
                 content=ft.Text("Log Out", color="red", weight="bold"),
@@ -225,13 +202,10 @@ def main(page: ft.Page):
     main_appbar = ft.AppBar(
         title=ft.Text("Spray Wall App", weight="bold"),
         bgcolor="#111111",
-        actions=[ft.IconButton(ft.icons.light_mode, on_click=toggle_theme)]
+        actions=[ft.IconButton(ft.icons.LIGHT_MODE, on_click=toggle_theme)]
     )
     page.appbar = None 
 
-    # ==========================================
-    #        ЭКРАН 1: АВТОРИЗАЦИЯ
-    # ==========================================
     auth_email = ft.TextField(label="Email", width=300)
     auth_password = ft.TextField(label="Password", width=300, password=True, can_reveal_password=True)
     is_login_mode = True 
@@ -322,9 +296,6 @@ def main(page: ft.Page):
         btn_auth_submit, auth_switch_container
     ])
 
-    # ==========================================
-    #        ЭКРАН 2: ONBOARDING
-    # ==========================================
     onb_nickname = ft.TextField(label="Nickname *", width=250)
     onb_first_name = ft.TextField(label="First Name", width=250)
     onb_last_name = ft.TextField(label="Last Name", width=250)
@@ -332,7 +303,7 @@ def main(page: ft.Page):
     
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
-        alignment=ft.Alignment(0, 0), content=ft.Icon(ft.icons.add_a_photo, size=40, color="grey")
+        alignment=ft.Alignment(0, 0), content=ft.Icon(ft.icons.ADD_A_PHOTO, size=40, color="grey")
     )
 
     def complete_onboarding(e):
@@ -362,9 +333,6 @@ def main(page: ft.Page):
         create_btn("Let's Climb! 🚀", complete_onboarding, bgcolor="green", width=250, height=50)
     ])
 
-    # ==========================================
-    #        ЭКРАН 3: ПРОФИЛЬ (МОЙ)
-    # ==========================================
     profile_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
 
     profile_name = ft.Text("", size=24, weight="bold")
@@ -418,7 +386,6 @@ def main(page: ft.Page):
     profile_edit_col = ft.Column([create_btn("Upload Photo", lambda _: trigger_picker("profile"), bgcolor="#444444"), edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
     profile_header = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[profile_avatar, ft.Container(width=10), profile_view_col, profile_edit_col])
     
-    # --- БЛОК ЗАЯВОК В ДРУЗЬЯ ---
     friend_requests_col = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
     friend_requests_container = ft.Container(
         content=ft.Column([ft.Text("Friend Requests", weight="bold", color="orange"), friend_requests_col]),
@@ -452,13 +419,12 @@ def main(page: ft.Page):
                 friend_requests_col.controls.append(
                     ft.Row([
                         ft.Text(f"@{s_name}", weight="bold", expand=True),
-                        ft.IconButton(ft.icons.check, icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
-                        ft.IconButton(ft.icons.close, icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
+                        ft.IconButton(ft.icons.CHECK, icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
+                        ft.IconButton(ft.icons.CLOSE, icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
                     ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
                 )
         page.update()
 
-    # СТАТИСТИКА ПРОФИЛЯ (МОЯ)
     stat_max_grade = ft.Text("-", size=24, weight="bold", color="red")
     stat_completed = ft.Text("0", size=24, weight="bold", color="green")
     stats_cards = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[
@@ -481,9 +447,6 @@ def main(page: ft.Page):
 
     home_view = ft.Column(visible=False, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[profile_header, friend_requests_container, stats_section])
 
-    # ==========================================
-    #        ЭКРАН 3.5: СПИСОК ДРУЗЕЙ 
-    # ==========================================
     friends_list_col = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
     
     def build_friends_list():
@@ -502,7 +465,7 @@ def main(page: ft.Page):
                 
                 card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=f_id, d=f_data: open_other_profile(u, d, show_friends_view), content=ft.Row([
                     ft.Row([
-                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.person)),
+                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                         ft.Container(width=10),
                         ft.Column([
                             ft.Text(f"@{f_data.get('nickname','Unknown')}", weight="bold"),
@@ -519,9 +482,6 @@ def main(page: ft.Page):
         friends_list_col
     ])
 
-    # ==========================================
-    #        ЭКРАН 3.9: SETTINGS (УДАЛЕНИЕ)
-    # ==========================================
     def close_dialog(e):
         confirm_dialog.open = False
         page.update()
@@ -572,9 +532,6 @@ def main(page: ft.Page):
         create_btn("Delete Account", open_delete_dialog, bgcolor="red"),
     ])
 
-    # ==========================================
-    #        ЭКРАН 4: СПИСОК ЗАЛОВ 
-    # ==========================================
     gyms_list_col = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
     new_gym_name = ft.TextField(label="Gym Name (e.g. Gravity)")
     new_gym_city = ft.TextField(label="City")
@@ -659,12 +616,7 @@ def main(page: ft.Page):
 
     gyms_list_view = ft.Column(visible=False, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[ft.Text("Climbing Gyms", size=24, weight="bold"), create_gym_panel, gyms_list_col])
 
-    # ==========================================
-    #        ЭКРАН 5: ТРАССЫ, ADMIN PANEL И CLIMBERS
-    # ==========================================
     gallery_list = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
-    
-    # --- CLIMBERS (COMMUNITY) TAB ---
     community_list_col = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
     
     def load_community_panel():
@@ -685,7 +637,7 @@ def main(page: ft.Page):
             
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.person)),
+                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -699,7 +651,6 @@ def main(page: ft.Page):
             else: community_list_col.controls.append(card)
         page.update()
 
-    # --- ADMIN PANEL ---
     admin_search_input = ft.TextField(label="Search by Name or Email", expand=True, height=45)
     admin_search_results = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
     admin_current_staff = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
@@ -848,9 +799,6 @@ def main(page: ft.Page):
                     gallery_list.controls.append(card)
         page.update()
 
-    # ==========================================
-    #        ЭКРАН 5.1: ЧУЖОЙ ПРОФИЛЬ (ПУБЛИЧНЫЙ)
-    # ==========================================
     op_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
     op_name = ft.Text("", size=24, weight="bold")
     op_real_name = ft.Text("", color="grey", size=14)
@@ -863,7 +811,7 @@ def main(page: ft.Page):
     op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
     
     op_private_lock = ft.Column([
-        ft.Icon(ft.icons.lock, size=40, color="grey"),
+        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
         ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
     
@@ -983,9 +931,6 @@ def main(page: ft.Page):
         op_private_content
     ])
 
-    # ==========================================
-    #        ЭКРАН 6: СОЗДАНИЕ ТРАССЫ
-    # ==========================================
     boulder_name = ft.TextField(label="Name (optional)", width=200)
     boulder_grade = ft.TextField(label="Grade (e.g., 6B+) *", width=170)
     boulder_author = ft.TextField(label="Author", width=170)
@@ -1052,9 +997,6 @@ def main(page: ft.Page):
     save_panel = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[ft.Row([boulder_name, boulder_grade, boulder_author], alignment=ft.MainAxisAlignment.CENTER), ft.Row([boulder_desc, create_btn("Save Route", save_boulder, bgcolor="purple", height=50)], alignment=ft.MainAxisAlignment.CENTER)])
     create_view = ft.Column(visible=False, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[ft.Row([create_btn("Back", lambda e: show_gym_routes_view(), bgcolor="#333333"), ft.Text("Create Route", size=24, weight="bold")]), save_panel, save_status, color_buttons, color_info, ft.Column([image_placeholder, markers_stack], horizontal_alignment=ft.CrossAxisAlignment.CENTER)])
 
-    # ==========================================
-    #        ЭКРАН 7: ПРОСМОТР И РЕДАКТИРОВАНИЕ ТРАССЫ
-    # ==========================================
     view_title = ft.Text(value="", size=24, weight="bold")
     view_author_desc = ft.Text(value="", size=14, color="grey", italic=True)
     view_stack = ft.Stack(width=400, height=600)
@@ -1172,9 +1114,6 @@ def main(page: ft.Page):
         route_view.visible = True
         page.update()
 
-    # ==========================================
-    #        РАСЧЕТ СТАТИСТИКИ ПРОФИЛЯ
-    # ==========================================
     def update_profile_stats():
         p_data = get_profile_data()
         history = p_data.get("ascents_history", [])
@@ -1282,7 +1221,6 @@ def main(page: ft.Page):
 
     page.add(notify_box, login_view, onboarding_view, home_view, friends_view, gyms_list_view, gym_routes_view, create_view, route_view, other_profile_view, settings_view)
 
-    # ЛОГИКА АВТОВХОДА 
     saved_user = get_profile_data()
     if saved_user.get("user_id") and saved_user.get("name"):
         show_home_view()
