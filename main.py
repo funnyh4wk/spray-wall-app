@@ -156,7 +156,11 @@ def main(page: ft.Page):
                 page.update()
             except Exception: show_notify("Error loading image", is_error=True)
 
-    global_file_picker = ft.FilePicker(on_result=on_file_picked)
+    # ==========================================
+    # ИСПРАВЛЕННЫЙ FILE PICKER БЕЗ ОШИБОК СИНТАКСИСА
+    # ==========================================
+    global_file_picker = ft.FilePicker()
+    global_file_picker.on_result = on_file_picked
     page.overlay.append(global_file_picker)
 
     def trigger_picker(context):
