@@ -12,12 +12,12 @@ import ssl
 import hashlib
 import os
 
+# Игнорируем проверку SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# ==========================================
-# НАШЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ НА ЧИСТОМ PYTHON
-# ==========================================
-SERVER_SESSIONS = {}
+# Папка для временной загрузки картинок из браузера
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
 
 def main(page: ft.Page):
     page.title = "Spray Wall App"
@@ -27,11 +27,6 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK 
     page.window_width = 400
     page.window_height = 800
-
-    # Привязываем профиль к уникальному ID вкладки браузера
-    if page.session_id not in SERVER_SESSIONS:
-        SERVER_SESSIONS[page.session_id] = {}
-    my_storage = SERVER_SESSIONS[page.session_id]
 
     FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 
@@ -95,6 +90,9 @@ def main(page: ft.Page):
             page.update()
         threading.Thread(target=hide).start()
 
+    # ==========================================
+    # ИСПРАВЛЕННОЕ ХРАНИЛИЩЕ (ЗАПОМИНАЕТ ВХОД)
+    # ==========================================
     def get_profile_data():
         default_data = {
             "user_id": str(uuid.uuid4()), 
@@ -107,17 +105,23 @@ def main(page: ft.Page):
             "ascents_history": [],
             "is_global_admin": False
         }
-        data = my_storage.get("user_profile")
-        if data:
-            for k, v in default_data.items():
-                if k not in data: data[k] = v
-            return data
-        
-        my_storage["user_profile"] = default_data
+        try:
+            if page.client_storage.contains_key("user_profile"):
+                data = page.client_storage.get("user_profile")
+                if data:
+                    for k, v in default_data.items():
+                        if k not in data: data[k] = v
+                    return data
+        except Exception:
+            pass
         return default_data
 
     def save_profile_data(data):
-        my_storage["user_profile"] = data
+        try:
+            page.client_storage.set("user_profile", data)
+        except Exception:
+            pass
+
         if "user_id" in data and data.get("name"):
             save_data(f"users/{data['user_id']}", {
                 "nickname": data.get('name', ''),
@@ -134,16 +138,23 @@ def main(page: ft.Page):
         elif isinstance(gyms_data, list): return [g for g in gyms_data if g is not None]
         return []
 
+    # ==========================================
+    # ИСПРАВЛЕННАЯ КАМЕРА И ЗАГРУЗКА ФОТО 
+    # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
-    def on_file_picked(e):
+    def on_upload_result(e: ft.FilePickerUploadEvent):
         nonlocal temp_avatar_b64, file_picker_context
-        if e.files and len(e.files) > 0:
+        # Когда файл успешно долетел до сервера
+        if e.progress == 1.0 or e.progress == 1:
+            file_path = os.path.join("uploads", e.file_name)
             try:
-                with open(e.files[0].path, "rb") as img_file: 
+                # Читаем байты загруженного фото
+                with open(file_path, "rb") as img_file: 
                     b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     
+                # Обновляем нужную картинку в интерфейсе
                 if file_picker_context == "onboarding":
                     temp_avatar_b64 = b64_img
                     onboarding_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=100, height=100, fit="cover", border_radius=50)
@@ -156,17 +167,55 @@ def main(page: ft.Page):
                     markers_stack.visible = True
                     markers_stack.controls = [detector]
                 page.update()
-            except Exception: show_notify("Error loading image", is_error=True)
+                
+                # Удаляем фото из памяти сервера, чтобы не мусорить
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as ex:
+                show_notify(f"Error processing image", is_error=True)
 
-    # ВОТ ОНО! РАЗДЕЛЕНО НА 2 СТРОКИ, ЧТОБЫ ИЗБЕЖАТЬ ОШИБКИ И КРАСНОЙ ПОЛОСЫ
+    def on_file_picked(e: ft.FilePickerResultEvent):
+        if e.files and len(e.files) > 0:
+            f = e.files[0]
+            # В вебе путь скрыт, поэтому запускаем быструю загрузку на сервер Flet
+            if not f.path: 
+                show_notify("Uploading photo...", is_error=False)
+                upload_url = page.get_upload_url(f.name, 600)
+                global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=upload_url)])
+            else:
+                # Локальный ПК
+                try:
+                    with open(f.path, "rb") as img_file: 
+                        b64_img = base64.b64encode(img_file.read()).decode('utf-8')
+                    nonlocal temp_avatar_b64
+                    if file_picker_context == "onboarding":
+                        temp_avatar_b64 = b64_img
+                        onboarding_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=100, height=100, fit="cover", border_radius=50)
+                    elif file_picker_context == "profile":
+                        temp_avatar_b64 = b64_img
+                        profile_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=80, height=80, fit="cover", border_radius=40)
+                    elif file_picker_context == "route":
+                        wall_image.src_base64 = b64_img
+                        image_placeholder.visible = False
+                        markers_stack.visible = True
+                        markers_stack.controls = [detector]
+                    page.update()
+                except Exception: 
+                    show_notify("Error local image", is_error=True)
+
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
+    global_file_picker.on_upload = on_upload_result
     page.overlay.append(global_file_picker)
+    # ЖИЗНЕННО ВАЖНО: обновляем страницу, чтобы кнопки заработали
+    page.update() 
 
     def trigger_picker(context):
         nonlocal file_picker_context
         file_picker_context = context
-        global_file_picker.pick_files()
+        # IMAGE type заставляет телефон предложить выбор: Камера или Галерея!
+        global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE)
+
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -189,7 +238,10 @@ def main(page: ft.Page):
         page.update()
 
     def logout_click(e):
-        my_storage["user_profile"] = None
+        try:
+            page.client_storage.remove("user_profile")
+        except:
+            pass
         page.drawer.open = False 
         show_auth_view()
 
@@ -513,7 +565,11 @@ def main(page: ft.Page):
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        my_storage["user_profile"] = None
+        try:
+            page.client_storage.remove("user_profile")
+        except:
+            pass
+            
         confirm_dialog.open = False
         show_auth_view()
         show_notify("Account permanently deleted.")
@@ -1241,4 +1297,5 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    ft.app(target=main, host="0.0.0.0", port=port)
+    # ДОБАВЛЕН upload_dir="uploads" ЧТОБЫ WEB ПРИНИМАЛ ФАЙЛЫ
+    ft.app(target=main, host="0.0.0.0", port=port, upload_dir="uploads")
