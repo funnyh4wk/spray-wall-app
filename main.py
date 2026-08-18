@@ -20,19 +20,16 @@ import os
 # Игнорируем SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Создаем папку для загрузок на сервере
-if not os.path.exists("uploads"):
-    os.makedirs("uploads", exist_ok=True)
-
-# ЖЕСТКАЯ ПРИВЯЗКА ДОМЕНА
+# ТВОЙ ДОМЕН (ДЛЯ МОБИЛЬНЫХ БРАУЗЕРОВ)
 RENDER_APP_URL = "https://spray-wall-app.onrender.com"
 
 # ==========================================
-# 1. НАШ СОБСТВЕННЫЙ ШЛЮЗ ДЛЯ ПРИЕМА ФОТОГРАФИЙ (FASTAPI)
+# 1. ГЛОБАЛЬНЫЙ КЭШ В ОПЕРАТИВКЕ (БЕЗ ЖЕСТКОГО ДИСКА)
 # ==========================================
+UPLOAD_CACHE = {}
+
 app = FastAPI()
 
-# Разрешаем телефонам кидать файлы с любых браузеров (отключаем паранойю CORS)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,21 +38,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.put("/api/upload/{filename}")
-async def upload_file(filename: str, request: Request):
+@app.put("/api/upload")
+async def upload_file(request: Request, fname: str):
     try:
-        # Ловим чистые байты файла напрямую от телефона
+        # Ловим фотку прямо в оперативную память (никаких папок и fakepath!)
         body = await request.body()
-        safe_name = urllib.parse.unquote(filename)
-        filepath = os.path.join("uploads", safe_name)
-        
-        # Сохраняем на жесткий диск сервера
-        with open(filepath, "wb") as f:
-            f.write(body)
-            
+        b64_str = base64.b64encode(body).decode('utf-8')
+        # Записываем в кэш
+        UPLOAD_CACHE[fname] = b64_str
         return {"success": True}
     except Exception as e:
         return {"error": str(e)}
+
 
 # ==========================================
 # 2. ОСНОВНОЙ КОД ПРИЛОЖЕНИЯ FLET
@@ -177,7 +171,7 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИНТЕГРАЦИЯ FLET С НАШИМ НОВЫМ FASTAPI ШЛЮЗОМ
+    # ИНТЕГРАЦИЯ FLET + ОПЕРАТИВНЫЙ КЭШ
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
@@ -198,7 +192,7 @@ def main(page: ft.Page):
                 wall_image.src_base64 = b64_img
                 markers_stack.controls = [detector]
                 
-                # Авто-переход на Шаг 2 (разметка) после загрузки фото
+                # ТРЮК WIZARD: Авто-переход на Шаг 2 (разметка) после загрузки фото
                 nonlocal create_step
                 create_step = 2
                 update_create_ui()
@@ -210,15 +204,21 @@ def main(page: ft.Page):
 
     def on_upload_result(e: ft.FilePickerUploadEvent):
         try:
-            # Когда FastAPI подтвердил прием файла
             if str(e.progress) == "1.0" or str(e.progress) == "1":
-                file_path = os.path.join("uploads", e.file_name)
-                time.sleep(1.0) # Даем диску секунду на запись
-                if os.path.exists(file_path):
-                    with open(file_path, "rb") as img_file: 
-                        b64_img = base64.b64encode(img_file.read()).decode('utf-8')
+                time.sleep(1.0) # Даем FastAPI секунду положить файл в оперативку
+                
+                # Вытягиваем файл прямо из оперативки по имени!
+                if e.file_name in UPLOAD_CACHE:
+                    b64_img = UPLOAD_CACHE.pop(e.file_name) # Забираем и стираем
                     apply_avatar(b64_img)
-                    os.remove(file_path) # Удаляем оригинал с сервера
+                else:
+                    # На случай долгой загрузки, ждем еще секунду
+                    time.sleep(1.5)
+                    if e.file_name in UPLOAD_CACHE:
+                        b64_img = UPLOAD_CACHE.pop(e.file_name)
+                        apply_avatar(b64_img)
+                    else:
+                        show_notify("Failed to fetch image from RAM", is_error=True)
             elif e.error:
                 show_notify(f"Upload failed: {e.error}", is_error=True)
         except Exception as ex:
@@ -231,9 +231,8 @@ def main(page: ft.Page):
                 show_notify("Uploading to server...", is_error=False)
                 
                 if not f.path: 
-                    # ТРЮК: МЫ БОЛЬШЕ НЕ ИСПОЛЬЗУЕМ ВНУТРЕННИЙ МЕХАНИЗМ FLET!
-                    # Мы шлем файл напрямую в наш собственный FastAPI шлюз
-                    safe_url = f"{RENDER_APP_URL}/api/upload/{urllib.parse.quote(f.name)}"
+                    # Отправляем файл на наш шлюз (в параметре fname передаем имя)
+                    safe_url = f"{RENDER_APP_URL}/api/upload?fname={urllib.parse.quote(f.name)}"
                     global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url, method="PUT")])
                 else:
                     # Запуск с локального компа
@@ -611,9 +610,6 @@ def main(page: ft.Page):
         friends_list_col
     ])
 
-    # ==========================================
-    # ЧУЖОЙ ПРОФИЛЬ
-    # ==========================================
     op_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
     op_name = ft.Text("", size=24, weight="bold")
     op_real_name = ft.Text("", color="grey", size=14)
@@ -1458,11 +1454,10 @@ def main(page: ft.Page):
         show_auth_view() 
 
 # ==========================================
-# 3. ЗАПУСКАЕМ ОБА СЕРВЕРА ОДНОВРЕМЕННО
+# 3. ЗАПУСК ДВУХ СЕРВЕРОВ (FLET + FASTAPI)
 # ==========================================
 app.mount("/", flet_fastapi.app(main))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    # Uvicorn теперь держит на своих плечах и твой сайт (Flet), и шлюз для фоток (FastAPI)
     uvicorn.run(app, host="0.0.0.0", port=port)
