@@ -10,7 +10,7 @@ import datetime
 from collections import Counter
 import ssl
 import hashlib
-import os  # <--- ДОБАВИЛИ ДЛЯ РАБОТЫ С ОБЛАЧНЫМ СЕРВЕРОМ
+import os  # <--- ДЛЯ РАБОТЫ С ОБЛАЧНЫМ СЕРВЕРОМ
 
 # ПРОБИВАЕМ БЛОКИРОВКУ WINDOWS ДЛЯ ОТПРАВКИ ДАННЫХ В ОБЛАКО
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -210,10 +210,10 @@ def main(page: ft.Page):
             ft.Container(height=20),
             ft.Text("   Navigation", size=20, weight="bold"),
             ft.Divider(),
-            ft.NavigationDrawerDestination(label="Profile", icon=ft.icons.PERSON),
-            ft.NavigationDrawerDestination(label="Friends", icon=ft.icons.PEOPLE), 
-            ft.NavigationDrawerDestination(label="Climbing Gyms", icon=ft.icons.FITNESS_CENTER),
-            ft.NavigationDrawerDestination(label="Settings", icon=ft.icons.SETTINGS),
+            ft.NavigationDrawerDestination(label="Profile", icon=ft.icons.person),
+            ft.NavigationDrawerDestination(label="Friends", icon=ft.icons.people), 
+            ft.NavigationDrawerDestination(label="Climbing Gyms", icon=ft.icons.fitness_center),
+            ft.NavigationDrawerDestination(label="Settings", icon=ft.icons.settings),
             ft.Divider(),
             ft.Container(
                 content=ft.Text("Log Out", color="red", weight="bold"),
@@ -225,7 +225,7 @@ def main(page: ft.Page):
     main_appbar = ft.AppBar(
         title=ft.Text("Spray Wall App", weight="bold"),
         bgcolor="#111111",
-        actions=[ft.IconButton(ft.icons.LIGHT_MODE, on_click=toggle_theme)]
+        actions=[ft.IconButton(ft.icons.light_mode, on_click=toggle_theme)]
     )
     page.appbar = None 
 
@@ -332,7 +332,7 @@ def main(page: ft.Page):
     
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
-        alignment=ft.Alignment(0, 0), content=ft.Icon(ft.icons.ADD_A_PHOTO, size=40, color="grey")
+        alignment=ft.Alignment(0, 0), content=ft.Icon(ft.icons.add_a_photo, size=40, color="grey")
     )
 
     def complete_onboarding(e):
@@ -452,8 +452,8 @@ def main(page: ft.Page):
                 friend_requests_col.controls.append(
                     ft.Row([
                         ft.Text(f"@{s_name}", weight="bold", expand=True),
-                        ft.IconButton(ft.icons.CHECK, icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
-                        ft.IconButton(ft.icons.CLOSE, icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
+                        ft.IconButton(ft.icons.check, icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
+                        ft.IconButton(ft.icons.close, icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
                     ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
                 )
         page.update()
@@ -502,7 +502,7 @@ def main(page: ft.Page):
                 
                 card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=f_id, d=f_data: open_other_profile(u, d, show_friends_view), content=ft.Row([
                     ft.Row([
-                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
+                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.person)),
                         ft.Container(width=10),
                         ft.Column([
                             ft.Text(f"@{f_data.get('nickname','Unknown')}", weight="bold"),
@@ -531,19 +531,16 @@ def main(page: ft.Page):
         uid = p_data.get("user_id")
         email = p_data.get("email")
         
-        # 1. Удаляем авторизацию
         if email:
             s_email = safe_email(email)
             save_data(f"auth_users/{s_email}", None, method="DELETE")
         
-        # 2. Удаляем все личные данные из базы
         if uid:
             save_data(f"users/{uid}", None, method="DELETE")
             save_data(f"user_ascents/{uid}", None, method="DELETE")
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        # 3. Чистим память телефона и выходим
         page.client_storage.remove("user_profile")
         confirm_dialog.open = False
         show_auth_view()
@@ -688,7 +685,7 @@ def main(page: ft.Page):
             
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
+                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.person)),
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -866,7 +863,7 @@ def main(page: ft.Page):
     op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
     
     op_private_lock = ft.Column([
-        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
+        ft.Icon(ft.icons.lock, size=40, color="grey"),
         ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
     
