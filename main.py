@@ -13,12 +13,51 @@ import ssl
 import hashlib
 import os
 
+# Заставляем Flet генерировать идеальные ссылки для интернета
+os.environ["FLET_UPLOAD_URL_PREFIX"] = "https://spray-wall-app.onrender.com"
+
 # Игнорируем проверку SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # Создаем папку для загрузок на сервере
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
+
+# КЛЮЧИ CLOUDINARY
+CLOUDINARY_CLOUD_NAME = "hz7ii1gc"
+CLOUDINARY_API_KEY = "228359521481238"
+CLOUDINARY_API_SECRET = "MvS2MySwEvuQRN3n-qG6bKdK-Bg"
+
+# ==========================================
+# ФУНКЦИЯ ПОЛНОГО УДАЛЕНИЯ ФОТО ИЗ ОБЛАКА
+# ==========================================
+def delete_from_cloudinary(image_url):
+    if not image_url or "cloudinary.com" not in image_url:
+        return
+    try:
+        # Достаем ID картинки из ссылки (например, https://.../v123456/abcdef.jpg -> abcdef)
+        public_id = image_url.split('/')[-1].rsplit('.', 1)[0]
+        
+        # Генерируем крипто-подпись для удаления (требование безопасности)
+        timestamp = str(int(time.time()))
+        string_to_sign = f"public_id={public_id}&timestamp={timestamp}{CLOUDINARY_API_SECRET}"
+        signature = hashlib.sha1(string_to_sign.encode()).hexdigest()
+        
+        url = f"https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD_NAME}/image/destroy"
+        data = urllib.parse.urlencode({
+            "public_id": public_id,
+            "api_key": CLOUDINARY_API_KEY,
+            "timestamp": timestamp,
+            "signature": signature
+        }).encode("utf-8")
+        
+        req = urllib.request.Request(url, data=data, method="POST")
+        with urllib.request.urlopen(req) as response:
+            pass # Файл успешно сожжен в облаке
+            print(f"🗑️ Файл {public_id} успешно удален из Cloudinary")
+    except Exception as e:
+        print("Ошибка удаления из Cloudinary:", e)
+
 
 def main(page: ft.Page):
     page.title = "Spray Wall App"
@@ -52,6 +91,29 @@ def main(page: ft.Page):
                 pass
         except Exception as e:
             print(f"🔥 Save error [{path}]:", e)
+
+    # Отправка в Cloudinary
+    def upload_to_cloudinary(file_path):
+        with open(file_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+
+        timestamp = str(int(time.time()))
+        string_to_sign = f"timestamp={timestamp}{CLOUDINARY_API_SECRET}"
+        signature = hashlib.sha1(string_to_sign.encode()).hexdigest()
+
+        url = f"https://api.cloudinary.com/v1_1/{CLOUDINARY_CLOUD_NAME}/image/upload"
+        
+        data = urllib.parse.urlencode({
+            "file": "data:image/jpeg;base64," + encoded_string,
+            "api_key": CLOUDINARY_API_KEY,
+            "timestamp": timestamp,
+            "signature": signature
+        }).encode("utf-8")
+
+        req = urllib.request.Request(url, data=data, method="POST")
+        with urllib.request.urlopen(req) as response:
+            res = json.loads(response.read().decode("utf-8"))
+            return res["secure_url"]
 
     current_color = "green" 
     is_delete_mode = False
@@ -99,7 +161,7 @@ def main(page: ft.Page):
             "first_name": "",  
             "last_name": "",   
             "bio": "Bouldering Enthusiast", 
-            "avatar_b64": "", 
+            "avatar_url": "", 
             "ascents_history": [],
             "is_global_admin": False
         }
@@ -126,7 +188,7 @@ def main(page: ft.Page):
                 "first_name": data.get('first_name', ''),
                 "last_name": data.get('last_name', ''),
                 "email": data.get('email', ''), 
-                "avatar_b64": data.get('avatar_b64', ''),
+                "avatar_url": data.get('avatar_url', ''),
                 "bio": data.get('bio', '')
             })
 
@@ -137,28 +199,26 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИДЕАЛЬНАЯ ЗАГРУЗКА ФОТО (С ФИКСОМ HTTPS ДЛЯ ТЕЛЕФОНА)
+    # СИСТЕМА ФОТО С ЗАЩИТОЙ ОТ МОБИЛЬНОГО СНА (SLEEP BUG FIX)
     # ==========================================
-    temp_avatar_b64 = "" 
+    temp_image_url = "" 
     file_picker_context = "" 
 
-    def apply_avatar(b64_img):
+    def apply_avatar(img_url):
         try:
-            nonlocal temp_avatar_b64
+            nonlocal temp_image_url
+            temp_image_url = img_url
+            
             if file_picker_context == "onboarding":
-                temp_avatar_b64 = b64_img
-                onboarding_avatar.content = ft.Image(src_base64=b64_img, width=100, height=100, fit="cover", border_radius=50)
+                onboarding_avatar.content = ft.Image(src=img_url, width=100, height=100, fit="cover", border_radius=50)
             elif file_picker_context == "profile":
-                temp_avatar_b64 = b64_img
                 profile_avatar.content = ft.Stack([
-                    ft.Image(src_base64=b64_img, width=80, height=80, fit="cover", border_radius=40),
+                    ft.Image(src=img_url, width=80, height=80, fit="cover", border_radius=40),
                     ft.Container(width=80, height=80, border_radius=40, bgcolor=ft.colors.with_opacity(0.3, "black"), alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.CAMERA_ALT, color="white", opacity=0.8))
                 ])
             elif file_picker_context == "route":
-                wall_image.src_base64 = b64_img
+                wall_image.src = img_url
                 markers_stack.controls = [detector]
-                
-                # ТРЮК WIZARD: Автоматически перекидываем на Шаг 2 после загрузки фото!
                 nonlocal create_step
                 create_step = 2
                 update_create_ui()
@@ -175,45 +235,41 @@ def main(page: ft.Page):
                 return
                 
             if str(e.progress) == "1.0" or str(e.progress) == "1":
+                show_notify("Optimizing in Cloudinary...", is_error=False)
                 file_path = os.path.join("uploads", e.file_name)
                 
-                # Даем серверу Render долю секунды, чтобы файл точно сохранился на диск
-                for _ in range(10):
-                    if os.path.exists(file_path):
-                        with open(file_path, "rb") as img_file: 
-                            b64_img = base64.b64encode(img_file.read()).decode('utf-8')
-                        apply_avatar(b64_img)
-                        os.remove(file_path)
-                        return
-                    time.sleep(0.5)
-                show_notify("File not saved to disk", is_error=True)
+                time.sleep(1.0) 
+                
+                if os.path.exists(file_path):
+                    cloud_url = upload_to_cloudinary(file_path)
+                    apply_avatar(cloud_url)
+                    os.remove(file_path)
+                else:
+                    show_notify("File missing on server", is_error=True)
         except Exception as ex:
-            show_notify(f"Network error: {str(ex)}", is_error=True)
+            show_notify(f"Cloud Error: {str(ex)}", is_error=True)
+
+    def upload_worker(file_name):
+        time.sleep(2.0)
+        try:
+            upload_url = page.get_upload_url(file_name, 600)
+            global_file_picker.upload([ft.FilePickerUploadFile(file_name, upload_url=upload_url)])
+        except Exception as e:
+            show_notify(f"Upload error: {e}", is_error=True)
 
     def on_file_picked(e: ft.FilePickerResultEvent):
-        try:
-            if e.files and len(e.files) > 0:
-                f = e.files[0]
-                show_notify("Uploading to server...", is_error=False)
-                
-                if not f.path: 
-                    # 1. Получаем стандартную кривую ссылку от Flet
-                    raw_url = page.get_upload_url(f.name, 600)
-                    
-                    # 2. ВОТ ТОТ САМЫЙ ФИКС! 
-                    # Парсим ссылку и насильно вклеиваем наш защищенный домен (HTTPS)
-                    parsed = urllib.parse.urlparse(raw_url)
-                    secure_url = f"https://spray-wall-app.onrender.com{parsed.path}?{parsed.query}"
-                    
-                    # 3. Отправляем. Теперь телефон ничего не заблокирует!
-                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=secure_url)])
-                else:
-                    # Это для запуска локально (на компе в VS Code)
-                    with open(f.path, "rb") as img_file: 
-                        b64_img = base64.b64encode(img_file.read()).decode('utf-8')
-                    apply_avatar(b64_img)
-        except Exception as ex:
-            show_notify(f"Sys Error: {str(ex)}", is_error=True)
+        if e.files and len(e.files) > 0:
+            f = e.files[0]
+            show_notify("Preparing upload... Please wait.", is_error=False)
+            
+            if not f.path: 
+                threading.Thread(target=upload_worker, args=(f.name,)).start()
+            else:
+                try:
+                    cloud_url = upload_to_cloudinary(f.path)
+                    apply_avatar(cloud_url)
+                except Exception as ex:
+                    show_notify(f"Sys Error: {str(ex)}", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
@@ -332,7 +388,7 @@ def main(page: ft.Page):
             
             new_profile = {
                 "user_id": new_uid, "email": em, "name": "", "first_name": "", 
-                "last_name": "", "bio": "", "avatar_b64": "", "ascents_history": [],
+                "last_name": "", "bio": "", "avatar_url": "", "ascents_history": [],
                 "is_global_admin": False
             }
             save_profile_data(new_profile)
@@ -351,7 +407,7 @@ def main(page: ft.Page):
                 "name": user_cloud_data.get("nickname", ""),
                 "first_name": user_cloud_data.get("first_name", ""),
                 "last_name": user_cloud_data.get("last_name", ""),
-                "avatar_b64": user_cloud_data.get("avatar_b64", ""),
+                "avatar_url": user_cloud_data.get("avatar_url", ""),
                 "bio": user_cloud_data.get("bio", "Bouldering Enthusiast"),
                 "ascents_history": fetch_data(f"user_ascents/{uid}") or [],
                 "is_global_admin": False
@@ -393,7 +449,7 @@ def main(page: ft.Page):
         p_data["first_name"] = onb_first_name.value.strip()
         p_data["last_name"] = onb_last_name.value.strip()
         p_data["bio"] = onb_bio.value.strip() if onb_bio.value.strip() else "Bouldering Enthusiast"
-        if temp_avatar_b64: p_data["avatar_b64"] = temp_avatar_b64
+        if temp_image_url: p_data["avatar_url"] = temp_image_url
         
         save_profile_data(p_data)
         show_home_view()
@@ -432,17 +488,20 @@ def main(page: ft.Page):
 
     def load_profile_ui(is_editing=False):
         user_data = get_profile_data()
-        avatar_b64 = user_data.get("avatar_b64", "")
+        avatar_val = user_data.get("avatar_url") or user_data.get("avatar_b64", "")
         
         if not is_editing:
-            if avatar_b64: 
-                profile_avatar.content = ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40)
+            if avatar_val:
+                if avatar_val.startswith("http"): profile_avatar.content = ft.Image(src=avatar_val, width=80, height=80, fit="cover", border_radius=40)
+                else: profile_avatar.content = ft.Image(src_base64=avatar_val, width=80, height=80, fit="cover", border_radius=40)
             else: 
                 profile_avatar.content = ft.Text("No Img", size=14, color="white")
         else:
-            if avatar_b64:
+            if avatar_val:
+                if avatar_val.startswith("http"): base_img = ft.Image(src=avatar_val, width=80, height=80, fit="cover", border_radius=40)
+                else: base_img = ft.Image(src_base64=avatar_val, width=80, height=80, fit="cover", border_radius=40)
                 profile_avatar.content = ft.Stack([
-                    ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40),
+                    base_img,
                     ft.Container(width=80, height=80, border_radius=40, bgcolor=ft.colors.with_opacity(0.4, "black"), alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.CAMERA_ALT, color="white"))
                 ])
             else:
@@ -470,8 +529,13 @@ def main(page: ft.Page):
         user_data["first_name"] = edit_first_name_input.value
         user_data["last_name"] = edit_last_name_input.value
         user_data["bio"] = edit_bio_input.value
-        if file_picker_context == "profile" and temp_avatar_b64: 
-            user_data["avatar_b64"] = temp_avatar_b64 
+        
+        # ЕСЛИ МЫ ЗАГРУЗИЛИ НОВУЮ АВАТАРКУ, СЖИГАЕМ СТАРУЮ ИЗ ОБЛАКА!
+        if file_picker_context == "profile" and temp_image_url: 
+            old_avatar = user_data.get("avatar_url")
+            if old_avatar and old_avatar != temp_image_url:
+                threading.Thread(target=delete_from_cloudinary, args=(old_avatar,)).start()
+            user_data["avatar_url"] = temp_image_url 
             
         save_profile_data(user_data)
         profile_view_col.visible = True
@@ -564,9 +628,15 @@ def main(page: ft.Page):
                 f_data = all_users.get(f_id)
                 if not f_data: continue
                 
+                ava_val = f_data.get('avatar_url') or f_data.get('avatar_b64', '')
+                if ava_val:
+                    if ava_val.startswith("http"): ava_img = ft.Image(src=ava_val, width=40, height=40, border_radius=20, fit="cover")
+                    else: ava_img = ft.Image(src_base64=ava_val, width=40, height=40, border_radius=20, fit="cover")
+                else: ava_img = ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON))
+
                 card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=f_id, d=f_data: open_other_profile(u, d, show_friends_view), content=ft.Row([
                     ft.Row([
-                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
+                        ava_img,
                         ft.Container(width=10),
                         ft.Column([
                             ft.Text(f"@{f_data.get('nickname','Unknown')}", weight="bold"),
@@ -665,7 +735,10 @@ def main(page: ft.Page):
         
         op_back_btn.on_click = lambda e: back_func()
         
-        if u_data.get('avatar_b64'): op_avatar.content = ft.Image(src_base64=u_data['avatar_b64'], width=80, height=80, fit="cover", border_radius=40)
+        ava_val = u_data.get('avatar_url') or u_data.get('avatar_b64', '')
+        if ava_val:
+            if ava_val.startswith("http"): op_avatar.content = ft.Image(src=ava_val, width=80, height=80, fit="cover", border_radius=40)
+            else: op_avatar.content = ft.Image(src_base64=ava_val, width=80, height=80, fit="cover", border_radius=40)
         else: op_avatar.content = ft.Text("No Img", size=14, color="white")
         
         op_name.value = f"@{u_data.get('nickname', 'Unknown')}"
@@ -872,9 +945,15 @@ def main(page: ft.Page):
             if role == "admin": role_badge = "👑 Admin"
             elif role == "setter": role_badge = "🛠️ Setter"
             
+            ava_val = u_data.get('avatar_url') or u_data.get('avatar_b64', '')
+            if ava_val:
+                if ava_val.startswith("http"): ava_img = ft.Image(src=ava_val, width=40, height=40, border_radius=20, fit="cover")
+                else: ava_img = ft.Image(src_base64=ava_val, width=40, height=40, border_radius=20, fit="cover")
+            else: ava_img = ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON))
+
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
+                    ava_img,
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -1051,7 +1130,7 @@ def main(page: ft.Page):
         nonlocal create_step; create_step = 1; update_create_ui()
 
     def go_step_2(e):
-        if not wall_image.src_base64:
+        if not wall_image.src:
             show_notify("Please upload a photo first!", True)
             return
         nonlocal create_step; create_step = 2; update_create_ui()
@@ -1120,7 +1199,7 @@ def main(page: ft.Page):
     ], horizontal_alignment="center", visible=False)
 
     def save_boulder(e):
-        if not boulder_grade.value or not wall_image.src_base64: 
+        if not boulder_grade.value or not wall_image.src: 
             show_notify("Please fill Grade and Image!", is_error=True)
             return
         show_notify("Saving Route to Cloud...")
@@ -1135,13 +1214,13 @@ def main(page: ft.Page):
             "author": author_name, 
             "author_id": get_profile_data()["user_id"], 
             "description": boulder_desc.value, 
-            "image_b64": wall_image.src_base64, 
+            "image_url": wall_image.src, 
             "markers": [{"x": m.left, "y": m.top, "color": m.data} for m in markers_stack.controls[1:] if m.data],
             "gym_id": current_gym_id, "route_type": current_tab         
         }
         save_data(f"boulders/{new_id}", boulder_data)
 
-        boulder_name.value, boulder_grade.value, boulder_desc.value, wall_image.src_base64 = "", "", "", ""
+        boulder_name.value, boulder_grade.value, boulder_desc.value, wall_image.src = "", "", "", ""
         markers_stack.controls = [detector]
         show_gym_routes_view() 
 
@@ -1165,7 +1244,7 @@ def main(page: ft.Page):
         page.appbar = main_appbar
         nonlocal create_step
         create_step = 1
-        wall_image.src_base64 = ""
+        wall_image.src = ""
         markers_stack.controls = [detector]
         boulder_name.value = ""
         boulder_grade.value = ""
@@ -1230,9 +1309,20 @@ def main(page: ft.Page):
         edit_desc_field_route.value = current_open_boulder_data.get("description", "")
         action_buttons_row.visible = False; view_title.visible = False; view_author_desc.visible = False; edit_panel_route.visible = True; page.update()
 
+    # ==========================================
+    # ВОТ ОНО: УДАЛЕНИЕ ИЗ БАЗЫ И ИЗ ОБЛАКА!
+    # ==========================================
     def delete_current_route(e):
         b_id = current_open_boulder_data.get("id")
-        if b_id: save_data(f"boulders/{b_id}", None, method="DELETE")
+        img_url = current_open_boulder_data.get("image_url")
+        
+        if b_id: 
+            save_data(f"boulders/{b_id}", None, method="DELETE")
+            
+        # Запускаем удаление фото из Cloudinary в фоне
+        if img_url:
+            threading.Thread(target=delete_from_cloudinary, args=(img_url,)).start()
+            
         show_gym_routes_view()
 
     def toggle_complete_route(e):
@@ -1292,7 +1382,11 @@ def main(page: ft.Page):
             else: btn_edit.visible = False; btn_delete.visible = False
 
         view_image = ft.Image(width=400, height=600, fit="contain")
-        if boulder_data.get("image_b64"): view_image.src_base64 = boulder_data["image_b64"]
+        
+        if boulder_data.get("image_url"):
+            view_image.src = boulder_data["image_url"]
+        elif boulder_data.get("image_b64"):
+            view_image.src_base64 = boulder_data["image_b64"]
 
         view_stack.controls.clear()
         view_stack.controls.append(view_image)
@@ -1426,7 +1520,6 @@ def main(page: ft.Page):
     else:
         show_auth_view() 
 
-# ВСТРОЕННЫЙ ЗАГРУЗЧИК (FLET САМ БУДЕТ ПРИНИМАТЬ ФАЙЛЫ В ПАПКУ UPLOADS)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     ft.app(target=main, host="0.0.0.0", port=port, upload_dir="uploads")
