@@ -16,9 +16,12 @@ import os
 # Игнорируем проверку SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Создаем папку для загрузок на сервере, чтобы ничего не падало
+# Создаем папку для загрузок на сервере
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
+
+# ЖЕСТКАЯ ПРИВЯЗКА ДОМЕНА (ЧТОБЫ ТЕЛЕФОН НЕ ТЕРЯЛ СЕРВЕР)
+RENDER_APP_URL = "https://spray-wall-app.onrender.com"
 
 def main(page: ft.Page):
     page.title = "Spray Wall App"
@@ -60,6 +63,8 @@ def main(page: ft.Page):
     current_tab = "official"    
     current_open_boulder_data = {} 
     current_other_user_id = None 
+
+    my_profile_data = None
     
     ALL_GRADES = ["All", "1", "2", "3", "4A", "4B", "4C", "5A", "5A+", "5B", "5B+", "5C", "5C+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"]
     EDIT_GRADES = [g for g in ALL_GRADES if g != "All"]
@@ -68,7 +73,6 @@ def main(page: ft.Page):
         if not grade_str: return ""
         return str(grade_str).upper().replace('А', 'A').replace('В', 'B').replace('С', 'C')
 
-    # ИСПРАВЛЕНИЕ #1: Теперь это НАСТОЯЩИЕ кнопки, мобильный браузер их не заблокирует
     def create_btn(text, on_click, bgcolor="blue", color="white", width=None, height=40, visible=True):
         return ft.ElevatedButton(
             text=text,
@@ -97,9 +101,6 @@ def main(page: ft.Page):
             page.update()
         threading.Thread(target=hide).start()
 
-    # ==========================================
-    # ИДЕАЛЬНОЕ ХРАНИЛИЩЕ БРАУЗЕРА (ТЫ УЖЕ ПРОВЕРИЛ, ОНО РАБОТАЕТ)
-    # ==========================================
     def get_profile_data():
         default_data = {
             "user_id": str(uuid.uuid4()), 
@@ -145,9 +146,6 @@ def main(page: ft.Page):
         elif isinstance(gyms_data, list): return [g for g in gyms_data if g is not None]
         return []
 
-    # ==========================================
-    # ПУЛЕНЕПРОБИВАЕМАЯ СИСТЕМА ФОТО И КАМЕРЫ С ЛОГАМИ
-    # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
@@ -159,16 +157,20 @@ def main(page: ft.Page):
                 onboarding_avatar.content = ft.Image(src_base64=b64_img, width=100, height=100, fit="cover", border_radius=50)
             elif file_picker_context == "profile":
                 temp_avatar_b64 = b64_img
-                profile_avatar.content = ft.Image(src_base64=b64_img, width=80, height=80, fit="cover", border_radius=40)
+                # В режиме редактирования оставляем полупрозрачную иконку поверх фото
+                profile_avatar.content = ft.Stack([
+                    ft.Image(src_base64=b64_img, width=80, height=80, fit="cover", border_radius=40),
+                    ft.Container(width=80, height=80, border_radius=40, bgcolor=ft.colors.with_opacity(0.3, "black"), alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.CAMERA_ALT, color="white", opacity=0.8))
+                ])
             elif file_picker_context == "route":
                 wall_image.src_base64 = b64_img
                 image_placeholder.visible = False
                 markers_stack.visible = True
                 markers_stack.controls = [detector]
             page.update()
-            show_notify("Фото успешно установлено!", is_error=False)
+            show_notify("Фото успешно загружено!", is_error=False)
         except Exception as e:
-            show_notify(f"Ошибка установки фото: {str(e)}", is_error=True)
+            show_notify("Ошибка отрисовки фото", is_error=True)
 
     def on_upload_result(e: ft.FilePickerUploadEvent):
         try:
@@ -178,33 +180,32 @@ def main(page: ft.Page):
                     with open(file_path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
-                    os.remove(file_path) # Удаляем, чтобы не мусорить на сервере
-                else:
-                    show_notify("Ошибка: Файл не долетел до сервера", is_error=True)
+                    os.remove(file_path)
             elif e.error:
-                show_notify(f"Ошибка загрузки: {e.error}", is_error=True)
+                show_notify(f"Сбой загрузки: {e.error}", is_error=True)
         except Exception as ex:
-            show_notify(f"Ошибка обработки: {str(ex)}", is_error=True)
+            show_notify("Ошибка сети", is_error=True)
 
     def on_file_picked(e: ft.FilePickerResultEvent):
         try:
             if e.files and len(e.files) > 0:
                 f = e.files[0]
-                show_notify("Фото выбрано. Загружаем...", is_error=False)
+                show_notify("Обработка файла...", is_error=False)
                 
-                # Если запускаем с телефона / веба
+                # Если пути нет (запуск с веба/телефона)
                 if not f.path: 
                     raw_url = page.get_upload_url(f.name, 600)
                     parsed = urllib.parse.urlparse(raw_url)
-                    safe_url = f"{parsed.path}?{parsed.query}"
+                    # ГРУБАЯ СИЛА: жестко заставляем телефон качать файл на нужный домен!
+                    safe_url = f"{RENDER_APP_URL}{parsed.path}?{parsed.query}"
                     global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url)])
                 else:
-                    # Локальный ПК
+                    # Запуск локально (VS Code)
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
         except Exception as ex:
-            show_notify(f"Ошибка выбора: {str(ex)}", is_error=True)
+            show_notify("Файл не выбран", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
@@ -212,13 +213,10 @@ def main(page: ft.Page):
     page.overlay.append(global_file_picker)
 
     def trigger_picker(context):
-        try:
-            nonlocal file_picker_context
-            file_picker_context = context
-            # IMAGE заставит телефон выдать выбор: Сделать фото камерой или выбрать из галереи!
-            global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
-        except Exception as e:
-            show_notify(f"Ошибка камеры: {str(e)}", is_error=True)
+        nonlocal file_picker_context
+        file_picker_context = context
+        global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
+
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -228,7 +226,7 @@ def main(page: ft.Page):
 
     def toggle_theme(e):
         page.theme_mode = ft.ThemeMode.LIGHT if page.theme_mode == ft.ThemeMode.DARK else ft.ThemeMode.DARK
-        e.control.icon = "dark_mode" if page.theme_mode == ft.ThemeMode.LIGHT else "light_mode"
+        e.control.icon = ft.icons.DARK_MODE if page.theme_mode == ft.ThemeMode.LIGHT else ft.icons.LIGHT_MODE
         page.update()
 
     def menu_changed(e):
@@ -254,10 +252,10 @@ def main(page: ft.Page):
             ft.Container(height=20),
             ft.Text("   Navigation", size=20, weight="bold"),
             ft.Divider(),
-            ft.NavigationDrawerDestination(label="Profile", icon="person"),
-            ft.NavigationDrawerDestination(label="Friends", icon="people"), 
-            ft.NavigationDrawerDestination(label="Climbing Gyms", icon="fitness_center"),
-            ft.NavigationDrawerDestination(label="Settings", icon="settings"),
+            ft.NavigationDrawerDestination(label="Profile", icon=ft.icons.PERSON),
+            ft.NavigationDrawerDestination(label="Friends", icon=ft.icons.PEOPLE), 
+            ft.NavigationDrawerDestination(label="Climbing Gyms", icon=ft.icons.FITNESS_CENTER),
+            ft.NavigationDrawerDestination(label="Settings", icon=ft.icons.SETTINGS),
             ft.Divider(),
             ft.Container(
                 content=ft.Text("Log Out", color="red", weight="bold"),
@@ -269,7 +267,7 @@ def main(page: ft.Page):
     main_appbar = ft.AppBar(
         title=ft.Text("Spray Wall App", weight="bold"),
         bgcolor="#111111",
-        actions=[ft.IconButton("light_mode", on_click=toggle_theme)]
+        actions=[ft.IconButton(ft.icons.LIGHT_MODE, on_click=toggle_theme)]
     )
     page.appbar = None 
 
@@ -368,9 +366,13 @@ def main(page: ft.Page):
     onb_last_name = ft.TextField(label="Last Name", width=250)
     onb_bio = ft.TextField(label="About Me", width=250, multiline=True)
     
+    # КЛИКАБЕЛЬНАЯ АВАТАРКА ПРИ РЕГИСТРАЦИИ (ВМЕСТО КНОПКИ)
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
-        alignment=ft.Alignment(0, 0), content=ft.Icon("add_a_photo", size=40, color="grey")
+        alignment=ft.Alignment(0, 0), 
+        content=ft.Icon(ft.icons.ADD_A_PHOTO, size=40, color="grey"),
+        on_click=lambda _: trigger_picker("onboarding"),
+        ink=True, tooltip="Нажми, чтобы загрузить фото"
     )
 
     def complete_onboarding(e):
@@ -390,17 +392,26 @@ def main(page: ft.Page):
     onboarding_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=False, controls=[
         ft.Container(height=40),
         ft.Text("Welcome!", size=30, weight="bold"),
-        ft.Text("Let's set up your profile", color="grey", size=14),
+        ft.Text("Нажми на кружок, чтобы загрузить фото", color="grey", size=14),
         ft.Container(height=20),
-        onboarding_avatar,
-        create_btn("Choose Avatar", lambda _: trigger_picker("onboarding"), bgcolor="#333333"),
+        onboarding_avatar, # Кнопки больше нет
         ft.Container(height=20),
         onb_nickname, onb_first_name, onb_last_name, onb_bio,
         ft.Container(height=10),
         create_btn("Let's Climb! 🚀", complete_onboarding, bgcolor="green", width=250, height=50)
     ])
 
-    profile_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
+    # КЛИКАБЕЛЬНАЯ АВАТАРКА В ПРОФИЛЕ
+    def on_profile_avatar_click(e):
+        if profile_edit_col.visible: # Разрешаем менять фото только в режиме редактирования
+            trigger_picker("profile")
+
+    profile_avatar = ft.Container(
+        width=80, height=80, border_radius=40, bgcolor="#444444", 
+        alignment=ft.Alignment(0, 0),
+        on_click=on_profile_avatar_click,
+        ink=True
+    )
 
     profile_name = ft.Text("", size=24, weight="bold")
     profile_real_name = ft.Text("", color="grey", size=14)
@@ -412,11 +423,25 @@ def main(page: ft.Page):
     edit_last_name_input = ft.TextField(label="Last Name", width=200, height=45)
     edit_bio_input = ft.TextField(label="Status", width=200, height=45)
 
-    def load_profile_ui():
+    def load_profile_ui(is_editing=False):
         user_data = get_profile_data()
         avatar_b64 = user_data.get("avatar_b64", "")
-        if avatar_b64: profile_avatar.content = ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40)
-        else: profile_avatar.content = ft.Text("No Img", size=14, color="white")
+        
+        # Если режим просмотра
+        if not is_editing:
+            if avatar_b64: 
+                profile_avatar.content = ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40)
+            else: 
+                profile_avatar.content = ft.Text("No Img", size=14, color="white")
+        else:
+            # Если режим редактирования — добавляем иконку камеры поверх
+            if avatar_b64:
+                profile_avatar.content = ft.Stack([
+                    ft.Image(src_base64=avatar_b64, width=80, height=80, fit="cover", border_radius=40),
+                    ft.Container(width=80, height=80, border_radius=40, bgcolor=ft.colors.with_opacity(0.4, "black"), alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.CAMERA_ALT, color="white"))
+                ])
+            else:
+                profile_avatar.content = ft.Icon(ft.icons.ADD_A_PHOTO, color="grey")
         
         profile_name.value = user_data.get("name", "")
         profile_real_name.value = f"{user_data.get('first_name','')} {user_data.get('last_name','')}".strip()
@@ -427,6 +452,12 @@ def main(page: ft.Page):
         edit_first_name_input.value = user_data.get("first_name", "")
         edit_last_name_input.value = user_data.get("last_name", "")
         edit_bio_input.value = user_data.get("bio", "")
+        page.update()
+
+    def activate_edit_profile(e):
+        profile_view_col.visible = False
+        profile_edit_col.visible = True
+        load_profile_ui(is_editing=True)
 
     def save_profile_click(e):
         user_data = get_profile_data()
@@ -438,19 +469,18 @@ def main(page: ft.Page):
             user_data["avatar_b64"] = temp_avatar_b64 
             
         save_profile_data(user_data)
-        load_profile_ui()
         profile_view_col.visible = True
         profile_edit_col.visible = False
-        page.update()
+        load_profile_ui(is_editing=False)
         
     def cancel_profile_click(e):
-        load_profile_ui()
         profile_view_col.visible = True
         profile_edit_col.visible = False
-        page.update()
+        load_profile_ui(is_editing=False)
 
-    profile_view_col = ft.Column([profile_name, profile_real_name, dev_badge, profile_bio, create_btn("Edit Profile", lambda e: setattr(profile_view_col, 'visible', False) or setattr(profile_edit_col, 'visible', True) or page.update(), bgcolor="#333333")], spacing=2)
-    profile_edit_col = ft.Column([create_btn("Upload Photo", lambda _: trigger_picker("profile"), bgcolor="#444444"), edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
+    profile_view_col = ft.Column([profile_name, profile_real_name, dev_badge, profile_bio, create_btn("Edit Profile", activate_edit_profile, bgcolor="#333333")], spacing=2)
+    # Кнопки Upload Photo здесь больше нет
+    profile_edit_col = ft.Column([ft.Text("Нажми на аватарку для смены", size=10, color="grey"), edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
     profile_header = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[profile_avatar, ft.Container(width=10), profile_view_col, profile_edit_col])
     
     friend_requests_col = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH)
@@ -486,8 +516,8 @@ def main(page: ft.Page):
                 friend_requests_col.controls.append(
                     ft.Row([
                         ft.Text(f"@{s_name}", weight="bold", expand=True),
-                        ft.IconButton("check", icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
-                        ft.IconButton("close", icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
+                        ft.IconButton(ft.icons.CHECK, icon_color="green", on_click=lambda e, sid=sender_id: handle_friend_request(sid, True)),
+                        ft.IconButton(ft.icons.CLOSE, icon_color="red", on_click=lambda e, sid=sender_id: handle_friend_request(sid, False))
                     ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
                 )
         page.update()
@@ -532,7 +562,7 @@ def main(page: ft.Page):
                 
                 card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=f_id, d=f_data: open_other_profile(u, d, show_friends_view), content=ft.Row([
                     ft.Row([
-                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon("person")),
+                        ft.Image(src_base64=f_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if f_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                         ft.Container(width=10),
                         ft.Column([
                             ft.Text(f"@{f_data.get('nickname','Unknown')}", weight="bold"),
@@ -708,7 +738,7 @@ def main(page: ft.Page):
             
             card = ft.Card(content=ft.Container(padding=15, ink=True, on_click=lambda e, u=uid, d=u_data: open_other_profile(u, d, show_gym_routes_view), content=ft.Row([
                 ft.Row([
-                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon("person")),
+                    ft.Image(src_base64=u_data.get('avatar_b64',''), width=40, height=40, border_radius=20) if u_data.get('avatar_b64') else ft.Container(width=40, height=40, border_radius=20, bgcolor="#444444", alignment=ft.Alignment(0,0), content=ft.Icon(ft.icons.PERSON)),
                     ft.Container(width=10),
                     ft.Column([
                         ft.Row([ft.Text(f"@{u_data.get('nickname','Unknown')}", weight="bold"), ft.Text(role_badge, color="orange", size=10)]),
@@ -882,7 +912,7 @@ def main(page: ft.Page):
     op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
     
     op_private_lock = ft.Column([
-        ft.Icon("lock", size=40, color="grey"),
+        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
         ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
     ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
     
@@ -1011,7 +1041,7 @@ def main(page: ft.Page):
     save_status = ft.Text(value="", size=14, weight="bold")
     color_info = ft.Text(value=f"Mode: Placing holds ({current_color})", size=14, color="grey")
 
-    # ИСПРАВЛЕНИЕ #2: Заменили прозрачные квадраты на настоящие кнопки камеры
+    # ИСПОЛЬЗУЕМ НАСТОЯЩИЕ КНОПКИ ДЛЯ КАМЕРЫ (ЧТОБЫ БРАУЗЕР ИХ НЕ БЛОКИРОВАЛ)
     top_upload_zone = ft.ElevatedButton(
         text="📂 Загрузить из галереи", 
         on_click=lambda _: trigger_picker("route"), 
@@ -1265,7 +1295,7 @@ def main(page: ft.Page):
         hide_all_views()
         page.appbar = main_appbar 
         if page.drawer: page.drawer.selected_index = 0
-        load_profile_ui()
+        load_profile_ui(is_editing=False)
         update_friend_requests_ui()
         home_view.visible = True
         update_profile_stats()
