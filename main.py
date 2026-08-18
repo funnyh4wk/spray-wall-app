@@ -20,6 +20,9 @@ ssl._create_default_https_context = ssl._create_unverified_context
 if not os.path.exists("uploads"):
     os.makedirs("uploads", exist_ok=True)
 
+# ЖЕСТКАЯ ПРИВЯЗКА ДОМЕНА 
+RENDER_APP_URL = "https://spray-wall-app.onrender.com"
+
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -60,7 +63,7 @@ def main(page: ft.Page):
     current_tab = "official"    
     current_open_boulder_data = {} 
     current_other_user_id = None 
-    
+
     ALL_GRADES = ["All", "1", "2", "3", "4A", "4B", "4C", "5A", "5A+", "5B", "5B+", "5C", "5C+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"]
     EDIT_GRADES = [g for g in ALL_GRADES if g != "All"]
 
@@ -137,7 +140,7 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ИДЕАЛЬНАЯ СИСТЕМА ФОТО (БЕЗ ОШИБКИ "НЕТ СВЯЗИ С САЙТОМ")
+    # ИДЕАЛЬНАЯ СИСТЕМА ФОТО И ОТЛОВ ОШИБОК
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
@@ -156,19 +159,23 @@ def main(page: ft.Page):
                 ])
             elif file_picker_context == "route":
                 wall_image.src_base64 = b64_img
-                image_placeholder.visible = False
-                markers_stack.visible = True
                 markers_stack.controls = [detector]
+                
+                # ТРЮК WIZARD: Автоматически перекидываем на Шаг 2 после загрузки фото!
+                nonlocal create_step
+                create_step = 2
+                update_create_ui()
+
             page.update()
             show_notify("Image loaded successfully!", is_error=False)
         except Exception as e:
-            show_notify("Error rendering image", is_error=True)
+            show_notify(f"Render error: {str(e)}", is_error=True)
 
     def on_upload_result(e: ft.FilePickerUploadEvent):
         try:
             if str(e.progress) == "1.0" or str(e.progress) == "1":
                 file_path = os.path.join("uploads", e.file_name)
-                time.sleep(0.5) # Даем серверу дописать файл
+                time.sleep(0.5) 
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
@@ -177,7 +184,7 @@ def main(page: ft.Page):
             elif e.error:
                 show_notify(f"Upload failed: {e.error}", is_error=True)
         except Exception as ex:
-            show_notify("Network error during upload", is_error=True)
+            show_notify(f"Network error: {str(ex)}", is_error=True)
 
     def on_file_picked(e: ft.FilePickerResultEvent):
         try:
@@ -186,21 +193,18 @@ def main(page: ft.Page):
                 show_notify("Uploading to server...", is_error=False)
                 
                 if not f.path: 
-                    # Получаем базовую ссылку от Flet
                     raw_url = page.get_upload_url(f.name, 600)
                     parsed = urllib.parse.urlparse(raw_url)
+                    safe_url = f"{RENDER_APP_URL}{parsed.path}?{parsed.query}"
                     
-                    # ГЕНИАЛЬНЫЙ ФИКС: Оставляем только путь! 
-                    # Теперь браузер телефона не пугается чужих IP и отправляет файл безопасно
-                    relative_url = f"{parsed.path}?{parsed.query}"
-                    
-                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=relative_url, method="PUT")])
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url)])
                 else:
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
                     apply_avatar(b64_img)
         except Exception as ex:
-            show_notify("File selection error", is_error=True)
+            # ТЕПЕРЬ ОШИБКА БУДЕТ ВЫВОДИТЬСЯ НА ЭКРАН ПОДРОБНО
+            show_notify(f"Sys Error: {str(ex)}", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
@@ -213,7 +217,7 @@ def main(page: ft.Page):
             file_picker_context = context
             global_file_picker.pick_files(allow_multiple=False)
         except Exception as e:
-            show_notify("Camera error", is_error=True)
+            show_notify(f"Cam error: {str(e)}", is_error=True)
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -363,7 +367,6 @@ def main(page: ft.Page):
     onb_last_name = ft.TextField(label="Last Name", width=250)
     onb_bio = ft.TextField(label="About Me", width=250, multiline=True)
     
-    # Кликабельная аватарка на этапе регистрации (Английский)
     onboarding_avatar = ft.Container(
         width=100, height=100, border_radius=50, bgcolor="#444444", 
         alignment=ft.Alignment(0, 0), 
@@ -472,7 +475,6 @@ def main(page: ft.Page):
         load_profile_ui(is_editing=False)
 
     profile_view_col = ft.Column([profile_name, profile_real_name, dev_badge, profile_bio, create_btn("Edit Profile", activate_edit_profile, bgcolor="#333333")], spacing=2)
-    # Кнопки загрузки больше нет. Инструкцию на русском удалил.
     profile_edit_col = ft.Column([edit_name_input, edit_first_name_input, edit_last_name_input, edit_bio_input, ft.Row([create_btn("Save", save_profile_click, bgcolor="green"), create_btn("Cancel", cancel_profile_click, bgcolor="red")])], visible=False, spacing=2)
     profile_header = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[profile_avatar, ft.Container(width=10), profile_view_col, profile_edit_col])
     
@@ -822,7 +824,7 @@ def main(page: ft.Page):
         admin_search_results
     ])
 
-    btn_add_route = create_btn("Add Route", lambda e: show_create_view(), bgcolor="green", visible=False)
+    btn_add_route = create_btn("Add Route", lambda e: show_create_wizard(), bgcolor="green", visible=False)
 
     def handle_tab_change_custom(tab_name):
         nonlocal current_tab; current_tab = tab_name
@@ -893,150 +895,39 @@ def main(page: ft.Page):
                     gallery_list.controls.append(card)
         page.update()
 
-    op_avatar = ft.Container(width=80, height=80, border_radius=40, bgcolor="#444444", alignment=ft.Alignment(0, 0))
-    op_name = ft.Text("", size=24, weight="bold")
-    op_real_name = ft.Text("", color="grey", size=14)
-    op_bio = ft.Text("", color="grey", size=14)
-    
-    op_action_btn = create_btn("Add Friend", lambda e: handle_op_action())
-    op_back_btn = create_btn("Back", lambda e: None, bgcolor="#333333") 
-    
-    op_stat_max = ft.Text("-", size=24, weight="bold", color="red")
-    op_stat_total = ft.Text("0", size=24, weight="bold", color="green")
-    
-    op_private_lock = ft.Column([
-        ft.Icon(ft.icons.LOCK, size=40, color="grey"),
-        ft.Text("Detailed stats are hidden.\nAdd as friend to view.", color="grey", text_align="center")
-    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=True)
-    
-    op_grade_breakdown = ft.Text("", color="orange", weight="bold", size=16, text_align="center")
-    op_weekly_days_row = ft.Row(
-        controls=[ft.Container(content=ft.Text(d, weight="bold", color="grey"), width=35, height=35, border_radius=5, alignment=ft.Alignment(0,0), bgcolor="#333333") for d in ["M", "T", "W", "T", "F", "S", "S"]], 
-        alignment=ft.MainAxisAlignment.CENTER
-    )
-    op_private_content = ft.Column([
-        ft.Text("Grade Breakdown", color="grey", size=12), op_grade_breakdown, ft.Container(height=15),
-        ft.Text("Training This Week", color="grey", size=12), op_weekly_days_row
-    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, visible=False)
+    # ==========================================
+    # ПОШАГОВОЕ СОЗДАНИЕ МАРШРУТА (WIZARD)
+    # ==========================================
+    create_step = 1
 
-    def handle_op_action():
-        my_id = get_profile_data()["user_id"]
-        target_id = current_other_user_id
-        current_state = op_action_btn.content.value
-        
-        if current_state == "Add Friend":
-            save_data(f"friend_requests/{target_id}/{my_id}", True)
-            show_notify("Friend Request Sent!")
-        elif current_state == "Remove Friend":
-            save_data(f"friends/{my_id}/{target_id}", None, method="DELETE")
-            save_data(f"friends/{target_id}/{my_id}", None, method="DELETE")
-            show_notify("Friend Removed.")
-            
-        refresh_op_view(target_id)
-
-    def refresh_op_view(uid):
-        my_id = get_profile_data()["user_id"]
-        
-        is_friend = fetch_data(f"friends/{my_id}/{uid}")
-        sent_req = fetch_data(f"friend_requests/{uid}/{my_id}")
-        received_req = fetch_data(f"friend_requests/{my_id}/{uid}")
-        
-        if is_friend:
-            op_action_btn.content.value = "Remove Friend"
-            op_action_btn.bgcolor = "red"
-            op_private_lock.visible = False
-            op_private_content.visible = True
-        elif sent_req:
-            op_action_btn.content.value = "Request Sent"
-            op_action_btn.bgcolor = "grey"
-            op_private_lock.visible = True
-            op_private_content.visible = False
-        elif received_req:
-            op_action_btn.content.value = "Check Your Requests"
-            op_action_btn.bgcolor = "orange"
-            op_private_lock.visible = True
-            op_private_content.visible = False
-        else:
-            op_action_btn.content.value = "Add Friend"
-            op_action_btn.bgcolor = "blue"
-            op_private_lock.visible = True
-            op_private_content.visible = False
-            
+    def update_create_ui():
+        step1_col.visible = (create_step == 1)
+        step2_col.visible = (create_step == 2)
+        step3_col.visible = (create_step == 3)
         page.update()
 
-    def open_other_profile(uid, u_data, back_func):
-        my_id = get_profile_data()["user_id"]
-        if uid == my_id:
-            show_home_view()
+    def go_step_1(e): 
+        nonlocal create_step; create_step = 1; update_create_ui()
+
+    def go_step_2(e):
+        if not wall_image.src_base64:
+            show_notify("Please upload a photo first!", True)
             return
-            
-        nonlocal current_other_user_id
-        current_other_user_id = uid
-        
-        op_back_btn.on_click = lambda e: back_func()
-        
-        if u_data.get('avatar_b64'): op_avatar.content = ft.Image(src_base64=u_data['avatar_b64'], width=80, height=80, fit="cover", border_radius=40)
-        else: op_avatar.content = ft.Text("No Img", size=14, color="white")
-        
-        op_name.value = f"@{u_data.get('nickname', 'Unknown')}"
-        op_real_name.value = f"{u_data.get('first_name', '')} {u_data.get('last_name', '')}".strip()
-        op_bio.value = u_data.get("bio", "Climber")
-        
-        history = fetch_data(f"user_ascents/{uid}") or []
-        op_stat_total.value = str(len(history))
-        
-        grades = [a.get("grade") for a in history if a.get("grade") in ALL_GRADES]
-        op_stat_max.value = max(grades, key=lambda x: ALL_GRADES.index(x)) if grades else "-"
-        
-        counts = Counter(a.get("grade") for a in history if a.get("grade"))
-        if counts: op_grade_breakdown.value = " | ".join([f"{g}: {c}" for g, c in sorted(counts.items())])
-        else: op_grade_breakdown.value = "No ascents yet"
-            
-        today = datetime.datetime.now()
-        start_of_week = today - datetime.timedelta(days=today.weekday())
-        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        active_days = set()
-        for a in history:
-            ts = a.get("timestamp", 0)
-            if ts:
-                dt = datetime.datetime.fromtimestamp(ts)
-                if dt >= start_of_week: active_days.add(dt.weekday()) 
-                    
-        for i, day_container in enumerate(op_weekly_days_row.controls):
-            if i in active_days: day_container.bgcolor = "green"; day_container.content.color = "white"
-            else: day_container.bgcolor = "#333333"; day_container.content.color = "grey"
-                
-        refresh_op_view(uid)
-        hide_all_views()
-        other_profile_view.visible = True
-        page.update()
+        nonlocal create_step; create_step = 2; update_create_ui()
 
-    other_profile_view = ft.Column(visible=False, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[
-        ft.Row([op_back_btn]),
-        ft.Row([op_avatar, ft.Container(width=10), ft.Column([op_name, op_real_name, op_bio, op_action_btn])], alignment=ft.MainAxisAlignment.CENTER),
-        ft.Divider(height=20),
-        ft.Row([
-            ft.Card(content=ft.Container(width=150, padding=15, content=ft.Column([ft.Text("Max Grade", size=12, color="grey"), op_stat_max], horizontal_alignment=ft.CrossAxisAlignment.CENTER))), 
-            ft.Card(content=ft.Container(width=150, padding=15, content=ft.Column([ft.Text("Total Ascents", size=12, color="grey"), op_stat_total], horizontal_alignment=ft.CrossAxisAlignment.CENTER)))
-        ], alignment=ft.MainAxisAlignment.CENTER),
-        ft.Container(height=20),
-        op_private_lock,
-        op_private_content
-    ])
+    def go_step_3(e): 
+        nonlocal create_step; create_step = 3; update_create_ui()
 
-    boulder_name = ft.TextField(label="Name (optional)", width=200)
-    boulder_grade = ft.TextField(label="Grade (e.g., 6B+) *", width=170)
-    boulder_author = ft.TextField(label="Author", width=170)
-    boulder_desc = ft.TextField(label="Description", width=300) 
-    wall_image = ft.Image(src="", width=400, height=600, fit="contain")
-    markers_stack = ft.Stack(width=400, height=600, visible=False)
-    save_status = ft.Text(value="", size=14, weight="bold")
+    # Поля для 3 шага (сделали на всю ширину для мобилок)
+    boulder_name = ft.TextField(label="Name (optional)", width=320)
+    boulder_grade = ft.Dropdown(label="Grade (e.g., 6B+) *", options=[ft.dropdown.Option(g) for g in EDIT_GRADES], width=320)
+    boulder_author = ft.TextField(label="Author", width=320)
+    boulder_desc = ft.TextField(label="Description", width=320, multiline=True) 
+
+    wall_image = ft.Image(src="", width=400, height=550, fit="contain")
+    markers_stack = ft.Stack(width=400, height=550)
     color_info = ft.Text(value=f"Mode: Placing holds ({current_color})", size=14, color="grey")
 
-    # ==========================================
-    # ВЕРНУЛИ РАЗДЕЛЕННЫЙ ЭКРАН НА ЧИСТОМ АНГЛИЙСКОМ
-    # ==========================================
     top_upload_zone = ft.Container(
         expand=True, ink=True, border_radius=10, 
         on_click=lambda _: trigger_picker("route"), 
@@ -1058,15 +949,93 @@ def main(page: ft.Page):
         ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), 
         alignment=ft.Alignment(0, 0)
     )
-    
-    image_placeholder = ft.Container(
-        width=400, height=600, bgcolor="#222222", border_radius=10, 
-        content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0), 
-        alignment=ft.Alignment(0, 0)
-    )
+
+    # ШАГ 1: Только огромные кнопки
+    step1_col = ft.Column([
+        ft.Row([create_btn("Cancel", lambda e: show_gym_routes_view(), bgcolor="#333333"), ft.Text("Create Route: Step 1", size=20, weight="bold")], alignment="center"),
+        ft.Container(height=10),
+        ft.Container(
+            width=400, height=600, bgcolor="#222222", border_radius=10, 
+            content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0), 
+            alignment=ft.Alignment(0, 0)
+        )
+    ], horizontal_alignment="center", visible=True)
 
     def change_color(color_name): nonlocal current_color, is_delete_mode; is_delete_mode = False; current_color = color_name; color_info.value = f"Mode: Placing holds ({current_color})"; color_info.color = "grey"; page.update()
     def enable_delete_mode(e): nonlocal is_delete_mode; is_delete_mode = True; color_info.value = "Erase mode: Click a hold to remove it"; color_info.color = "red"; page.update()
+
+    color_buttons = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[
+        create_btn("Start", lambda e: change_color("green"), bgcolor="green"), 
+        create_btn("Route", lambda e: change_color("blue"), bgcolor="blue"), 
+        create_btn("Top", lambda e: change_color("red"), bgcolor="red"), 
+        create_btn("Delete", enable_delete_mode, bgcolor="orange")
+    ])
+
+    # ШАГ 2: Только разметка (Изображение + Кнопки)
+    step2_col = ft.Column([
+        ft.Row([create_btn("Back", go_step_1, bgcolor="#333333"), ft.Text("Step 2: Place Holds", size=20, weight="bold")], alignment="center"),
+        color_buttons,
+        color_info,
+        markers_stack,
+        ft.Container(height=10),
+        create_btn("Next Step ->", go_step_3, bgcolor="blue", width=300, height=50)
+    ], horizontal_alignment="center", visible=False)
+
+    def save_boulder(e):
+        if not boulder_grade.value or not wall_image.src_base64: 
+            show_notify("Please fill Grade and Image!", is_error=True)
+            return
+        show_notify("Saving Route to Cloud...")
+
+        new_id = str(uuid.uuid4())
+        author_name = boulder_author.value if boulder_author.value else get_profile_data().get("name", "Unknown")
+        
+        boulder_data = {
+            "id": new_id, 
+            "name": boulder_name.value if boulder_name.value else "Untitled", 
+            "grade": sanitize_grade(boulder_grade.value),
+            "author": author_name, 
+            "author_id": get_profile_data()["user_id"], 
+            "description": boulder_desc.value, 
+            "image_b64": wall_image.src_base64, 
+            "markers": [{"x": m.left, "y": m.top, "color": m.data} for m in markers_stack.controls[1:] if m.data],
+            "gym_id": current_gym_id, "route_type": current_tab         
+        }
+        save_data(f"boulders/{new_id}", boulder_data)
+
+        boulder_name.value, boulder_grade.value, boulder_desc.value, wall_image.src_base64 = "", "", "", ""
+        markers_stack.controls = [detector]
+        show_gym_routes_view() 
+
+    # ШАГ 3: Чистые детали маршрута
+    step3_col = ft.Column([
+        ft.Row([create_btn("Back", go_step_2, bgcolor="#333333"), ft.Text("Step 3: Details", size=20, weight="bold")], alignment="center"),
+        ft.Container(height=20),
+        boulder_name, 
+        boulder_grade, 
+        boulder_author,
+        boulder_desc,
+        ft.Container(height=20),
+        create_btn("Save Route", save_boulder, bgcolor="purple", width=300, height=50)
+    ], horizontal_alignment="center", visible=False)
+
+    create_view = ft.Column(visible=False, horizontal_alignment="center", controls=[
+        step1_col, step2_col, step3_col
+    ])
+
+    def show_create_wizard():
+        hide_all_views()
+        page.appbar = main_appbar
+        nonlocal create_step
+        create_step = 1
+        wall_image.src_base64 = ""
+        markers_stack.controls = [detector]
+        boulder_name.value = ""
+        boulder_grade.value = ""
+        boulder_desc.value = ""
+        update_create_ui()
+        create_view.visible = True
+        page.update()
 
     def on_image_tap(e):
         if is_delete_mode: return
@@ -1090,34 +1059,9 @@ def main(page: ft.Page):
     detector = ft.GestureDetector(on_tap_down=on_image_tap, content=wall_image)
     markers_stack.controls = [detector]
 
-    def save_boulder(e):
-        if not boulder_grade.value or not wall_image.src_base64: return
-        show_notify("Saving Route to Cloud...")
-
-        new_id = str(uuid.uuid4())
-        author_name = boulder_author.value if boulder_author.value else get_profile_data().get("name", "Unknown")
-        
-        boulder_data = {
-            "id": new_id, 
-            "name": boulder_name.value if boulder_name.value else "Untitled", 
-            "grade": sanitize_grade(boulder_grade.value),
-            "author": author_name, 
-            "author_id": get_profile_data()["user_id"], 
-            "description": boulder_desc.value, 
-            "image_b64": wall_image.src_base64, 
-            "markers": [{"x": m.left, "y": m.top, "color": m.data} for m in markers_stack.controls[1:] if m.data],
-            "gym_id": current_gym_id, "route_type": current_tab         
-        }
-        save_data(f"boulders/{new_id}", boulder_data)
-
-        boulder_name.value, boulder_grade.value, boulder_desc.value, wall_image.src_base64 = "", "", "", ""
-        markers_stack.visible = False; image_placeholder.visible = True
-        show_gym_routes_view() 
-
-    color_buttons = ft.Row(alignment=ft.MainAxisAlignment.CENTER, controls=[create_btn("Start", lambda e: change_color("green"), bgcolor="green"), create_btn("Route", lambda e: change_color("blue"), bgcolor="blue"), create_btn("Top", lambda e: change_color("red"), bgcolor="red"), create_btn("Delete", enable_delete_mode, bgcolor="orange")])
-    save_panel = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[ft.Row([boulder_name, boulder_grade, boulder_author], alignment=ft.MainAxisAlignment.CENTER), ft.Row([boulder_desc, create_btn("Save Route", save_boulder, bgcolor="purple", height=50)], alignment=ft.MainAxisAlignment.CENTER)])
-    create_view = ft.Column(visible=False, horizontal_alignment=ft.CrossAxisAlignment.CENTER, controls=[ft.Row([create_btn("Back", lambda e: show_gym_routes_view(), bgcolor="#333333"), ft.Text("Create Route", size=24, weight="bold")]), save_panel, save_status, color_buttons, color_info, ft.Column([image_placeholder, markers_stack], horizontal_alignment=ft.CrossAxisAlignment.CENTER)])
-
+    # ==========================================
+    # ПРОСМОТР И РЕДАКТИРОВАНИЕ МАРШРУТА
+    # ==========================================
     view_title = ft.Text(value="", size=24, weight="bold")
     view_author_desc = ft.Text(value="", size=14, color="grey", italic=True)
     view_stack = ft.Stack(width=400, height=600)
@@ -1259,7 +1203,7 @@ def main(page: ft.Page):
                 dt = datetime.datetime.fromtimestamp(ts)
                 if dt >= start_of_week: active_days.add(dt.weekday()) 
                     
-        for i, day_container in enumerate(weekly_days_row.controls):
+        for i, day_container in enumerate(op_weekly_days_row.controls):
             if i in active_days:
                 day_container.bgcolor = "green"
                 day_container.content.color = "white"
@@ -1332,12 +1276,6 @@ def main(page: ft.Page):
         page.appbar = main_appbar
         if page.drawer: page.drawer.selected_index = 3
         settings_view.visible = True
-        page.update()
-
-    def show_create_view():
-        hide_all_views()
-        page.appbar = main_appbar
-        create_view.visible = True
         page.update()
 
     page.add(notify_box, login_view, onboarding_view, home_view, friends_view, gyms_list_view, gym_routes_view, create_view, route_view, other_profile_view, settings_view)
