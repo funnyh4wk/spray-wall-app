@@ -14,11 +14,6 @@ import os
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# ==========================================
-# НАШЕ СОБСТВЕННОЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ
-# ==========================================
-SERVER_SESSIONS = {}
-
 def main(page: ft.Page):
     page.title = "Spray Wall App"
     page.vertical_alignment = ft.MainAxisAlignment.START 
@@ -27,11 +22,6 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK 
     page.window_width = 400
     page.window_height = 800
-
-    # Инициализируем хранилище для конкретного пользователя
-    if page.session_id not in SERVER_SESSIONS:
-        SERVER_SESSIONS[page.session_id] = {}
-    my_storage = SERVER_SESSIONS[page.session_id]
 
     FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 
@@ -95,6 +85,9 @@ def main(page: ft.Page):
             page.update()
         threading.Thread(target=hide).start()
 
+    # ==========================================
+    # НАШЕ НЕУБИВАЕМОЕ ХРАНИЛИЩЕ НА ЧИСТОМ PYTHON
+    # ==========================================
     def get_profile_data():
         default_data = {
             "user_id": str(uuid.uuid4()), 
@@ -107,18 +100,20 @@ def main(page: ft.Page):
             "ascents_history": [],
             "is_global_admin": False
         }
-        # ИСПОЛЬЗУЕМ НАШ СЛОВАРЬ ВМЕСТО FLET
-        data = my_storage.get("user_profile")
-        if data:
-            for k, v in default_data.items():
-                if k not in data: data[k] = v
-            return data
         
-        my_storage["user_profile"] = default_data
-        return default_data
+        # Если переменной еще нет в объекте page, создаем её насильно
+        if not hasattr(page, "user_profile_data") or page.user_profile_data is None:
+            page.user_profile_data = default_data
+            
+        # Проверяем, что все поля на месте (на случай старых сохранений)
+        for k, v in default_data.items():
+            if k not in page.user_profile_data:
+                page.user_profile_data[k] = v
+                
+        return page.user_profile_data
 
     def save_profile_data(data):
-        my_storage["user_profile"] = data
+        page.user_profile_data = data
         if "user_id" in data and data.get("name"):
             save_data(f"users/{data['user_id']}", {
                 "nickname": data.get('name', ''),
@@ -188,7 +183,7 @@ def main(page: ft.Page):
         page.update()
 
     def logout_click(e):
-        my_storage["user_profile"] = None
+        page.user_profile_data = None
         page.drawer.open = False 
         show_auth_view()
 
@@ -512,7 +507,7 @@ def main(page: ft.Page):
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        my_storage["user_profile"] = None
+        page.user_profile_data = None
         confirm_dialog.open = False
         show_auth_view()
         show_notify("Account permanently deleted.")
