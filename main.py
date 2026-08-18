@@ -97,17 +97,18 @@ def main(page: ft.Page):
             "ascents_history": [],
             "is_global_admin": False
         }
-        data = page.client_storage.get("user_profile")
+        # ЗАМЕНИЛИ client_storage НА session
+        data = page.session.get("user_profile")
         if data:
             for k, v in default_data.items():
                 if k not in data: data[k] = v
             return data
         
-        page.client_storage.set("user_profile", default_data)
+        page.session.set("user_profile", default_data)
         return default_data
 
     def save_profile_data(data):
-        page.client_storage.set("user_profile", data)
+        page.session.set("user_profile", data)
         if "user_id" in data and data.get("name"):
             save_data(f"users/{data['user_id']}", {
                 "nickname": data.get('name', ''),
@@ -177,7 +178,7 @@ def main(page: ft.Page):
         page.update()
 
     def logout_click(e):
-        page.client_storage.remove("user_profile")
+        page.session.set("user_profile", None)
         page.drawer.open = False 
         show_auth_view()
 
@@ -501,7 +502,7 @@ def main(page: ft.Page):
             save_data(f"friends/{uid}", None, method="DELETE")
             save_data(f"friend_requests/{uid}", None, method="DELETE")
             
-        page.client_storage.remove("user_profile")
+        page.session.set("user_profile", None)
         confirm_dialog.open = False
         show_auth_view()
         show_notify("Account permanently deleted.")
