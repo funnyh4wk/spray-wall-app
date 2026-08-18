@@ -16,9 +16,9 @@ import os
 # Игнорируем проверку SSL
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Создаем папку для временной загрузки фото на сервере
+# Создаем папку для загрузок на сервере, чтобы ничего не падало
 if not os.path.exists("uploads"):
-    os.makedirs("uploads")
+    os.makedirs("uploads", exist_ok=True)
 
 def main(page: ft.Page):
     page.title = "Spray Wall App"
@@ -68,13 +68,19 @@ def main(page: ft.Page):
         if not grade_str: return ""
         return str(grade_str).upper().replace('А', 'A').replace('В', 'B').replace('С', 'C')
 
+    # ИСПРАВЛЕНИЕ #1: Теперь это НАСТОЯЩИЕ кнопки, мобильный браузер их не заблокирует
     def create_btn(text, on_click, bgcolor="blue", color="white", width=None, height=40, visible=True):
-        return ft.Container(
-            content=ft.Text(text, color=color, weight="bold", text_align="center"),
-            bgcolor=bgcolor, padding=10, border_radius=5,
-            width=width, height=height,
-            alignment=ft.Alignment(0, 0),
-            on_click=on_click, ink=True, visible=visible
+        return ft.ElevatedButton(
+            text=text,
+            on_click=on_click,
+            width=width,
+            height=height,
+            visible=visible,
+            style=ft.ButtonStyle(
+                color=color,
+                bgcolor=bgcolor,
+                shape=ft.RoundedRectangleBorder(radius=5),
+            )
         )
 
     notify_text = ft.Text("", color="white", weight="bold", text_align="center")
@@ -92,7 +98,7 @@ def main(page: ft.Page):
         threading.Thread(target=hide).start()
 
     # ==========================================
-    # РАБОЧЕЕ ХРАНИЛИЩЕ БРАУЗЕРА
+    # ИДЕАЛЬНОЕ ХРАНИЛИЩЕ БРАУЗЕРА (ТЫ УЖЕ ПРОВЕРИЛ, ОНО РАБОТАЕТ)
     # ==========================================
     def get_profile_data():
         default_data = {
@@ -140,77 +146,65 @@ def main(page: ft.Page):
         return []
 
     # ==========================================
-    # ГЕНИАЛЬНЫЙ ФИКС КАМЕРЫ И ГАЛЕРЕИ ДЛЯ RENDER
+    # ПУЛЕНЕПРОБИВАЕМАЯ СИСТЕМА ФОТО И КАМЕРЫ С ЛОГАМИ
     # ==========================================
     temp_avatar_b64 = "" 
     file_picker_context = "" 
 
+    def apply_avatar(b64_img):
+        try:
+            nonlocal temp_avatar_b64
+            if file_picker_context == "onboarding":
+                temp_avatar_b64 = b64_img
+                onboarding_avatar.content = ft.Image(src_base64=b64_img, width=100, height=100, fit="cover", border_radius=50)
+            elif file_picker_context == "profile":
+                temp_avatar_b64 = b64_img
+                profile_avatar.content = ft.Image(src_base64=b64_img, width=80, height=80, fit="cover", border_radius=40)
+            elif file_picker_context == "route":
+                wall_image.src_base64 = b64_img
+                image_placeholder.visible = False
+                markers_stack.visible = True
+                markers_stack.controls = [detector]
+            page.update()
+            show_notify("Фото успешно установлено!", is_error=False)
+        except Exception as e:
+            show_notify(f"Ошибка установки фото: {str(e)}", is_error=True)
+
     def on_upload_result(e: ft.FilePickerUploadEvent):
-        nonlocal temp_avatar_b64, file_picker_context
-        # Как только файл успешно загружен на сервер
-        if str(e.progress) == "1.0" or str(e.progress) == "1":
-            file_path = os.path.join("uploads", e.file_name)
-            try:
-                with open(file_path, "rb") as img_file: 
-                    b64_img = base64.b64encode(img_file.read()).decode('utf-8')
-                    
-                if file_picker_context == "onboarding":
-                    temp_avatar_b64 = b64_img
-                    onboarding_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=100, height=100, fit="cover", border_radius=50)
-                elif file_picker_context == "profile":
-                    temp_avatar_b64 = b64_img
-                    profile_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=80, height=80, fit="cover", border_radius=40)
-                elif file_picker_context == "route":
-                    wall_image.src_base64 = b64_img
-                    image_placeholder.visible = False
-                    markers_stack.visible = True
-                    markers_stack.controls = [detector]
-                
-                page.update()
-                show_notify("Успешно загружено!", is_error=False)
-                
-                # Сразу удаляем фото из памяти сервера
+        try:
+            if str(e.progress) == "1.0" or str(e.progress) == "1":
+                file_path = os.path.join("uploads", e.file_name)
                 if os.path.exists(file_path):
-                    os.remove(file_path)
-            except Exception as ex:
-                show_notify("Ошибка обработки фото", is_error=True)
-        elif e.error:
-            show_notify(f"Ошибка: {e.error}", is_error=True)
+                    with open(file_path, "rb") as img_file: 
+                        b64_img = base64.b64encode(img_file.read()).decode('utf-8')
+                    apply_avatar(b64_img)
+                    os.remove(file_path) # Удаляем, чтобы не мусорить на сервере
+                else:
+                    show_notify("Ошибка: Файл не долетел до сервера", is_error=True)
+            elif e.error:
+                show_notify(f"Ошибка загрузки: {e.error}", is_error=True)
+        except Exception as ex:
+            show_notify(f"Ошибка обработки: {str(ex)}", is_error=True)
 
     def on_file_picked(e: ft.FilePickerResultEvent):
-        if e.files and len(e.files) > 0:
-            f = e.files[0]
-            # Если пути нет (это браузер/телефон), загружаем на сервер
-            if not f.path: 
-                show_notify("Загрузка фото...", is_error=False)
-                raw_url = page.get_upload_url(f.name, 600)
+        try:
+            if e.files and len(e.files) > 0:
+                f = e.files[0]
+                show_notify("Фото выбрано. Загружаем...", is_error=False)
                 
-                # ВОТ ЭТОТ ТРЮК ЛЕЧИТ "ТИШИНУ" ТЕЛЕФОНА:
-                # Обрезаем кривой IP-адрес Flet и заставляем браузер использовать родной домен
-                parsed = urllib.parse.urlparse(raw_url)
-                safe_upload_url = f"{parsed.path}?{parsed.query}"
-                
-                global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_upload_url)])
-            else:
-                # Локальный ПК (VS Code)
-                try:
+                # Если запускаем с телефона / веба
+                if not f.path: 
+                    raw_url = page.get_upload_url(f.name, 600)
+                    parsed = urllib.parse.urlparse(raw_url)
+                    safe_url = f"{parsed.path}?{parsed.query}"
+                    global_file_picker.upload([ft.FilePickerUploadFile(f.name, upload_url=safe_url)])
+                else:
+                    # Локальный ПК
                     with open(f.path, "rb") as img_file: 
                         b64_img = base64.b64encode(img_file.read()).decode('utf-8')
-                    nonlocal temp_avatar_b64
-                    if file_picker_context == "onboarding":
-                        temp_avatar_b64 = b64_img
-                        onboarding_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=100, height=100, fit="cover", border_radius=50)
-                    elif file_picker_context == "profile":
-                        temp_avatar_b64 = b64_img
-                        profile_avatar.content = ft.Image(src_base64=temp_avatar_b64, width=80, height=80, fit="cover", border_radius=40)
-                    elif file_picker_context == "route":
-                        wall_image.src_base64 = b64_img
-                        image_placeholder.visible = False
-                        markers_stack.visible = True
-                        markers_stack.controls = [detector]
-                    page.update()
-                except Exception: 
-                    show_notify("Ошибка локального фото", is_error=True)
+                    apply_avatar(b64_img)
+        except Exception as ex:
+            show_notify(f"Ошибка выбора: {str(ex)}", is_error=True)
 
     global_file_picker = ft.FilePicker()
     global_file_picker.on_result = on_file_picked
@@ -218,10 +212,13 @@ def main(page: ft.Page):
     page.overlay.append(global_file_picker)
 
     def trigger_picker(context):
-        nonlocal file_picker_context
-        file_picker_context = context
-        # IMAGE заставит телефон предложить выбор: Камера или Галерея!
-        global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE)
+        try:
+            nonlocal file_picker_context
+            file_picker_context = context
+            # IMAGE заставит телефон выдать выбор: Сделать фото камерой или выбрать из галереи!
+            global_file_picker.pick_files(file_type=ft.FilePickerFileType.IMAGE, allow_multiple=False)
+        except Exception as e:
+            show_notify(f"Ошибка камеры: {str(e)}", is_error=True)
 
     def hash_password(pwd):
         return hashlib.sha256(pwd.encode()).hexdigest()
@@ -1014,9 +1011,27 @@ def main(page: ft.Page):
     save_status = ft.Text(value="", size=14, weight="bold")
     color_info = ft.Text(value=f"Mode: Placing holds ({current_color})", size=14, color="grey")
 
-    top_upload_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Gallery", size=24, weight="bold", color="grey"), ft.Text("Upload from device", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
-    bottom_camera_zone = ft.Container(expand=True, ink=True, border_radius=10, on_click=lambda _: trigger_picker("route"), content=ft.Column([ft.Text("Camera", size=24, weight="bold", color="grey"), ft.Text("Take a photo", color="grey")], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), alignment=ft.Alignment(0, 0))
-    image_placeholder = ft.Container(width=400, height=600, bgcolor="#222222", border_radius=10, content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], spacing=0))
+    # ИСПРАВЛЕНИЕ #2: Заменили прозрачные квадраты на настоящие кнопки камеры
+    top_upload_zone = ft.ElevatedButton(
+        text="📂 Загрузить из галереи", 
+        on_click=lambda _: trigger_picker("route"), 
+        height=80, 
+        width=300,
+        style=ft.ButtonStyle(bgcolor="#333333", color="white", shape=ft.RoundedRectangleBorder(radius=10))
+    )
+    bottom_camera_zone = ft.ElevatedButton(
+        text="📷 Сделать фото", 
+        on_click=lambda _: trigger_picker("route"), 
+        height=80, 
+        width=300,
+        style=ft.ButtonStyle(bgcolor="#333333", color="white", shape=ft.RoundedRectangleBorder(radius=10))
+    )
+    
+    image_placeholder = ft.Container(
+        width=400, height=600, bgcolor="#222222", border_radius=10, 
+        content=ft.Column(controls=[top_upload_zone, ft.Divider(height=1, color="#444444"), bottom_camera_zone], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER), 
+        alignment=ft.Alignment(0, 0)
+    )
 
     def change_color(color_name): nonlocal current_color, is_delete_mode; is_delete_mode = False; current_color = color_name; color_info.value = f"Mode: Placing holds ({current_color})"; color_info.color = "grey"; page.update()
     def enable_delete_mode(e): nonlocal is_delete_mode; is_delete_mode = True; color_info.value = "Erase mode: Click a hold to remove it"; color_info.color = "red"; page.update()
@@ -1303,5 +1318,4 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    # ДОБАВЛЕН upload_dir="uploads" ЧТОБЫ WEB ПРИНИМАЛ ФАЙЛЫ
     ft.app(target=main, host="0.0.0.0", port=port, upload_dir="uploads")
