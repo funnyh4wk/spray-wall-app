@@ -45,7 +45,7 @@
         <div id="view-auth" class="flex flex-col items-center mt-20 hidden-view">
             <h2 id="auth-title" class="text-3xl font-bold mb-8">Login</h2>
             
-            <input id="auth-email" type="text" placeholder="Email (or admin)" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            <input id="auth-email" type="text" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
             
             <!-- Поле пароля с ДИНАМИЧНЫМ глазиком -->
             <div class="relative w-full mb-6">
@@ -336,7 +336,6 @@
             document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
         }
 
-        // НОВАЯ ФУНКЦИЯ ДЛЯ ГЛАЗИКА С ЗАМЕНОЙ ИКОНКИ
         function togglePassword() {
             const pwdInput = document.getElementById('auth-password');
             const eyeOpen = document.getElementById('eye-open');
@@ -409,7 +408,6 @@
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
             
-            // Сбрасываем глазик при выходе
             document.getElementById('auth-password').type = 'password';
             document.getElementById('eye-open').classList.remove('hidden-view');
             document.getElementById('eye-closed').classList.add('hidden-view');
