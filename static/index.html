@@ -225,7 +225,8 @@
                     <span class="font-bold text-gray-300">Upload wall photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
-                <button onclick="switchTab('official')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4 transition-colors">Cancel</button>
+                <!-- ИСПРАВЛЕНА КНОПКА ОТМЕНЫ (CANCEL) -->
+                <button onclick="navigate('gym-routes')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4 transition-colors">Cancel</button>
             </div>
 
             <!-- Step 2: Place Holds -->
@@ -877,7 +878,7 @@
                                 <p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}${secName}</p>
                                 <p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${ascentsCount}</p>
                             </div>
-                            ${isDone ? '<span class="text-green-500 font-bold text-xl">✓</span>' : ''}
+                            ${isDone ? '<span class="text-green-500 font-bold text-xl">[ DONE ]</span>' : ''}
                         </div>`;
                 }
             }
