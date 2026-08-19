@@ -218,6 +218,7 @@
                 <div id="climbers-list-container" class="space-y-2"></div>
             </div>
 
+            <!-- ADMIN TAB WITH NEW DELETE GYM BUTTON -->
             <div id="tab-content-admin" class="w-full space-y-3 hidden-view">
                 <h3 class="font-bold text-orange-400">Gym Setters:</h3>
                 <div id="admin-setters-list" class="space-y-2"></div>
@@ -228,6 +229,14 @@
                     <button onclick="searchUsersForAdmin()" class="bg-blue-600 hover:bg-blue-500 px-4 rounded font-bold transition-colors">Search</button>
                 </div>
                 <div id="admin-search-results" class="space-y-2 mt-2"></div>
+
+                <!-- DELETE GYM BUTTON (DANGER ZONE) -->
+                <hr class="border-gray-700 my-4">
+                <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-4 rounded-lg mt-4">
+                    <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
+                    <p class="text-gray-400 text-xs mb-3">Permanently delete this gym, including all routes, sectors, and roles.</p>
+                    <button onclick="deleteCurrentGym()" class="w-full bg-red-600 hover:bg-red-500 font-bold py-2 rounded transition-colors text-sm">Delete Gym</button>
+                </div>
             </div>
         </div>
 
@@ -432,7 +441,7 @@
             else if(viewName === 'gyms') { loadGymsView(); showView('view-gyms'); }
             else if(viewName === 'gym-routes') { showView('view-gym-routes'); switchTab(currentTab); }
             else if(viewName === 'settings') { showView('view-settings'); }
-            else if(viewName === 'super-admin') { showView('view-super-admin'); } // <--- СЕКРЕТНАЯ ВКЛАДКА
+            else if(viewName === 'super-admin') { showView('view-super-admin'); }
         }
 
         // --- AUTH С FIREBASE ---
@@ -704,7 +713,6 @@
             document.getElementById('profile-bio').innerText = profile.bio || "";
             if(profile.avatar_url) document.getElementById('profile-avatar').src = profile.avatar_url;
 
-            // Показываем секретную кнопку в меню, только если ты Глобал Админ
             if(profile.is_global_admin) {
                 document.getElementById('nav-super-admin').classList.remove('hidden-view');
             } else {
@@ -779,7 +787,6 @@
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             
-            // Кнопка "Создать зал" показывается только Тебе ИЛИ Директорам залов
             if(profile.is_global_admin || profile.can_create_gyms) {
                 document.getElementById('create-gym-btn').classList.remove('hidden-view');
             } else {
@@ -882,6 +889,29 @@
             showNotify("Sector deleted!"); currentSector = 'all'; await loadSectors(); loadGallery();
         }
 
+        // --- УДАЛЕНИЕ ЦЕЛОГО ЗАЛА (ДЛЯ АДМИНА) ---
+        async function deleteCurrentGym() {
+            if(!confirm("Are you SURE you want to delete this ENTIRE GYM? All sectors, routes, and roles will be lost forever! This cannot be undone.")) return;
+            showNotify("Deleting gym...");
+            
+            // 1. Сносим все трассы и фотки
+            const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
+            for(let bId in boulders) {
+                if(boulders[bId].gym_id === currentGymId) {
+                    await apiCall('/api/db/save', { path: `boulders/${bId}`, method: 'DELETE' });
+                    if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
+                }
+            }
+            
+            // 2. Сносим сектора, роли и сам зал
+            await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}`, method: 'DELETE' });
+            await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}`, method: 'DELETE' });
+            await apiCall('/api/db/save', { path: `gyms/${currentGymId}`, method: 'DELETE' });
+            
+            showNotify("Gym deleted successfully!");
+            navigate('gyms');
+        }
+
         function switchTab(tabName) {
             currentTab = tabName;
             ['official', 'custom', 'climbers', 'admin'].forEach(t => {
@@ -932,7 +962,7 @@
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No ${currentTab} routes here yet.</p>`;
         }
 
-        // --- CLIMBERS TAB (Leaderboard & Search) ---
+        // --- CLIMBERS TAB ---
         async function loadGymClimbers() {
             const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
@@ -1009,7 +1039,7 @@
 
         async function setGymRole(uid, role) { await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role }); showNotify("Role updated!"); loadAdminPanel(); }
 
-        // --- CREATE ROUTE (WIZARD) ---
+        // --- CREATE ROUTE ---
         function startCreateRoute() {
             wizardMarkers = []; document.getElementById('wizard-wall-img').src = '';
             const secSelect = document.getElementById('route-sector'); secSelect.innerHTML = '';
