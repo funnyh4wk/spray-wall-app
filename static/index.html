@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spray Wall App</title>
-    <!-- ПОДКЛЮЧАЕМ ПАСПОРТ ПРИЛОЖЕНИЯ -->
+    
+    <!-- === ПОДКЛЮЧАЕМ PWA ДЛЯ ANDROID === -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#111827">
-    <!-- Для Айфонов -->
+    <!-- === ДЛЯ IPHONE === -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -28,7 +29,7 @@
     <div id="app-bar" class="w-full max-w-md bg-black p-4 flex items-center justify-between hidden-view shadow-md sticky top-0 z-40">
         <button onclick="toggleMenu()" class="text-xl font-bold w-1/4 text-left">Menu</button>
         <h1 id="app-title" class="text-lg font-bold w-1/2 text-center">Spray Wall</h1>
-        <div class="w-1/4"></div> <!-- Пустой блок, чтобы заголовок был по центру, Logout убран в Settings -->
+        <div class="w-1/4"></div>
     </div>
 
     <!-- DRAWER MENU -->
@@ -285,7 +286,6 @@
                     <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
                 </div>
             </div>
-            <!-- УМНАЯ КНОПКА ВОЗВРАТА -->
             <button onclick="navigate(profileBackTarget)" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm transition-colors">Back</button>
         </div>
 
@@ -309,13 +309,20 @@
     </div>
 
     <!-- JAVASCRIPT LOGIC -->
+    <!-- === СКРИПТ ДЛЯ SERVICE WORKER === -->
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+
         const ALL_GRADES = ["6A", "6A+", "6B", "6B+", "6C", "7A", "7A+", "7B", "7B+", "7C", "8A"];
         let currentGymId = null, currentGymRole = 'user', currentTab = 'official';
         let wizardColor = 'green', wizardMarkers = [], currentBoulderId = null, currentOtherUserId = null;
         let gymSectors = {}; let currentSector = 'all';
         let currentClimbersData = [];
-        let profileBackTarget = 'home'; // <-- Переменная для умного возврата
+        let profileBackTarget = 'home'; 
 
         function showNotify(msg, isError = false) {
             const box = document.getElementById('notify-box');
@@ -355,7 +362,7 @@
             else if(viewName === 'gyms') { loadGymsView(); showView('view-gyms'); }
             else if(viewName === 'gym-routes') { 
                 showView('view-gym-routes'); 
-                switchTab(currentTab); // <-- Обновленный вызов, чтобы страница корректно перерисовала нужную вкладку
+                switchTab(currentTab); 
             }
             else if(viewName === 'settings') { showView('view-settings'); }
         }
@@ -609,7 +616,6 @@
             if(Object.keys(friends).length === 0) { list.innerHTML = '<p class="text-gray-500 text-center mt-4">No friends yet</p>'; return; }
             for(let fId in friends) {
                 const u = allUsers[fId] || {};
-                // ПЕРЕДАЕМ 'friends' В openOtherProfile ДЛЯ КНОПКИ BACK
                 list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`;
             }
         }
@@ -867,7 +873,6 @@
                     else if (rank === 2) rankColor = "text-gray-300 font-extrabold";
                     else if (rank === 3) rankColor = "text-orange-400 font-extrabold";
 
-                    // ПЕРЕДАЕМ 'gym-routes' В openOtherProfile ДЛЯ КНОПКИ BACK
                     container.innerHTML += `
                         <div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors">
                             <div class="flex items-center space-x-3">
@@ -1072,7 +1077,7 @@
 
         // --- OTHER PROFILE С УМНОЙ КНОПКОЙ ВОЗВРАТА ---
         async function openOtherProfile(uid, source = 'home') {
-            profileBackTarget = source; // Запоминаем, откуда пришли (friends или gym-routes)
+            profileBackTarget = source; 
             currentOtherUserId = uid;
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             
