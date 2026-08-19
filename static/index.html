@@ -17,10 +17,10 @@
     <div id="notify-box" class="fixed top-5 bg-green-500 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50"></div>
 
     <!-- APP BAR -->
-    <div id="app-bar" class="w-full max-w-md bg-black p-4 flex justify-between items-center hidden-view shadow-md sticky top-0 z-40">
-        <button onclick="toggleMenu()" class="text-xl font-bold">☰ Menu</button>
-        <h1 id="app-title" class="text-lg font-bold">Spray Wall</h1>
-        <button onclick="logout()" class="text-red-500 font-bold text-sm">Logout</button>
+    <div id="app-bar" class="w-full max-w-md bg-black p-4 flex items-center justify-between hidden-view shadow-md sticky top-0 z-40">
+        <button onclick="toggleMenu()" class="text-xl font-bold w-1/4 text-left">☰ Menu</button>
+        <h1 id="app-title" class="text-lg font-bold w-1/2 text-center">Spray Wall</h1>
+        <div class="w-1/4"></div> <!-- Spacer чтобы заголовок был ровно по центру -->
     </div>
 
     <!-- DRAWER MENU -->
@@ -271,6 +271,15 @@
         <!-- 9. SETTINGS -->
         <div id="view-settings" class="flex flex-col items-center hidden-view w-full">
             <h2 class="text-2xl font-bold mb-6">Settings</h2>
+            
+            <!-- Новый блок Account Actions с Logout -->
+            <div class="w-full bg-gray-800 p-5 rounded-lg mb-6">
+                <h3 class="font-bold mb-2">Account Actions</h3>
+                <p class="text-gray-400 text-xs mb-4">Sign out of your current session on this device.</p>
+                <button onclick="logout()" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded transition-colors">Logout</button>
+            </div>
+
+            <!-- Danger Zone -->
             <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-5 rounded-lg">
                 <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
                 <p class="text-gray-400 text-xs mb-4">Delete account and all associated data permanently.</p>
