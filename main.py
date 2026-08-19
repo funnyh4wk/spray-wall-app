@@ -11,19 +11,14 @@ import hashlib
 
 app = FastAPI()
 
-# Твои доступы (я всё перенес)
 FIREBASE_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app/"
 CLOUDINARY_CLOUD_NAME = "hz7ii1gc"
 CLOUDINARY_API_KEY = "228359521481238"
 CLOUDINARY_API_SECRET = "MvS2MySwEvuQRN3n-qG6bKdK-Bg"
 
-# Защита папки
 if not os.path.exists("static"):
     os.makedirs("static")
 
-# ==========================================
-# 1. МОСТ ДЛЯ БАЗЫ ДАННЫХ FIREBASE
-# ==========================================
 @app.post("/api/db/get")
 async def get_db(request: Request):
     data = await request.json()
@@ -54,9 +49,6 @@ async def save_db(request: Request):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# ==========================================
-# 2. МОСТ ДЛЯ ФОТОК В CLOUDINARY
-# ==========================================
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...)):
     try:
@@ -101,9 +93,6 @@ async def delete_image(request: Request):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# ==========================================
-# 3. РАЗДАЧА ИНТЕРФЕЙСА (Должно быть в самом конце!)
-# ==========================================
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
