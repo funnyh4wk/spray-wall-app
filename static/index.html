@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Эта строчка делает из сайта мобильное приложение -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spray Wall</title>
+    <!-- Подключаем стили Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+
+    <h1 class="text-3xl font-bold mb-8">PWA Camera Test</h1>
+
+    <!-- ВОТ ОНА, РОДНАЯ КНОПКА, КОТОРАЯ РАБОТАЕТ ВЕЗДЕ -->
+    <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg cursor-pointer shadow-lg transition-transform active:scale-95">
+        📸 Открыть Камеру / Галерею
+        <!-- hidden прячет стандартную уродливую кнопку браузера, оставляя только красивую обертку -->
+        <input type="file" accept="image/*" class="hidden" id="photoInput">
+    </label>
+
+    <!-- Блок, где появится фотка -->
+    <div id="preview" class="mt-8 hidden flex-col items-center">
+        <p class="text-green-400 font-bold mb-4 text-xl">Работает, сука!</p>
+        <img id="imgPreview" src="" class="w-64 h-64 object-cover rounded-lg border-4 border-green-400 shadow-2xl">
+    </div>
+
+    <script>
+        // Этот маленький JavaScript ловит фотку от телефона и сразу показывает на экране
+        document.getElementById('photoInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('imgPreview').src = e.target.result;
+                    document.getElementById('preview').classList.remove('hidden');
+                    document.getElementById('preview').classList.add('flex');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

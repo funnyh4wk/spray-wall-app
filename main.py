@@ -5,7 +5,11 @@ import os
 
 app = FastAPI()
 
-# Говорим серверу: "Возьми папку static и покажи её всему интернету"
+# ГЕНИАЛЬНЫЙ ФИКС: Если папки static почему-то нет, сервер создаст её сам и не упадет!
+if not os.path.exists("static"):
+    os.makedirs("static")
+
+# Говорим серверу раздавать эту папку
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
