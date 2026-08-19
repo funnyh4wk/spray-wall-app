@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spray Wall App</title>
-    
-    <!-- === ПОДКЛЮЧАЕМ PWA ДЛЯ ANDROID === -->
+    <!-- === PWA SETUP === -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#111827">
-    <!-- === ДЛЯ IPHONE === -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -29,7 +27,7 @@
     <div id="app-bar" class="w-full max-w-md bg-black p-4 flex items-center justify-between hidden-view shadow-md sticky top-0 z-40">
         <button onclick="toggleMenu()" class="text-xl font-bold w-1/4 text-left">Menu</button>
         <h1 id="app-title" class="text-lg font-bold w-1/2 text-center">Spray Wall</h1>
-        <div class="w-1/4"></div>
+        <div class="w-1/4"></div> <!-- Пустой блок для выравнивания заголовка -->
     </div>
 
     <!-- DRAWER MENU -->
@@ -59,7 +57,9 @@
             <div class="relative w-full mb-6">
                 <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
                 <button onclick="togglePassword()" type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
+                    <!-- Глаз открыт -->
                     <svg id="eye-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    <!-- Глаз закрыт -->
                     <svg id="eye-closed" class="w-6 h-6 hidden-view" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
                 </button>
             </div>
@@ -124,9 +124,15 @@
                 <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="stat-max" class="text-xl font-bold text-red-500">-</p></div>
                 <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="stat-total" class="text-xl font-bold text-green-500">0</p></div>
             </div>
-            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3 text-center">
-                <p class="text-gray-400 text-xs uppercase mb-1">Grade Breakdown</p>
-                <p id="stat-breakdown" class="text-sm font-bold text-orange-400">No ascents yet</p>
+            
+            <!-- ГРАФИК (CHART) -->
+            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
+                </div>
+                <div id="stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full">
+                    <!-- Сюда JS вставит столбики -->
+                </div>
             </div>
         </div>
 
@@ -187,7 +193,7 @@
             <!-- Gym Tabs Content -->
             <div id="tab-content-gallery" class="w-full space-y-3"></div>
             
-            <!-- CLIMBERS TAB -->
+            <!-- CLIMBERS TAB (Search & Leaderboard) -->
             <div id="tab-content-climbers" class="w-full hidden-view">
                 <div class="relative w-full mb-4">
                     <input id="climbers-search" oninput="renderClimbers()" placeholder="Search climbers by name, email..." class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 outline-none focus:border-blue-500 text-sm">
@@ -241,13 +247,22 @@
                 </div>
             </div>
 
-            <!-- Step 3: Route Details -->
+            <!-- Step 3: Route Details (French Grades) -->
             <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
                 <select id="route-sector" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500 hidden-view"></select>
                 <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
+                
                 <select id="route-grade" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
-                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="8A">8A</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
+                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option>
+                    <option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
+                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option>
+                    <option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
+                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option>
+                    <option value="8B+">8B+</option><option value="8C">8C</option>
                 </select>
+
                 <textarea id="route-desc" placeholder="Description" rows="3" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500"></textarea>
                 <div class="flex space-x-2 mt-2">
                     <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
@@ -286,6 +301,17 @@
                     <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
                 </div>
             </div>
+
+            <!-- ГРАФИК ДРУГОГО ПРОФИЛЯ -->
+            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
+                </div>
+                <div id="op-stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full">
+                    <!-- Сюда JS вставит столбики -->
+                </div>
+            </div>
+
             <button onclick="navigate(profileBackTarget)" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm transition-colors">Back</button>
         </div>
 
@@ -309,15 +335,21 @@
     </div>
 
     <!-- JAVASCRIPT LOGIC -->
-    <!-- === СКРИПТ ДЛЯ SERVICE WORKER === -->
     <script>
+        // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
+                navigator.serviceWorker.register('sw.js').catch(()=>{});
             });
         }
 
-        const ALL_GRADES = ["6A", "6A+", "6B", "6B+", "6C", "7A", "7A+", "7B", "7B+", "7C", "8A"];
+        const ALL_GRADES = [
+            "1", "2", "3", "4", "5", "5+", 
+            "6A", "6A+", "6B", "6B+", "6C", "6C+", 
+            "7A", "7A+", "7B", "7B+", "7C", "7C+", 
+            "8A", "8A+", "8B", "8B+", "8C"
+        ];
+        
         let currentGymId = null, currentGymRole = 'user', currentTab = 'official';
         let wizardColor = 'green', wizardMarkers = [], currentBoulderId = null, currentOtherUserId = null;
         let gymSectors = {}; let currentSector = 'all';
@@ -333,8 +365,10 @@
         }
 
         async function apiCall(endpoint, payload = {}) {
-            const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            return await res.json();
+            try {
+                const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                return await res.json();
+            } catch(e) { return null; }
         }
 
         function toggleMenu() {
@@ -537,6 +571,36 @@
             showNotify("Profile updated!");
         }
 
+        // --- BAR CHART RENDERER ---
+        function renderGradeChart(containerId, gradesArray) {
+            const chartContainer = document.getElementById(containerId);
+            chartContainer.innerHTML = '';
+            
+            const counts = {};
+            gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
+
+            if (Object.keys(counts).length === 0) {
+                chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-sm">No ascents yet</p>';
+                return;
+            }
+
+            const maxCount = Math.max(...Object.values(counts));
+            const sortedGrades = Object.keys(counts).sort((a,b) => ALL_GRADES.indexOf(a) - ALL_GRADES.indexOf(b));
+
+            sortedGrades.forEach(grade => {
+                const count = counts[grade];
+                const heightPercent = (count / maxCount) * 100;
+                
+                chartContainer.innerHTML += `
+                    <div class="flex flex-col items-center flex-1 min-w-[24px]">
+                        <span class="text-[10px] text-gray-400 mb-1">${count}</span>
+                        <div class="w-full bg-red-500 rounded-t-sm transition-all duration-500 hover:bg-red-400" style="height: ${heightPercent}%"></div>
+                        <span class="text-[10px] font-bold mt-1 text-gray-300">${grade}</span>
+                    </div>
+                `;
+            });
+        }
+
         // --- HOME / PROFILE DATA ---
         async function loadHomeView() {
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
@@ -553,11 +617,8 @@
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
             
-            const counts = {};
-            grades.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
-            const breakdownStr = Object.entries(counts).sort((a,b) => ALL_GRADES.indexOf(a[0]) - ALL_GRADES.indexOf(b[0])).map(e => `${e[0]}: ${e[1]}`).join(' | ');
-            document.getElementById('stat-breakdown').innerText = breakdownStr || "No ascents yet";
-
+            renderGradeChart('stat-chart', grades);
+            
             loadFriendRequests();
         }
 
@@ -816,13 +877,14 @@
                                 <p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}${secName}</p>
                                 <p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${ascentsCount}</p>
                             </div>
-                            ${isDone ? '<span class="text-green-500 font-bold text-xl">[ DONE ]</span>' : ''}
+                            ${isDone ? '<span class="text-green-500 font-bold text-xl">✓</span>' : ''}
                         </div>`;
                 }
             }
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No ${currentTab} routes here yet.</p>`;
         }
 
+        // --- CLIMBERS TAB (Leaderboard & Search) ---
         async function loadGymClimbers() {
             const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
@@ -834,6 +896,7 @@
                 const u = allUsers[uid] || {};
                 const history = allAscents[uid] || [];
                 const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+                
                 const maxGradeIdx = grades.length ? Math.max(...grades.map(g => ALL_GRADES.indexOf(g))) : -1;
                 const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : '-';
                 const totalAscents = grades.length;
@@ -1075,7 +1138,7 @@
             navigate('gym-routes');
         }
 
-        // --- OTHER PROFILE С УМНОЙ КНОПКОЙ ВОЗВРАТА ---
+        // --- OTHER PROFILE ---
         async function openOtherProfile(uid, source = 'home') {
             profileBackTarget = source; 
             currentOtherUserId = uid;
@@ -1094,6 +1157,8 @@
             document.getElementById('op-stat-total').innerText = history.length;
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('op-stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
+
+            renderGradeChart('op-stat-chart', grades);
 
             const isFriend = await apiCall('/api/db/get', { path: `friends/${profile.user_id}/${uid}` });
             const sentReq = await apiCall('/api/db/get', { path: `friend_requests/${uid}/${profile.user_id}` });
