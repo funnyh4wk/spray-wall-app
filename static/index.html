@@ -2,43 +2,212 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Эта строчка делает из сайта мобильное приложение -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spray Wall</title>
-    <!-- Подключаем стили Tailwind -->
+    <title>Spray Wall App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Прячем элементы по умолчанию */
+        .hidden-view { display: none !important; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen">
+<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center">
 
-    <h1 class="text-3xl font-bold mb-8">PWA Camera Test</h1>
-
-    <!-- ВОТ ОНА, РОДНАЯ КНОПКА, КОТОРАЯ РАБОТАЕТ ВЕЗДЕ -->
-    <label class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg cursor-pointer shadow-lg transition-transform active:scale-95">
-        📸 Открыть Камеру / Галерею
-        <!-- hidden прячет стандартную уродливую кнопку браузера, оставляя только красивую обертку -->
-        <input type="file" accept="image/*" class="hidden" id="photoInput">
-    </label>
-
-    <!-- Блок, где появится фотка -->
-    <div id="preview" class="mt-8 hidden flex-col items-center">
-        <p class="text-green-400 font-bold mb-4 text-xl">Работает, сука!</p>
-        <img id="imgPreview" src="" class="w-64 h-64 object-cover rounded-lg border-4 border-green-400 shadow-2xl">
+    <!-- Всплывающее уведомление -->
+    <div id="notify-box" class="fixed top-5 bg-green-500 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50">
+        Уведомление
     </div>
 
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <div id="app-bar" class="w-full max-w-md bg-black p-4 flex justify-between items-center hidden-view shadow-md">
+        <h1 class="text-xl font-bold">Spray Wall App</h1>
+        <button onclick="logout()" class="text-red-500 font-bold text-sm">Выйти</button>
+    </div>
+
+    <!-- КОНТЕЙНЕР ПРИЛОЖЕНИЯ -->
+    <div class="w-full max-w-md p-4 flex-1 flex flex-col">
+
+        <!-- ЭКРАН АВТОРИЗАЦИИ -->
+        <div id="view-auth" class="flex flex-col items-center mt-20 hidden-view">
+            <h2 id="auth-title" class="text-3xl font-bold mb-8">Вход</h2>
+            <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            <input id="auth-password" type="password" placeholder="Пароль" class="w-full p-3 mb-6 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            
+            <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg shadow-lg mb-4">Войти</button>
+            <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm">Нет аккаунта? Зарегистрироваться</button>
+        </div>
+
+        <!-- ЭКРАН ПРОФИЛЯ (ГЛАВНАЯ) -->
+        <div id="view-home" class="flex flex-col items-center hidden-view">
+            <!-- Аватарка с кнопкой загрузки -->
+            <label class="relative cursor-pointer group mt-6">
+                <img id="profile-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg">
+                <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-2xl">📸</span>
+                </div>
+                <input type="file" accept="image/*" class="hidden" id="avatar-upload">
+            </label>
+            
+            <h2 id="profile-name" class="text-2xl font-bold mt-4">Имя</h2>
+            <p id="profile-bio" class="text-gray-400 text-sm">Bouldering Enthusiast</p>
+            
+            <div class="w-full bg-gray-800 rounded-lg p-4 mt-8 flex justify-around">
+                <div class="text-center">
+                    <p class="text-gray-400 text-xs uppercase">Макс Категория</p>
+                    <p class="text-xl font-bold text-red-500">-</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-400 text-xs uppercase">Пройдено</p>
+                    <p class="text-xl font-bold text-green-500">0</p>
+                </div>
+            </div>
+            
+            <p class="text-gray-500 mt-10 text-center text-sm">Остальной функционал (залы и маршруты) загружается...</p>
+        </div>
+
+    </div>
+
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ (JAVASCRIPT) -->
     <script>
-        // Этот маленький JavaScript ловит фотку от телефона и сразу показывает на экране
-        document.getElementById('photoInput').addEventListener('change', function(event) {
+        // --- УТИЛИТЫ ---
+        function showNotify(msg, isError = false) {
+            const box = document.getElementById('notify-box');
+            box.innerText = msg;
+            box.className = `fixed top-5 px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 z-50 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            box.style.opacity = '1';
+            setTimeout(() => box.style.opacity = '0', 3000);
+        }
+
+        // Общение с нашим Python-сервером
+        async function apiCall(endpoint, payload = {}) {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            return await res.json();
+        }
+
+        // --- НАВИГАЦИЯ ---
+        function showView(viewId) {
+            document.querySelectorAll('.w-full.max-w-md > div[id^="view-"]').forEach(el => el.classList.add('hidden-view'));
+            document.getElementById(viewId).classList.remove('hidden-view');
+            
+            const appBar = document.getElementById('app-bar');
+            if(viewId === 'view-auth') appBar.classList.add('hidden-view');
+            else appBar.classList.remove('hidden-view');
+        }
+
+        // --- АВТОРИЗАЦИЯ ---
+        let isLoginMode = true;
+        function switchAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-title').innerText = isLoginMode ? "Вход" : "Регистрация";
+            document.getElementById('auth-btn').innerText = isLoginMode ? "Войти" : "Создать аккаунт";
+            document.getElementById('auth-switch').innerText = isLoginMode ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти";
+        }
+
+        async function processAuth() {
+            const email = document.getElementById('auth-email').value.trim().toLowerCase().replace(/\./g, ',');
+            const pwd = document.getElementById('auth-password').value.trim();
+            if(!email || !pwd) return showNotify("Заполните все поля", true);
+
+            // Простое хеширование пароля на клиенте (для совместимости со старой базой)
+            const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+            const hashedPwd = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+            if (!isLoginMode) {
+                // Регистрация
+                const existing = await apiCall('/api/db/get', { path: `auth_users/${email}` });
+                if(existing) return showNotify("Email уже занят!", true);
+                
+                const newUid = crypto.randomUUID();
+                await apiCall('/api/db/save', { path: `auth_users/${email}`, payload: { uid: newUid, password: hashedPwd } });
+                
+                const profile = { user_id: newUid, email: email, name: `User_${newUid.substring(0,5)}`, bio: "Bouldering Enthusiast", avatar_url: "" };
+                await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
+                
+                localStorage.setItem('user_profile', JSON.stringify(profile));
+                loadProfileUi();
+                showView('view-home');
+                showNotify("Аккаунт создан!");
+            } else {
+                // Вход
+                const userCreds = await apiCall('/api/db/get', { path: `auth_users/${email}` });
+                if(!userCreds || userCreds.password !== hashedPwd) return showNotify("Неверный email или пароль", true);
+                
+                const profile = await apiCall('/api/db/get', { path: `users/${userCreds.uid}` });
+                localStorage.setItem('user_profile', JSON.stringify(profile));
+                loadProfileUi();
+                showView('view-home');
+                showNotify("С возвращением!");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user_profile');
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-password').value = '';
+            showView('view-auth');
+        }
+
+        // --- ПРОФИЛЬ И КАМЕРА ---
+        function loadProfileUi() {
+            const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+            document.getElementById('profile-name').innerText = profile.name || "Без имени";
+            document.getElementById('profile-bio').innerText = profile.bio || "Bouldering Enthusiast";
+            if (profile.avatar_url) {
+                document.getElementById('profile-avatar').src = profile.avatar_url;
+            }
+        }
+
+        // ТО САМОЕ БРОНЕБОЙНОЕ РЕШЕНИЕ ДЛЯ ЗАГРУЗКИ ФОТО
+        document.getElementById('avatar-upload').addEventListener('change', async function(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('imgPreview').src = e.target.result;
-                    document.getElementById('preview').classList.remove('hidden');
-                    document.getElementById('preview').classList.add('flex');
+            if (!file) return;
+
+            showNotify("Грузим фотку в облако... ⏳");
+            
+            // 1. Упаковываем файл для отправки
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                // 2. Отправляем на наш Python-сервер
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.status === "ok") {
+                    const profile = JSON.parse(localStorage.getItem('user_profile'));
+                    
+                    // Удаляем старую фотку, если была
+                    if(profile.avatar_url) {
+                        apiCall('/api/delete_image', { url: profile.avatar_url });
+                    }
+
+                    // Сохраняем новую
+                    profile.avatar_url = result.url;
+                    localStorage.setItem('user_profile', JSON.stringify(profile));
+                    await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: result.url } });
+                    
+                    loadProfileUi();
+                    showNotify("Аватарка обновлена! 🚀");
+                } else {
+                    showNotify("Ошибка загрузки", true);
                 }
-                reader.readAsDataURL(file);
+            } catch (e) {
+                showNotify("Ошибка сети", true);
             }
         });
+
+        // ЗАПУСК ПРИЛОЖЕНИЯ
+        window.onload = () => {
+            if(localStorage.getItem('user_profile')) {
+                loadProfileUi();
+                showView('view-home');
+            } else {
+                showView('view-auth');
+            }
+        };
     </script>
 </body>
 </html>
