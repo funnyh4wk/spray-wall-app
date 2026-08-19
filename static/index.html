@@ -11,6 +11,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
     
+    <!-- === FIREBASE SDK (ДЛЯ БЕЗОПАСНОСТИ И GOOGLE LOGIN) === -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hidden-view { display: none !important; }
@@ -27,7 +31,7 @@
     <div id="app-bar" class="w-full max-w-md bg-black p-4 flex items-center justify-between hidden-view shadow-md sticky top-0 z-40">
         <button onclick="toggleMenu()" class="text-xl font-bold w-1/4 text-left">Menu</button>
         <h1 id="app-title" class="text-lg font-bold w-1/2 text-center">Spray Wall</h1>
-        <div class="w-1/4"></div> <!-- Пустой блок для выравнивания заголовка -->
+        <div class="w-1/4"></div> 
     </div>
 
     <!-- DRAWER MENU -->
@@ -48,24 +52,42 @@
     <!-- MAIN CONTAINER -->
     <div class="w-full max-w-md p-4 flex-1 flex flex-col pb-20">
 
-        <!-- 1. AUTH VIEW -->
-        <div id="view-auth" class="flex flex-col items-center mt-20 hidden-view">
-            <h2 id="auth-title" class="text-3xl font-bold mb-8">Login</h2>
+        <!-- 1. AUTH VIEW (ОБНОВЛЕННЫЙ С GOOGLE И ПОДТВЕРЖДЕНИЕМ ПАРОЛЯ) -->
+        <div id="view-auth" class="flex flex-col items-center mt-12 hidden-view">
+            <h2 id="auth-title" class="text-3xl font-bold mb-6">Login</h2>
             
-            <input id="auth-email" type="text" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
             
-            <div class="relative w-full mb-6">
+            <div class="relative w-full mb-4">
                 <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
-                <button onclick="togglePassword()" type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
-                    <!-- Глаз открыт -->
+                <button onclick="togglePassword('auth-password', 'eye-open', 'eye-closed')" type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
                     <svg id="eye-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <!-- Глаз закрыт -->
                     <svg id="eye-closed" class="w-6 h-6 hidden-view" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
                 </button>
             </div>
 
+            <!-- ПОЛЕ ПОДТВЕРЖДЕНИЯ ПАРОЛЯ -->
+            <div id="confirm-pwd-container" class="relative w-full mb-6 hidden-view">
+                <input id="auth-password-confirm" type="password" placeholder="Confirm Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
+                <button onclick="togglePassword('auth-password-confirm', 'eye-open-c', 'eye-closed-c')" type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
+                    <svg id="eye-open-c" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <svg id="eye-closed-c" class="w-6 h-6 hidden-view" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+                </button>
+            </div>
+
             <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4 transition-colors">Login</button>
-            <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm">Don't have an account? Sign Up</button>
+            <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm mb-4">Don't have an account? Sign Up</button>
+
+            <!-- КНОПКА GOOGLE -->
+            <div class="flex items-center my-4 w-full">
+                <hr class="flex-grow border-gray-700">
+                <span class="px-3 text-gray-500 text-sm">OR</span>
+                <hr class="flex-grow border-gray-700">
+            </div>
+            <button onclick="googleSignIn()" class="w-full bg-white text-black hover:bg-gray-200 font-bold py-3 rounded-lg mt-2 transition-colors flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571c.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+                Continue with Google
+            </button>
         </div>
 
         <!-- 1.5. ONBOARDING VIEW -->
@@ -130,9 +152,7 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
                 </div>
-                <div id="stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full">
-                    <!-- Сюда JS вставит столбики -->
-                </div>
+                <div id="stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full"></div>
             </div>
         </div>
 
@@ -173,9 +193,7 @@
 
             <!-- SECTORS BAR -->
             <div id="sector-bar-container" class="w-full hidden-view mb-4">
-                <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-                    <!-- Dynamic Sectors -->
-                </div>
+                <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide"></div>
                 
                 <div id="add-sector-form" class="mt-2 flex space-x-2 hidden-view bg-gray-800 p-2 rounded-lg">
                     <input id="new-sector-name" placeholder="Sector Name" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
@@ -183,17 +201,14 @@
                     <button onclick="toggleSectorForm(false)" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded font-bold text-sm">Cancel</button>
                 </div>
 
-                <!-- SECTOR ACTIONS (CLEAR & DELETE) -->
                 <div id="sector-actions" class="mt-2 flex space-x-2 hidden-view bg-red-900 bg-opacity-20 border border-red-800 p-2 rounded-lg">
                     <button onclick="clearSector()" class="flex-1 bg-orange-600 hover:bg-orange-500 py-1.5 rounded font-bold text-sm transition-colors">Clear Sector</button>
                     <button onclick="deleteSector()" class="flex-1 bg-red-600 hover:bg-red-500 py-1.5 rounded font-bold text-sm transition-colors">Delete Sector</button>
                 </div>
             </div>
 
-            <!-- Gym Tabs Content -->
             <div id="tab-content-gallery" class="w-full space-y-3"></div>
             
-            <!-- CLIMBERS TAB (Search & Leaderboard) -->
             <div id="tab-content-climbers" class="w-full hidden-view">
                 <div class="relative w-full mb-4">
                     <input id="climbers-search" oninput="renderClimbers()" placeholder="Search climbers by name, email..." class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 outline-none focus:border-blue-500 text-sm">
@@ -218,18 +233,15 @@
         <div id="view-create-route" class="flex flex-col items-center hidden-view w-full">
             <h2 class="text-xl font-bold mb-3">Create Route</h2>
             
-            <!-- Step 1: Upload Photo -->
             <div id="wizard-step-1" class="w-full flex flex-col items-center">
                 <label class="w-full h-80 bg-gray-800 hover:bg-gray-700 transition-colors border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer">
                     <svg class="w-12 h-12 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <span class="font-bold text-gray-300">Upload wall photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
-                <!-- ИСПРАВЛЕНА КНОПКА ОТМЕНЫ (CANCEL) -->
                 <button onclick="navigate('gym-routes')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4 transition-colors">Cancel</button>
             </div>
 
-            <!-- Step 2: Place Holds -->
             <div id="wizard-step-2" class="w-full flex flex-col items-center hidden-view">
                 <div class="flex space-x-2 mb-3">
                     <button onclick="setHoldColor('green')" class="bg-green-600 hover:bg-green-500 px-3 py-2 rounded font-bold text-xs transition-colors">Start</button>
@@ -248,7 +260,6 @@
                 </div>
             </div>
 
-            <!-- Step 3: Route Details (French Grades) -->
             <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
                 <select id="route-sector" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500 hidden-view"></select>
                 <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
@@ -303,14 +314,11 @@
                 </div>
             </div>
 
-            <!-- ГРАФИК ДРУГОГО ПРОФИЛЯ -->
             <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
                 </div>
-                <div id="op-stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full">
-                    <!-- Сюда JS вставит столбики -->
-                </div>
+                <div id="op-stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full"></div>
             </div>
 
             <button onclick="navigate(profileBackTarget)" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm transition-colors">Back</button>
@@ -337,11 +345,22 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // PWA Service Worker Registration
+        // === ИНИЦИАЛИЗАЦИЯ ЗАЩИТЫ FIREBASE ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyCktyBrBt6plVunjtEkBPg8RAMsLUbU5eQ",
+            authDomain: "spray-wall-v2.firebaseapp.com",
+            databaseURL: "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "spray-wall-v2",
+            storageBucket: "spray-wall-v2.firebasestorage.app",
+            messagingSenderId: "448869831046",
+            appId: "1:448869831046:web:8471c5e855e3dbf6599c07"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(()=>{});
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
         }
 
         const ALL_GRADES = [
@@ -362,7 +381,7 @@
             box.innerText = msg;
             box.className = `fixed top-5 px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 z-50 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
             box.style.opacity = '1';
-            setTimeout(() => box.style.opacity = '0', 3000);
+            setTimeout(() => box.style.opacity = '0', 4000);
         }
 
         async function apiCall(endpoint, payload = {}) {
@@ -383,11 +402,8 @@
             document.querySelectorAll('.w-full.max-w-md > div[id^="view-"]').forEach(el => el.classList.add('hidden-view'));
             document.getElementById(viewId).classList.remove('hidden-view');
             const appBar = document.getElementById('app-bar');
-            if(viewId === 'view-auth' || viewId === 'view-onboarding') {
-                appBar.classList.add('hidden-view');
-            } else {
-                appBar.classList.remove('hidden-view');
-            }
+            if(viewId === 'view-auth' || viewId === 'view-onboarding') appBar.classList.add('hidden-view');
+            else appBar.classList.remove('hidden-view');
         }
 
         function navigate(viewName) {
@@ -395,35 +411,29 @@
             if(viewName === 'home') { loadHomeView(); showView('view-home'); }
             else if(viewName === 'friends') { loadFriendsView(); showView('view-friends'); }
             else if(viewName === 'gyms') { loadGymsView(); showView('view-gyms'); }
-            else if(viewName === 'gym-routes') { 
-                showView('view-gym-routes'); 
-                switchTab(currentTab); 
-            }
+            else if(viewName === 'gym-routes') { showView('view-gym-routes'); switchTab(currentTab); }
             else if(viewName === 'settings') { showView('view-settings'); }
         }
 
-        // --- AUTH ---
+        // --- AUTH С FIREBASE ---
         let isLoginMode = true;
         function switchAuthMode() {
             isLoginMode = !isLoginMode;
             document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Sign Up";
             document.getElementById('auth-btn').innerText = isLoginMode ? "Login" : "Create Account";
             document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
+            // Показываем поле Confirm Password только при регистрации
+            document.getElementById('confirm-pwd-container').classList.toggle('hidden-view', isLoginMode);
         }
 
-        function togglePassword() {
-            const pwdInput = document.getElementById('auth-password');
-            const eyeOpen = document.getElementById('eye-open');
-            const eyeClosed = document.getElementById('eye-closed');
-            
+        function togglePassword(inputId, eyeOpenId, eyeClosedId) {
+            const pwdInput = document.getElementById(inputId);
+            const eyeOpen = document.getElementById(eyeOpenId);
+            const eyeClosed = document.getElementById(eyeClosedId);
             if (pwdInput.type === 'password') {
-                pwdInput.type = 'text';
-                eyeOpen.classList.add('hidden-view');
-                eyeClosed.classList.remove('hidden-view');
+                pwdInput.type = 'text'; eyeOpen.classList.add('hidden-view'); eyeClosed.classList.remove('hidden-view');
             } else {
-                pwdInput.type = 'password';
-                eyeOpen.classList.remove('hidden-view');
-                eyeClosed.classList.add('hidden-view');
+                pwdInput.type = 'password'; eyeOpen.classList.remove('hidden-view'); eyeClosed.classList.add('hidden-view');
             }
         }
 
@@ -432,61 +442,104 @@
             const pwd = document.getElementById('auth-password').value.trim();
             if(!rawEmail || !pwd) return showNotify("Fill all fields", true);
 
+            // БЭКДОР ДЛЯ ТЕБЯ (Админский доступ без Гугла)
             if (rawEmail === 'admin' && pwd === 'admin') {
                 const newUid = "global_admin_boss";
-                const profile = { 
-                    user_id: newUid, email: "admin@system.local", name: "Creator", 
-                    first_name: "Global", last_name: "Admin", bio: "System Administrator", 
-                    avatar_url: "", ascents_history: [], is_global_admin: true 
-                };
+                const profile = { user_id: newUid, email: "admin@system.local", name: "Creator", first_name: "Global", last_name: "Admin", bio: "System Administrator", avatar_url: "", ascents_history: [], is_global_admin: true };
                 await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 loadHomeView(); showView('view-home');
                 return showNotify("Welcome back, Boss!");
             }
 
-            const email = rawEmail.toLowerCase().replace(/\./g, ',');
-            const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
-            const hashedPwd = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-
             if (!isLoginMode) {
-                const existing = await apiCall('/api/db/get', { path: `auth_users/${email}` });
-                if(existing) return showNotify("Email already registered!", true);
-                const newUid = crypto.randomUUID();
-                await apiCall('/api/db/save', { path: `auth_users/${email}`, payload: { uid: newUid, password: hashedPwd } });
+                // РЕГИСТРАЦИЯ ЧЕРЕЗ FIREBASE
+                const pwdConfirm = document.getElementById('auth-password-confirm').value.trim();
+                if (pwd !== pwdConfirm) return showNotify("Passwords do not match!", true);
                 
-                const profile = { user_id: newUid, email: email, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false };
-                await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
-                localStorage.setItem('user_profile', JSON.stringify(profile));
-                
-                showView('view-onboarding');
-                showNotify("Account created! Let's set it up.");
-            } else {
-                const userCreds = await apiCall('/api/db/get', { path: `auth_users/${email}` });
-                if(!userCreds || userCreds.password !== hashedPwd) return showNotify("Invalid email or password", true);
-                
-                let profile = await apiCall('/api/db/get', { path: `users/${userCreds.uid}` });
-                profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${userCreds.uid}` }) || [];
-                localStorage.setItem('user_profile', JSON.stringify(profile));
-                
-                if (!profile.name) {
+                try {
+                    showNotify("Creating secure account...");
+                    const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
+                    const user = userCred.user;
+                    await user.sendEmailVerification();
+                    
+                    // Создаем профиль в нашей базе, используя защищенный UID от Google
+                    const profile = { user_id: user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false };
+                    await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
+                    localStorage.setItem('user_profile', JSON.stringify(profile));
+                    
+                    showNotify("Account created! Check your email to verify.", false);
                     showView('view-onboarding');
-                } else {
-                    loadHomeView(); showView('view-home');
-                    showNotify("Welcome back!");
+                } catch (error) {
+                    showNotify(error.message.replace("Firebase: ", ""), true);
+                }
+            } else {
+                // ЛОГИН ЧЕРЕЗ FIREBASE
+                try {
+                    showNotify("Logging in...");
+                    const userCred = await auth.signInWithEmailAndPassword(rawEmail, pwd);
+                    const user = userCred.user;
+                    
+                    if (!user.emailVerified) {
+                        return showNotify("Please verify your email first! Check your inbox.", true);
+                    }
+
+                    let profile = await apiCall('/api/db/get', { path: `users/${user.uid}` });
+                    if (!profile) profile = { user_id: user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", ascents_history: [], is_global_admin: false };
+                    
+                    profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
+                    localStorage.setItem('user_profile', JSON.stringify(profile));
+                    
+                    if (!profile.name) showView('view-onboarding');
+                    else { loadHomeView(); showView('view-home'); showNotify("Welcome back!"); }
+                } catch (error) {
+                    showNotify(error.message.replace("Firebase: ", ""), true);
                 }
             }
         }
 
+        // --- GOOGLE SIGN IN ---
+        async function googleSignIn() {
+            try {
+                showNotify("Connecting to Google...");
+                const userCred = await auth.signInWithPopup(googleProvider);
+                const user = userCred.user;
+                
+                let profile = await apiCall('/api/db/get', { path: `users/${user.uid}` });
+                if (!profile) {
+                    profile = { 
+                        user_id: user.uid, email: user.email, 
+                        name: user.displayName || "", 
+                        first_name: (user.displayName || "").split(" ")[0],
+                        last_name: (user.displayName || "").split(" ").slice(1).join(" "),
+                        bio: "Bouldering Enthusiast", 
+                        avatar_url: user.photoURL || "", 
+                        ascents_history: [], is_global_admin: false 
+                    };
+                    await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
+                }
+                
+                profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
+                localStorage.setItem('user_profile', JSON.stringify(profile));
+                
+                if (!profile.name) showView('view-onboarding');
+                else { loadHomeView(); showView('view-home'); showNotify("Welcome back!"); }
+                
+            } catch (error) {
+                showNotify(error.message.replace("Firebase: ", ""), true);
+            }
+        }
+
         function logout() { 
+            auth.signOut(); // Выход из Гугла
             localStorage.removeItem('user_profile'); 
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
+            document.getElementById('auth-password-confirm').value = '';
             
             document.getElementById('auth-password').type = 'password';
             document.getElementById('eye-open').classList.remove('hidden-view');
             document.getElementById('eye-closed').classList.add('hidden-view');
-
             showView('view-auth'); 
         }
 
@@ -502,12 +555,9 @@
                 profile.avatar_url = res.url;
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
-                
                 document.getElementById('onboard-avatar').src = res.url;
                 showNotify("Avatar uploaded!");
-            } else {
-                showNotify("Upload failed", true);
-            }
+            } else { showNotify("Upload failed", true); }
         }
 
         async function completeOnboarding() {
@@ -518,21 +568,16 @@
             const bio = document.getElementById('onb-bio').value.trim();
 
             const parts = realname.split(' ');
-            const first_name = parts[0] || '';
-            const last_name = parts.slice(1).join(' ') || '';
-
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
             profile.name = nickname;
-            profile.first_name = first_name;
-            profile.last_name = last_name;
+            profile.first_name = parts[0] || '';
+            profile.last_name = parts.slice(1).join(' ') || '';
             if (bio) profile.bio = bio;
 
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
 
-            loadHomeView();
-            showView('view-home');
-            showNotify("Setup Complete!");
+            loadHomeView(); showView('view-home'); showNotify("Setup Complete!");
         }
 
         // --- PROFILE EDIT ---
@@ -555,34 +600,27 @@
             if(!name) return showNotify("Nickname is required!", true);
 
             const parts = realname.split(' ');
-            const first_name = parts[0] || '';
-            const last_name = parts.slice(1).join(' ') || '';
-
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
             profile.name = name;
-            profile.first_name = first_name;
-            profile.last_name = last_name;
+            profile.first_name = parts[0] || '';
+            profile.last_name = parts.slice(1).join(' ') || '';
             profile.bio = bio;
 
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
 
-            loadHomeView();
-            toggleEditProfile(false);
-            showNotify("Profile updated!");
+            loadHomeView(); toggleEditProfile(false); showNotify("Profile updated!");
         }
 
         // --- BAR CHART RENDERER ---
         function renderGradeChart(containerId, gradesArray) {
             const chartContainer = document.getElementById(containerId);
             chartContainer.innerHTML = '';
-            
             const counts = {};
             gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
 
             if (Object.keys(counts).length === 0) {
-                chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-sm">No ascents yet</p>';
-                return;
+                chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-sm">No ascents yet</p>'; return;
             }
 
             const maxCount = Math.max(...Object.values(counts));
@@ -591,7 +629,6 @@
             sortedGrades.forEach(grade => {
                 const count = counts[grade];
                 const heightPercent = (count / maxCount) * 100;
-                
                 chartContainer.innerHTML += `
                     <div class="flex flex-col items-center flex-1 min-w-[24px]">
                         <span class="text-[10px] text-gray-400 mb-1">${count}</span>
@@ -619,7 +656,6 @@
             document.getElementById('stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
             
             renderGradeChart('stat-chart', grades);
-            
             loadFriendRequests();
         }
 
@@ -632,14 +668,10 @@
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
                 profile.avatar_url = res.url;
-                
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
-                
                 loadHomeView(); showNotify("Avatar updated!");
-            } else {
-                showNotify("Upload failed", true);
-            }
+            } else { showNotify("Upload failed", true); }
         }
 
         // --- FRIENDS & REQUESTS ---
@@ -685,11 +717,8 @@
         // --- GYMS & SECTORS ---
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            if(profile.is_global_admin) {
-                document.getElementById('create-gym-btn').classList.remove('hidden-view');
-            } else {
-                document.getElementById('create-gym-btn').classList.add('hidden-view');
-            }
+            if(profile.is_global_admin) document.getElementById('create-gym-btn').classList.remove('hidden-view');
+            else document.getElementById('create-gym-btn').classList.add('hidden-view');
             const gyms = await apiCall('/api/db/get', { path: `gyms` }) || {};
             const list = document.getElementById('gyms-list');
             list.innerHTML = '';
@@ -718,74 +747,43 @@
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             
             let roles = await apiCall('/api/db/get', { path: `gym_roles/${gymId}` }) || {};
-            
             if (!profile.is_global_admin && !roles[profile.user_id]) {
                 await apiCall('/api/db/save', { path: `gym_roles/${gymId}/${profile.user_id}`, payload: 'user' });
                 roles[profile.user_id] = 'user';
             }
-
-            if(profile.is_global_admin) {
-                currentGymRole = 'admin';
-            } else {
-                currentGymRole = roles[profile.user_id] || 'user';
-            }
+            currentGymRole = profile.is_global_admin ? 'admin' : (roles[profile.user_id] || 'user');
             
             document.getElementById('tab-admin').classList.toggle('hidden-view', currentGymRole !== 'admin');
-            
-            await loadSectors();
-            switchTab('official');
-            navigate('gym-routes');
+            await loadSectors(); switchTab('official'); navigate('gym-routes');
         }
 
-        async function loadSectors() {
-            gymSectors = await apiCall('/api/db/get', { path: `gym_sectors/${currentGymId}` }) || {};
-            renderSectors();
-        }
+        async function loadSectors() { gymSectors = await apiCall('/api/db/get', { path: `gym_sectors/${currentGymId}` }) || {}; renderSectors(); }
 
         function renderSectors() {
             const container = document.getElementById('sector-filters');
-            container.innerHTML = '';
-            
-            container.innerHTML += `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All</button>`;
-            
+            container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All</button>`;
             for(let sId in gymSectors) {
                 container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`;
             }
-            
-            if(currentGymRole === 'admin') {
-                container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
-            }
+            if(currentGymRole === 'admin') container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
 
             const actionsBlock = document.getElementById('sector-actions');
-            if (currentSector !== 'all' && (currentGymRole === 'admin' || currentGymRole === 'setter')) {
-                actionsBlock.classList.remove('hidden-view');
-            } else {
-                actionsBlock.classList.add('hidden-view');
-            }
+            if (currentSector !== 'all' && (currentGymRole === 'admin' || currentGymRole === 'setter')) actionsBlock.classList.remove('hidden-view');
+            else actionsBlock.classList.add('hidden-view');
         }
 
-        function selectSector(sId) {
-            currentSector = sId;
-            renderSectors();
-            loadGallery();
-        }
+        function selectSector(sId) { currentSector = sId; renderSectors(); loadGallery(); }
 
         function toggleSectorForm(show) {
             document.getElementById('add-sector-form').classList.toggle('hidden-view', !show);
-            if(show) {
-                document.getElementById('new-sector-name').value = '';
-                document.getElementById('new-sector-name').focus();
-            }
+            if(show) { document.getElementById('new-sector-name').value = ''; document.getElementById('new-sector-name').focus(); }
         }
 
         async function saveSector() {
-            const name = document.getElementById('new-sector-name').value.trim();
-            if(!name) return;
+            const name = document.getElementById('new-sector-name').value.trim(); if(!name) return;
             const sId = 'sec_' + Math.random().toString(36).substring(2,9);
             await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${sId}`, payload: name });
-            toggleSectorForm(false);
-            await loadSectors();
-            showNotify("Sector added!");
+            toggleSectorForm(false); await loadSectors(); showNotify("Sector added!");
         }
 
         async function clearSector() {
@@ -799,8 +797,7 @@
                     if(b.image_url) apiCall('/api/delete_image', { url: b.image_url });
                 }
             }
-            showNotify("Sector cleared!");
-            loadGallery();
+            showNotify("Sector cleared!"); loadGallery();
         }
 
         async function deleteSector() {
@@ -815,10 +812,7 @@
                 }
             }
             await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${currentSector}`, method: 'DELETE' });
-            showNotify("Sector deleted!");
-            currentSector = 'all';
-            await loadSectors();
-            loadGallery();
+            showNotify("Sector deleted!"); currentSector = 'all'; await loadSectors(); loadGallery();
         }
 
         function switchTab(tabName) {
@@ -826,13 +820,8 @@
             ['official', 'custom', 'climbers', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 if(btn) {
-                    if (t === tabName) {
-                        btn.classList.add('bg-blue-600');
-                        btn.classList.remove('bg-gray-800');
-                    } else {
-                        btn.classList.add('bg-gray-800');
-                        btn.classList.remove('bg-blue-600');
-                    }
+                    if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800'); } 
+                    else { btn.classList.add('bg-gray-800'); btn.classList.remove('bg-blue-600'); }
                 }
             });
             
@@ -842,32 +831,23 @@
             
             const showSectors = (tabName === 'official' || tabName === 'custom');
             document.getElementById('sector-bar-container').classList.toggle('hidden-view', !showSectors);
-
             document.getElementById('add-route-btn').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin' || (tabName === 'official' && currentGymRole === 'user'));
 
-            if(tabName === 'climbers') loadGymClimbers();
-            else if(tabName === 'admin') loadAdminPanel();
-            else loadGallery();
+            if(tabName === 'climbers') loadGymClimbers(); else if(tabName === 'admin') loadAdminPanel(); else loadGallery();
         }
 
         async function loadGallery() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
-            const list = document.getElementById('tab-content-gallery');
-            list.innerHTML = '';
+            const list = document.getElementById('tab-content-gallery'); list.innerHTML = '';
             const completedIds = (profile.ascents_history || []).map(a => a.boulder_id);
-            let found = false;
-            const bKeys = Object.keys(boulders).reverse();
+            let found = false; const bKeys = Object.keys(boulders).reverse();
             for(let bId of bKeys) {
                 const b = boulders[bId];
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
-                    
                     if (currentSector !== 'all' && b.sector_id !== currentSector) continue;
-
-                    found = true;
-                    const isDone = completedIds.includes(b.id);
+                    found = true; const isDone = completedIds.includes(b.id);
                     const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-                    
                     const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
                     const ascentsCount = b.ascents || 0;
                     
@@ -892,39 +872,21 @@
             const allAscents = await apiCall('/api/db/get', { path: `user_ascents` }) || {};
 
             currentClimbersData = [];
-            
             for(let uid in roles) {
-                const u = allUsers[uid] || {};
-                const history = allAscents[uid] || [];
+                const u = allUsers[uid] || {}; const history = allAscents[uid] || [];
                 const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
-                
                 const maxGradeIdx = grades.length ? Math.max(...grades.map(g => ALL_GRADES.indexOf(g))) : -1;
                 const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : '-';
-                const totalAscents = grades.length;
-
-                currentClimbersData.push({
-                    uid: uid,
-                    user: u,
-                    maxGradeIdx: maxGradeIdx,
-                    maxGrade: maxGrade,
-                    totalAscents: totalAscents
-                });
+                currentClimbersData.push({ uid: uid, user: u, maxGradeIdx: maxGradeIdx, maxGrade: maxGrade, totalAscents: grades.length });
             }
 
-            currentClimbersData.sort((a, b) => {
-                if (b.maxGradeIdx !== a.maxGradeIdx) return b.maxGradeIdx - a.maxGradeIdx;
-                return b.totalAscents - a.totalAscents;
-            });
-
-            document.getElementById('climbers-search').value = '';
-            renderClimbers();
+            currentClimbersData.sort((a, b) => { if (b.maxGradeIdx !== a.maxGradeIdx) return b.maxGradeIdx - a.maxGradeIdx; return b.totalAscents - a.totalAscents; });
+            document.getElementById('climbers-search').value = ''; renderClimbers();
         }
 
         function renderClimbers() {
-            const container = document.getElementById('climbers-list-container');
-            container.innerHTML = '';
+            const container = document.getElementById('climbers-list-container'); container.innerHTML = '';
             const q = (document.getElementById('climbers-search').value || '').toLowerCase();
-            
             let rank = 1;
             currentClimbersData.forEach(c => {
                 const nameStr = (c.user.nickname || c.user.name || 'User').toLowerCase();
@@ -957,8 +919,7 @@
         async function loadAdminPanel() {
             const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('admin-setters-list');
-            list.innerHTML = '';
+            const list = document.getElementById('admin-setters-list'); list.innerHTML = '';
             for(let uid in roles) {
                 if(roles[uid] === 'setter') {
                     const u = allUsers[uid] || {};
@@ -970,8 +931,7 @@
         async function searchUsersForAdmin() {
             const q = document.getElementById('admin-search-input').value.toLowerCase();
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('admin-search-results');
-            list.innerHTML = '';
+            const list = document.getElementById('admin-search-results'); list.innerHTML = '';
             for(let uid in allUsers) {
                 const u = allUsers[uid];
                 if((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
@@ -980,27 +940,15 @@
             }
         }
 
-        async function setGymRole(uid, role) {
-            await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role });
-            showNotify("Role updated!"); loadAdminPanel();
-        }
+        async function setGymRole(uid, role) { await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role }); showNotify("Role updated!"); loadAdminPanel(); }
 
         // --- CREATE ROUTE (WIZARD) ---
         function startCreateRoute() {
             wizardMarkers = []; document.getElementById('wizard-wall-img').src = '';
-            
-            const secSelect = document.getElementById('route-sector');
-            secSelect.innerHTML = '';
+            const secSelect = document.getElementById('route-sector'); secSelect.innerHTML = '';
             const sKeys = Object.keys(gymSectors);
-            if(sKeys.length > 0) {
-                secSelect.classList.remove('hidden-view');
-                sKeys.forEach(k => {
-                    secSelect.innerHTML += `<option value="${k}">${gymSectors[k]}</option>`;
-                });
-            } else {
-                secSelect.classList.add('hidden-view');
-            }
-
+            if(sKeys.length > 0) { secSelect.classList.remove('hidden-view'); sKeys.forEach(k => { secSelect.innerHTML += `<option value="${k}">${gymSectors[k]}</option>`; }); } 
+            else { secSelect.classList.add('hidden-view'); }
             wizardStep(1); showView('view-create-route');
         }
 
@@ -1011,34 +959,24 @@
         }
 
         async function loadWallPhoto(input) {
-            const file = input.files[0]; if(!file) return;
-            showNotify("Uploading wall photo...");
+            const file = input.files[0]; if(!file) return; showNotify("Uploading wall photo...");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
-                document.getElementById('wizard-wall-img').src = res.url;
-                document.getElementById('detail-wall-img').src = res.url;
+                document.getElementById('wizard-wall-img').src = res.url; document.getElementById('detail-wall-img').src = res.url;
                 wizardStep(2); showNotify("Photo uploaded!");
-            } else {
-                showNotify("Upload failed", true);
-            }
+            } else { showNotify("Upload failed", true); }
         }
 
         function setHoldColor(c) { wizardColor = c; }
         function handleCanvasClick(e) {
-            const rect = e.target.getBoundingClientRect();
-            const x = e.clientX - rect.left, y = e.clientY - rect.top;
-            if(wizardColor === 'erase') {
-                wizardMarkers = wizardMarkers.filter(m => Math.hypot(m.x - x, m.y - y) > 20);
-            } else {
-                wizardMarkers.push({ x, y, color: wizardColor });
-            }
+            const rect = e.target.getBoundingClientRect(); const x = e.clientX - rect.left, y = e.clientY - rect.top;
+            if(wizardColor === 'erase') wizardMarkers = wizardMarkers.filter(m => Math.hypot(m.x - x, m.y - y) > 20); else wizardMarkers.push({ x, y, color: wizardColor });
             renderCanvasMarkers();
         }
 
         function renderCanvasMarkers() {
-            const container = document.getElementById('canvas-container');
-            container.querySelectorAll('.marker').forEach(el => el.remove());
+            const container = document.getElementById('canvas-container'); container.querySelectorAll('.marker').forEach(el => el.remove());
             wizardMarkers.forEach(m => {
                 const dot = document.createElement('div');
                 dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
@@ -1051,39 +989,23 @@
         async function saveNewRoute() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const bId = 'boulder_' + Math.random().toString(36).substring(2, 9);
-            const rGrade = document.getElementById('route-grade').value;
-            
-            const secVal = document.getElementById('route-sector').value;
             const bData = {
-                id: bId, gym_id: currentGymId, route_type: currentTab,
-                sector_id: secVal || null,
-                name: document.getElementById('route-name').value || 'Unnamed',
-                grade: rGrade,
-                description: document.getElementById('route-desc').value,
-                author: profile.name, author_id: profile.user_id,
-                image_url: document.getElementById('wizard-wall-img').src,
-                markers: wizardMarkers,
-                ascents: 0 
+                id: bId, gym_id: currentGymId, route_type: currentTab, sector_id: document.getElementById('route-sector').value || null,
+                name: document.getElementById('route-name').value || 'Unnamed', grade: document.getElementById('route-grade').value,
+                description: document.getElementById('route-desc').value, author: profile.name, author_id: profile.user_id,
+                image_url: document.getElementById('wizard-wall-img').src, markers: wizardMarkers, ascents: 0 
             };
             await apiCall('/api/db/save', { path: `boulders/${bId}`, payload: bData });
-            showNotify("Route created!");
-            
-            document.getElementById('route-name').value = '';
-            document.getElementById('route-desc').value = '';
-            
-            navigate('gym-routes');
+            showNotify("Route created!"); document.getElementById('route-name').value = ''; document.getElementById('route-desc').value = ''; navigate('gym-routes');
         }
 
         // --- ROUTE DETAIL ---
         let activeBoulder = null;
         function openRouteDetail(b) {
-            activeBoulder = b;
-            document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} (${b.grade})`;
+            activeBoulder = b; document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} (${b.grade})`;
             document.getElementById('detail-author').innerText = `Author: ${b.author || 'Unknown'} | Ascents: ${b.ascents || 0}\n${b.description || ''}`;
             document.getElementById('detail-wall-img').src = b.image_url;
-            
-            const container = document.getElementById('detail-canvas');
-            container.querySelectorAll('.marker').forEach(el => el.remove());
+            const container = document.getElementById('detail-canvas'); container.querySelectorAll('.marker').forEach(el => el.remove());
             (b.markers || []).forEach(m => {
                 const dot = document.createElement('div');
                 dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
@@ -1095,94 +1017,62 @@
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const isDone = (profile.ascents_history || []).some(a => a.boulder_id === b.id);
             const btnComp = document.getElementById('detail-complete-btn');
-            btnComp.innerText = isDone ? "Completed" : "Mark Complete";
-            btnComp.className = `px-5 py-2 rounded font-bold text-sm transition-colors ${isDone ? 'bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`;
+            btnComp.innerText = isDone ? "Completed" : "Mark Complete"; btnComp.className = `px-5 py-2 rounded font-bold text-sm transition-colors ${isDone ? 'bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`;
 
             const canDelete = currentGymRole === 'admin' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
-            document.getElementById('detail-delete-btn').classList.toggle('hidden-view', !canDelete);
-
-            showView('view-route-detail');
+            document.getElementById('detail-delete-btn').classList.toggle('hidden-view', !canDelete); showView('view-route-detail');
         }
 
         async function toggleCompleteRoute() {
-            let profile = JSON.parse(localStorage.getItem('user_profile'));
-            let history = profile.ascents_history || [];
+            let profile = JSON.parse(localStorage.getItem('user_profile')); let history = profile.ascents_history || [];
             const idx = history.findIndex(a => a.boulder_id === activeBoulder.id);
-            
-            const freshBoulder = await apiCall('/api/db/get', { path: `boulders/${activeBoulder.id}` }) || {};
-            let currentAscents = freshBoulder.ascents || 0;
-
-            if(idx > -1) {
-                history.splice(idx, 1);
-                currentAscents = Math.max(0, currentAscents - 1);
-            } else {
-                history.push({ boulder_id: activeBoulder.id, grade: activeBoulder.grade, timestamp: Date.now() });
-                currentAscents += 1;
-            }
-            
-            profile.ascents_history = history;
-            localStorage.setItem('user_profile', JSON.stringify(profile));
+            const freshBoulder = await apiCall('/api/db/get', { path: `boulders/${activeBoulder.id}` }) || {}; let currentAscents = freshBoulder.ascents || 0;
+            if(idx > -1) { history.splice(idx, 1); currentAscents = Math.max(0, currentAscents - 1); } 
+            else { history.push({ boulder_id: activeBoulder.id, grade: activeBoulder.grade, timestamp: Date.now() }); currentAscents += 1; }
+            profile.ascents_history = history; localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
-            
-            activeBoulder.ascents = currentAscents;
-            await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}/ascents`, payload: currentAscents });
-
-            openRouteDetail(activeBoulder); 
-            showNotify("Stats updated!");
+            activeBoulder.ascents = currentAscents; await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}/ascents`, payload: currentAscents });
+            openRouteDetail(activeBoulder); showNotify("Stats updated!");
         }
 
         async function deleteRoute() {
             if(!confirm("Delete this route permanently?")) return;
             await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, method: 'DELETE' });
             if(activeBoulder.image_url) apiCall('/api/delete_image', { url: activeBoulder.image_url });
-            showNotify("Route deleted!"); 
-            navigate('gym-routes');
+            showNotify("Route deleted!"); navigate('gym-routes');
         }
 
         // --- OTHER PROFILE ---
         async function openOtherProfile(uid, source = 'home') {
-            profileBackTarget = source; 
-            currentOtherUserId = uid;
-            const profile = JSON.parse(localStorage.getItem('user_profile'));
-            
-            if(uid === profile.user_id) { navigate(source); return; }
-            
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const u = allUsers[uid] || {};
+            profileBackTarget = source; currentOtherUserId = uid;
+            const profile = JSON.parse(localStorage.getItem('user_profile')); if(uid === profile.user_id) { navigate(source); return; }
+            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; const u = allUsers[uid] || {};
             document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'User'}`;
             document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim();
             document.getElementById('op-bio').innerText = u.bio || "";
             document.getElementById('op-avatar').src = u.avatar_url || 'https://via.placeholder.com/150/444444/FFFFFF?text=No+Img';
-            
-            const history = await apiCall('/api/db/get', { path: `user_ascents/${uid}` }) || [];
-            document.getElementById('op-stat-total').innerText = history.length;
+            const history = await apiCall('/api/db/get', { path: `user_ascents/${uid}` }) || []; document.getElementById('op-stat-total').innerText = history.length;
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('op-stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
-
             renderGradeChart('op-stat-chart', grades);
-
             const isFriend = await apiCall('/api/db/get', { path: `friends/${profile.user_id}/${uid}` });
             const sentReq = await apiCall('/api/db/get', { path: `friend_requests/${uid}/${profile.user_id}` });
             const btn = document.getElementById('op-action-btn');
             if(isFriend) { btn.innerText = "Remove Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600 hover:bg-red-500 transition-colors"; }
             else if(sentReq) { btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; }
             else { btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors"; }
-
             showView('view-other-profile');
         }
 
         async function handleOpAction() {
-            const profile = JSON.parse(localStorage.getItem('user_profile'));
-            const btn = document.getElementById('op-action-btn');
+            const profile = JSON.parse(localStorage.getItem('user_profile')); const btn = document.getElementById('op-action-btn');
             if(btn.innerText === "Add Friend") {
                 await apiCall('/api/db/save', { path: `friend_requests/${currentOtherUserId}/${profile.user_id}`, payload: true });
-                showNotify("Friend request sent!"); 
-                btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600";
+                showNotify("Friend request sent!"); btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600";
             } else if(btn.innerText === "Remove Friend") {
                 await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' });
                 await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' });
-                showNotify("Removed from friends"); 
-                btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors";
+                showNotify("Removed from friends"); btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors";
             }
         }
 
@@ -1201,14 +1091,8 @@
             const profileStr = localStorage.getItem('user_profile');
             if(profileStr) { 
                 const profile = JSON.parse(profileStr);
-                if (!profile.name) {
-                    showView('view-onboarding');
-                } else {
-                    loadHomeView(); 
-                    showView('view-home'); 
-                }
-            }
-            else { showView('view-auth'); }
+                if (!profile.name) showView('view-onboarding'); else { loadHomeView(); showView('view-home'); }
+            } else { showView('view-auth'); }
         };
     </script>
 </body>
