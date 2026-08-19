@@ -42,28 +42,43 @@
         <!-- 1. AUTH VIEW -->
         <div id="view-auth" class="flex flex-col items-center mt-20 hidden-view">
             <h2 id="auth-title" class="text-3xl font-bold mb-8">Login</h2>
-            <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700">
-            <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 mb-6 bg-gray-800 rounded outline-none border border-gray-700">
-            <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4">Login</button>
+            <input id="auth-email" type="text" placeholder="Email (or admin)" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 mb-6 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4 transition-colors">Login</button>
             <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm">Don't have an account? Sign Up</button>
         </div>
 
         <!-- 2. HOME / PROFILE VIEW -->
         <div id="view-home" class="flex flex-col items-center hidden-view">
-            <!-- Updated Avatar with neat corner badge -->
+            <!-- Avatar -->
             <label class="relative cursor-pointer mt-4 inline-block">
                 <img id="profile-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg">
                 <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 border-2 border-gray-900 shadow-lg hover:bg-blue-500 transition-colors">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </div>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
             </label>
             
-            <h2 id="profile-name" class="text-2xl font-bold mt-3">Name</h2>
-            <p id="profile-realname" class="text-gray-400 text-xs"></p>
-            <p id="profile-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
+            <!-- Display Mode -->
+            <div id="profile-display" class="flex flex-col items-center w-full mt-3">
+                <h2 id="profile-name" class="text-2xl font-bold">Name</h2>
+                <p id="profile-realname" class="text-gray-400 text-xs"></p>
+                <p id="profile-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
+                <button onclick="toggleEditProfile(true)" class="mt-3 bg-gray-800 hover:bg-gray-700 px-5 py-1.5 rounded-lg text-sm font-bold transition-colors">Edit Profile</button>
+            </div>
 
-            <div id="friend-requests-box" class="w-full bg-gray-800 rounded-lg p-3 mt-4 hidden-view">
+            <!-- Edit Mode -->
+            <div id="profile-edit" class="flex flex-col items-center w-full mt-3 hidden-view space-y-3">
+                <input id="edit-name" placeholder="Nickname" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center">
+                <input id="edit-realname" placeholder="First & Last Name" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center">
+                <textarea id="edit-bio" placeholder="Bio" rows="2" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center"></textarea>
+                <div class="flex space-x-2 w-full">
+                    <button onclick="toggleEditProfile(false)" class="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold transition-colors">Cancel</button>
+                    <button onclick="saveProfile()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors">Save</button>
+                </div>
+            </div>
+
+            <div id="friend-requests-box" class="w-full bg-gray-800 rounded-lg p-3 mt-5 hidden-view">
                 <p class="text-orange-400 font-bold text-sm mb-2">Friend Requests:</p>
                 <div id="friend-requests-list" class="space-y-2"></div>
             </div>
@@ -87,15 +102,15 @@
         <!-- 4. GYMS VIEW -->
         <div id="view-gyms" class="flex flex-col items-center hidden-view">
             <h2 class="text-2xl font-bold mb-4">Climbing Gyms</h2>
-            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view">➕ Create Gym</button>
+            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view transition-colors">➕ Create Gym</button>
             
             <div id="gym-form" class="w-full bg-gray-800 p-4 rounded-lg mb-4 hidden-view space-y-3">
                 <h3 class="font-bold">New Gym</h3>
                 <input id="gym-name" placeholder="Gym Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
                 <input id="gym-city" placeholder="City" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
                 <div class="flex space-x-2">
-                    <button onclick="toggleGymForm(false)" class="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold">Cancel</button>
-                    <button onclick="saveGym()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold">Create</button>
+                    <button onclick="toggleGymForm(false)" class="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold transition-colors">Cancel</button>
+                    <button onclick="saveGym()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors">Create</button>
                 </div>
             </div>
             <div id="gyms-list" class="w-full space-y-3"></div>
@@ -104,7 +119,7 @@
         <!-- 5. GYM ROUTES VIEW -->
         <div id="view-gym-routes" class="flex flex-col items-center hidden-view">
             <h2 id="gym-title" class="text-2xl font-bold mb-2">Gym Name</h2>
-            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view">➕ Add Route</button>
+            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view transition-colors">➕ Add Route</button>
             
             <div class="flex space-x-1 w-full bg-black p-1 rounded-lg mb-4 overflow-x-auto">
                 <button onclick="switchTab('official')" id="tab-official" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-blue-600 transition-colors">Official</button>
@@ -123,7 +138,7 @@
                 <h3 class="font-bold">Assign Setter:</h3>
                 <div class="flex space-x-2">
                     <input id="admin-search-input" placeholder="Search by Name/Email" class="flex-1 p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500">
-                    <button onclick="searchUsersForAdmin()" class="bg-blue-600 hover:bg-blue-500 px-4 rounded font-bold">Search</button>
+                    <button onclick="searchUsersForAdmin()" class="bg-blue-600 hover:bg-blue-500 px-4 rounded font-bold transition-colors">Search</button>
                 </div>
                 <div id="admin-search-results" class="space-y-2 mt-2"></div>
             </div>
@@ -140,16 +155,16 @@
                     <span class="font-bold text-gray-300">Upload wall photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
-                <button onclick="switchTab('official')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4">Cancel</button>
+                <button onclick="switchTab('official')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4 transition-colors">Cancel</button>
             </div>
 
             <!-- Step 2: Place Holds -->
             <div id="wizard-step-2" class="w-full flex flex-col items-center hidden-view">
                 <div class="flex space-x-2 mb-3">
-                    <button onclick="setHoldColor('green')" class="bg-green-600 px-3 py-2 rounded font-bold text-xs">Start</button>
-                    <button onclick="setHoldColor('blue')" class="bg-blue-600 px-3 py-2 rounded font-bold text-xs">Route</button>
-                    <button onclick="setHoldColor('red')" class="bg-red-600 px-3 py-2 rounded font-bold text-xs">Top</button>
-                    <button onclick="setHoldColor('erase')" class="bg-orange-600 px-3 py-2 rounded font-bold text-xs">Erase</button>
+                    <button onclick="setHoldColor('green')" class="bg-green-600 hover:bg-green-500 px-3 py-2 rounded font-bold text-xs transition-colors">Start</button>
+                    <button onclick="setHoldColor('blue')" class="bg-blue-600 hover:bg-blue-500 px-3 py-2 rounded font-bold text-xs transition-colors">Route</button>
+                    <button onclick="setHoldColor('red')" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded font-bold text-xs transition-colors">Top</button>
+                    <button onclick="setHoldColor('erase')" class="bg-orange-600 hover:bg-orange-500 px-3 py-2 rounded font-bold text-xs transition-colors">Erase</button>
                 </div>
                 
                 <div id="canvas-container" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 cursor-crosshair" onclick="handleCanvasClick(event)">
@@ -157,8 +172,8 @@
                 </div>
 
                 <div class="flex space-x-2 w-full mt-4">
-                    <button onclick="wizardStep(1)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold">Back</button>
-                    <button onclick="wizardStep(3)" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold">Next</button>
+                    <button onclick="wizardStep(1)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
+                    <button onclick="wizardStep(3)" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold transition-colors">Next</button>
                 </div>
             </div>
 
@@ -170,8 +185,8 @@
                 </select>
                 <textarea id="route-desc" placeholder="Description" rows="3" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500"></textarea>
                 <div class="flex space-x-2 mt-2">
-                    <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold">Back</button>
-                    <button onclick="saveNewRoute()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-3 rounded font-bold">Save</button>
+                    <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
+                    <button onclick="saveNewRoute()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-3 rounded font-bold transition-colors">Save</button>
                 </div>
             </div>
         </div>
@@ -186,9 +201,9 @@
             </div>
 
             <div class="flex flex-wrap gap-2 w-full justify-center">
-                <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-5 py-2 rounded font-bold text-sm">Back</button>
-                <button id="detail-complete-btn" onclick="toggleCompleteRoute()" class="bg-gray-600 px-5 py-2 rounded font-bold text-sm">Mark Complete</button>
-                <button id="detail-delete-btn" onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm hidden-view">Delete</button>
+                <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-5 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                <button id="detail-complete-btn" onclick="toggleCompleteRoute()" class="bg-gray-600 hover:bg-gray-500 px-5 py-2 rounded font-bold text-sm transition-colors">Mark Complete</button>
+                <button id="detail-delete-btn" onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm hidden-view transition-colors">Delete</button>
             </div>
         </div>
 
@@ -198,7 +213,7 @@
             <h2 id="op-name" class="text-2xl font-bold mt-3">Name</h2>
             <p id="op-realname" class="text-gray-400 text-xs"></p>
             <p id="op-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
-            <button id="op-action-btn" onclick="handleOpAction()" class="mt-4 px-6 py-2 rounded font-bold bg-blue-600">Add Friend</button>
+            <button id="op-action-btn" onclick="handleOpAction()" class="mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors">Add Friend</button>
             
             <div id="op-stats-box" class="w-full mt-6 space-y-3">
                 <div class="w-full grid grid-cols-2 gap-3">
@@ -206,7 +221,7 @@
                     <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
                 </div>
             </div>
-            <button onclick="history.back()" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm">Back</button>
+            <button onclick="history.back()" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm transition-colors">Back</button>
         </div>
 
         <!-- 9. SETTINGS -->
@@ -215,7 +230,7 @@
             <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-5 rounded-lg">
                 <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
                 <p class="text-gray-400 text-xs mb-4">Delete account and all associated data permanently.</p>
-                <button onclick="deleteAccount()" class="w-full bg-red-600 hover:bg-red-500 font-bold py-3 rounded">Delete Account</button>
+                <button onclick="deleteAccount()" class="w-full bg-red-600 hover:bg-red-500 font-bold py-3 rounded transition-colors">Delete Account</button>
             </div>
         </div>
 
@@ -274,10 +289,25 @@
         }
 
         async function processAuth() {
-            const email = document.getElementById('auth-email').value.trim().toLowerCase().replace(/\./g, ',');
+            const rawEmail = document.getElementById('auth-email').value.trim();
             const pwd = document.getElementById('auth-password').value.trim();
-            if(!email || !pwd) return showNotify("Fill all fields", true);
+            if(!rawEmail || !pwd) return showNotify("Fill all fields", true);
 
+            // SECRET ADMIN LOGIN
+            if (rawEmail === 'admin' && pwd === 'admin') {
+                const newUid = "global_admin_boss";
+                const profile = { 
+                    user_id: newUid, email: "admin@system.local", name: "Creator", 
+                    first_name: "Global", last_name: "Admin", bio: "System Administrator", 
+                    avatar_url: "", ascents_history: [], is_global_admin: true 
+                };
+                await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
+                localStorage.setItem('user_profile', JSON.stringify(profile));
+                loadHomeView(); showView('view-home');
+                return showNotify("Welcome back, Boss!");
+            }
+
+            const email = rawEmail.toLowerCase().replace(/\./g, ',');
             const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
             const hashedPwd = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -286,7 +316,7 @@
                 if(existing) return showNotify("Email already registered!", true);
                 const newUid = crypto.randomUUID();
                 await apiCall('/api/db/save', { path: `auth_users/${email}`, payload: { uid: newUid, password: hashedPwd } });
-                const profile = { user_id: newUid, email: email, name: `User_${newUid.substring(0,5)}`, bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [] };
+                const profile = { user_id: newUid, email: email, name: `User_${newUid.substring(0,5)}`, bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false };
                 await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 loadHomeView(); showView('view-home');
@@ -302,9 +332,52 @@
             }
         }
 
-        function logout() { localStorage.removeItem('user_profile'); showView('view-auth'); }
+        function logout() { 
+            localStorage.removeItem('user_profile'); 
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-password').value = '';
+            showView('view-auth'); 
+        }
 
-        // --- PROFILE ---
+        // --- PROFILE EDIT ---
+        function toggleEditProfile(show) {
+            document.getElementById('profile-display').classList.toggle('hidden-view', show);
+            document.getElementById('profile-edit').classList.toggle('hidden-view', !show);
+            if(show) {
+                const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+                document.getElementById('edit-name').value = profile.name || '';
+                document.getElementById('edit-realname').value = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+                document.getElementById('edit-bio').value = profile.bio || '';
+            }
+        }
+
+        async function saveProfile() {
+            const name = document.getElementById('edit-name').value.trim();
+            const realname = document.getElementById('edit-realname').value.trim();
+            const bio = document.getElementById('edit-bio').value.trim();
+            
+            if(!name) return showNotify("Nickname is required!", true);
+
+            const parts = realname.split(' ');
+            const first_name = parts[0] || '';
+            const last_name = parts.slice(1).join(' ') || '';
+
+            let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+            profile.name = name;
+            profile.first_name = first_name;
+            profile.last_name = last_name;
+            profile.bio = bio;
+
+            // ЗДЕСЬ МЫ СПАСАЕМ БАЗУ: Отправляем ВЕСЬ профиль целиком, чтобы ничего не затерлось!
+            localStorage.setItem('user_profile', JSON.stringify(profile));
+            await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
+
+            loadHomeView();
+            toggleEditProfile(false);
+            showNotify("Profile updated!");
+        }
+
+        // --- HOME / PROFILE DATA ---
         async function loadHomeView() {
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
             profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${profile.user_id}` }) || [];
@@ -320,7 +393,6 @@
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
             
-            // Grade Breakdown Calculation
             const counts = {};
             grades.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
             const breakdownStr = Object.entries(counts).sort((a,b) => ALL_GRADES.indexOf(a[0]) - ALL_GRADES.indexOf(b[0])).map(e => `${e[0]}: ${e[1]}`).join(' | ');
@@ -338,8 +410,11 @@
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
                 profile.avatar_url = res.url;
+                
+                // СНОВА СПАСАЕМ БАЗУ: Обновляем и сохраняем ВЕСЬ профиль
                 localStorage.setItem('user_profile', JSON.stringify(profile));
-                await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
+                await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
+                
                 loadHomeView(); showNotify("Avatar updated!");
             } else {
                 showNotify("Upload failed", true);
@@ -358,7 +433,7 @@
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             for(let senderId in reqs) {
                 const u = allUsers[senderId] || {};
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2">✔</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs">✕</button></div></div>`;
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2">✔</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs">✕</button></div></div>`;
             }
         }
 
@@ -382,24 +457,29 @@
             if(Object.keys(friends).length === 0) { list.innerHTML = '<p class="text-gray-500 text-center mt-4">No friends yet</p>'; return; }
             for(let fId in friends) {
                 const u = allUsers[fId] || {};
-                list.innerHTML += `<div onclick="openOtherProfile('${fId}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2"><span>@${u.nickname || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`;
+                list.innerHTML += `<div onclick="openOtherProfile('${fId}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`;
             }
         }
 
         // --- GYMS ---
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            if(profile.is_global_admin) document.getElementById('create-gym-btn').classList.remove('hidden-view');
+            if(profile.is_global_admin) {
+                document.getElementById('create-gym-btn').classList.remove('hidden-view');
+            } else {
+                document.getElementById('create-gym-btn').classList.add('hidden-view');
+            }
             const gyms = await apiCall('/api/db/get', { path: `gyms` }) || {};
             const list = document.getElementById('gyms-list');
             list.innerHTML = '';
             for(let gId in gyms) {
                 const g = gyms[gId];
-                list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown City'}</p></div><span class="text-blue-400 font-bold">Enter -></span></div>`;
+                list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown City'}</p></div><span class="text-blue-400 font-bold">Enter -></span></div>`;
             }
         }
 
         function toggleGymForm(show) { document.getElementById('gym-form').classList.toggle('hidden-view', !show); }
+        
         async function saveGym() {
             const name = document.getElementById('gym-name').value;
             const city = document.getElementById('gym-city').value;
@@ -415,11 +495,14 @@
             currentGymId = gymId;
             document.getElementById('gym-title').innerText = gymName;
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            if(profile.is_global_admin) currentGymRole = 'admin';
-            else {
+            
+            if(profile.is_global_admin) {
+                currentGymRole = 'admin';
+            } else {
                 const roles = await apiCall('/api/db/get', { path: `gym_roles/${gymId}` }) || {};
                 currentGymRole = roles[profile.user_id] || 'user';
             }
+            
             document.getElementById('tab-admin').classList.toggle('hidden-view', currentGymRole !== 'admin');
             switchTab('official');
             navigate('gym-routes');
@@ -429,8 +512,17 @@
             currentTab = tabName;
             ['official', 'custom', 'climbers', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
-                if(btn) btn.className = `flex-1 py-2 px-2 rounded text-xs font-bold transition-colors ${t === tabName ? 'bg-blue-600' : 'bg-gray-800'}`;
+                if(btn) {
+                    if (t === tabName) {
+                        btn.classList.add('bg-blue-600');
+                        btn.classList.remove('bg-gray-800');
+                    } else {
+                        btn.classList.add('bg-gray-800');
+                        btn.classList.remove('bg-blue-600');
+                    }
+                }
             });
+            
             document.getElementById('tab-content-gallery').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin');
             document.getElementById('tab-content-climbers').classList.toggle('hidden-view', tabName !== 'climbers');
             document.getElementById('tab-content-admin').classList.toggle('hidden-view', tabName !== 'admin');
@@ -449,16 +541,14 @@
             list.innerHTML = '';
             const completedIds = (profile.ascents_history || []).map(a => a.boulder_id);
             let found = false;
-            // Iterate in reverse for newest first
             const bKeys = Object.keys(boulders).reverse();
             for(let bId of bKeys) {
                 const b = boulders[bId];
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
                     found = true;
                     const isDone = completedIds.includes(b.id);
-                    // Safe stringify for onclick
                     const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-                    list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}</p></div>${isDone ? '<span class="text-green-500 font-bold text-xl">✔</span>' : ''}</div>`;
+                    list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}</p></div>${isDone ? '<span class="text-green-500 font-bold text-xl">✔</span>' : ''}</div>`;
                 }
             }
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No ${currentTab} routes here yet.</p>`;
@@ -472,7 +562,7 @@
             for(let uid in roles) {
                 const u = allUsers[uid] || {};
                 const rBadge = roles[uid] === 'admin' ? '👑 Admin' : (roles[uid] === 'setter' ? '🛠️ Setter' : '');
-                list.innerHTML += `<div onclick="openOtherProfile('${uid}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700"><span>@${u.nickname || 'User'}</span><span class="text-orange-400 text-xs font-bold">${rBadge}</span></div>`;
+                list.innerHTML += `<div onclick="openOtherProfile('${uid}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-orange-400 text-xs font-bold">${rBadge}</span></div>`;
             }
         }
 
@@ -484,7 +574,7 @@
             for(let uid in roles) {
                 if(roles[uid] === 'setter') {
                     const u = allUsers[uid] || {};
-                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2"><span>@${u.nickname || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold">Demote</button></div>`;
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2"><span>@${u.nickname || u.name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors">Demote</button></div>`;
                 }
             }
         }
@@ -496,8 +586,8 @@
             list.innerHTML = '';
             for(let uid in allUsers) {
                 const u = allUsers[uid];
-                if((u.nickname || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
-                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold">Make Setter</button></div>`;
+                if((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors">Make Setter</button></div>`;
                 }
             }
         }
@@ -573,7 +663,6 @@
             await apiCall('/api/db/save', { path: `boulders/${bId}`, payload: bData });
             showNotify("Route created!");
             
-            // Clear inputs
             document.getElementById('route-name').value = '';
             document.getElementById('route-desc').value = '';
             
@@ -640,7 +729,7 @@
             
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             const u = allUsers[uid] || {};
-            document.getElementById('op-name').innerText = `@${u.nickname || 'User'}`;
+            document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'User'}`;
             document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim();
             document.getElementById('op-bio').innerText = u.bio || "";
             document.getElementById('op-avatar').src = u.avatar_url || 'https://via.placeholder.com/150/444444/FFFFFF?text=No+Img';
@@ -653,9 +742,9 @@
             const isFriend = await apiCall('/api/db/get', { path: `friends/${profile.user_id}/${uid}` });
             const sentReq = await apiCall('/api/db/get', { path: `friend_requests/${uid}/${profile.user_id}` });
             const btn = document.getElementById('op-action-btn');
-            if(isFriend) { btn.innerText = "Remove Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600 hover:bg-red-500"; }
+            if(isFriend) { btn.innerText = "Remove Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600 hover:bg-red-500 transition-colors"; }
             else if(sentReq) { btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; }
-            else { btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500"; }
+            else { btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors"; }
 
             showView('view-other-profile');
         }
@@ -671,7 +760,7 @@
                 await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' });
                 await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' });
                 showNotify("Removed from friends"); 
-                btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500";
+                btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors";
             }
         }
 
