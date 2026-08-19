@@ -11,172 +11,174 @@
 </head>
 <body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center">
 
-    <!-- Уведомления -->
+    <!-- Notifications -->
     <div id="notify-box" class="fixed top-5 bg-green-500 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50"></div>
 
-    <!-- ШАПКА И МЕНЮ -->
+    <!-- APP BAR -->
     <div id="app-bar" class="w-full max-w-md bg-black p-4 flex justify-between items-center hidden-view shadow-md sticky top-0 z-40">
-        <button onclick="toggleMenu()" class="text-xl font-bold">☰ Меню</button>
+        <button onclick="toggleMenu()" class="text-xl font-bold">☰ Menu</button>
         <h1 id="app-title" class="text-lg font-bold">Spray Wall</h1>
-        <button onclick="logout()" class="text-red-500 font-bold text-sm">Выйти</button>
+        <button onclick="logout()" class="text-red-500 font-bold text-sm">Logout</button>
     </div>
 
-    <!-- БОКОВОЕ МЕНЮ (DRAWER) -->
+    <!-- DRAWER MENU -->
     <div id="drawer" class="fixed inset-y-0 left-0 w-64 bg-black z-50 transform -translate-x-full transition-transform duration-300 flex flex-col p-4 shadow-2xl">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold">Навигация</h2>
+            <h2 class="text-xl font-bold">Navigation</h2>
             <button onclick="toggleMenu()" class="text-gray-400 text-xl">✕</button>
         </div>
         <div class="flex flex-col space-y-4">
-            <button onclick="navigate('home')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">👤 Профиль</button>
-            <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">👥 Друзья</button>
-            <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">🧗 Скалодромы</button>
-            <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">⚙️ Настройки</button>
+            <button onclick="navigate('home')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">👤 Profile</button>
+            <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">👥 Friends</button>
+            <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">🧗 Gyms</button>
+            <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">⚙️ Settings</button>
         </div>
     </div>
     <div id="drawer-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden-view"></div>
 
-    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
+    <!-- MAIN CONTAINER -->
     <div class="w-full max-w-md p-4 flex-1 flex flex-col pb-20">
 
-        <!-- 1. АВТОРИЗАЦИЯ -->
+        <!-- 1. AUTH VIEW -->
         <div id="view-auth" class="flex flex-col items-center mt-20 hidden-view">
-            <h2 id="auth-title" class="text-3xl font-bold mb-8">Вход</h2>
+            <h2 id="auth-title" class="text-3xl font-bold mb-8">Login</h2>
             <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700">
-            <input id="auth-password" type="password" placeholder="Пароль" class="w-full p-3 mb-6 bg-gray-800 rounded outline-none border border-gray-700">
-            <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 font-bold py-3 rounded-lg mb-4">Войти</button>
-            <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm">Нет аккаунта? Зарегистрироваться</button>
+            <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 mb-6 bg-gray-800 rounded outline-none border border-gray-700">
+            <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4">Login</button>
+            <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm">Don't have an account? Sign Up</button>
         </div>
 
-        <!-- 2. ПРОФИЛЬ -->
+        <!-- 2. HOME / PROFILE VIEW -->
         <div id="view-home" class="flex flex-col items-center hidden-view">
-            <label class="relative cursor-pointer group mt-4">
+            <!-- Updated Avatar with neat corner badge -->
+            <label class="relative cursor-pointer mt-4 inline-block">
                 <img id="profile-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg">
-                <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span class="text-2xl">📸</span>
+                <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 border-2 border-gray-900 shadow-lg hover:bg-blue-500 transition-colors">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </div>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
             </label>
-            <h2 id="profile-name" class="text-2xl font-bold mt-3">Имя</h2>
+            
+            <h2 id="profile-name" class="text-2xl font-bold mt-3">Name</h2>
             <p id="profile-realname" class="text-gray-400 text-xs"></p>
             <p id="profile-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
 
             <div id="friend-requests-box" class="w-full bg-gray-800 rounded-lg p-3 mt-4 hidden-view">
-                <p class="text-orange-400 font-bold text-sm mb-2">Запросы в друзья:</p>
+                <p class="text-orange-400 font-bold text-sm mb-2">Friend Requests:</p>
                 <div id="friend-requests-list" class="space-y-2"></div>
             </div>
 
             <div class="w-full grid grid-cols-2 gap-3 mt-6">
-                <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs">Макс Категория</p><p id="stat-max" class="text-xl font-bold text-red-500">-</p></div>
-                <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs">Пройдено</p><p id="stat-total" class="text-xl font-bold text-green-500">0</p></div>
+                <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="stat-max" class="text-xl font-bold text-red-500">-</p></div>
+                <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="stat-total" class="text-xl font-bold text-green-500">0</p></div>
             </div>
             <div class="w-full bg-gray-800 p-4 rounded-lg mt-3 text-center">
-                <p class="text-gray-400 text-xs mb-1">Категории</p>
-                <p id="stat-breakdown" class="text-sm font-bold text-orange-400">Нет пролазов</p>
+                <p class="text-gray-400 text-xs uppercase mb-1">Grade Breakdown</p>
+                <p id="stat-breakdown" class="text-sm font-bold text-orange-400">No ascents yet</p>
             </div>
         </div>
 
-        <!-- 3. ДРУЗЬЯ -->
+        <!-- 3. FRIENDS VIEW -->
         <div id="view-friends" class="flex flex-col items-center hidden-view">
-            <h2 class="text-2xl font-bold mb-4">Мои друзья</h2>
+            <h2 class="text-2xl font-bold mb-4">My Friends</h2>
             <div id="friends-list" class="w-full space-y-3"></div>
         </div>
 
-        <!-- 4. СПИСОК ЗАЛОВ -->
+        <!-- 4. GYMS VIEW -->
         <div id="view-gyms" class="flex flex-col items-center hidden-view">
-            <h2 class="text-2xl font-bold mb-4">Скалодромы</h2>
-            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 font-bold py-2 rounded-lg mb-4 hidden-view">➕ Создать зал</button>
+            <h2 class="text-2xl font-bold mb-4">Climbing Gyms</h2>
+            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view">➕ Create Gym</button>
             
             <div id="gym-form" class="w-full bg-gray-800 p-4 rounded-lg mb-4 hidden-view space-y-3">
-                <h3 class="font-bold">Новый зал</h3>
-                <input id="gym-name" placeholder="Название залы" class="w-full p-2 bg-gray-900 rounded border border-gray-700">
-                <input id="gym-city" placeholder="Город" class="w-full p-2 bg-gray-900 rounded border border-gray-700">
+                <h3 class="font-bold">New Gym</h3>
+                <input id="gym-name" placeholder="Gym Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
+                <input id="gym-city" placeholder="City" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
                 <div class="flex space-x-2">
-                    <button onclick="toggleGymForm(false)" class="flex-1 bg-red-600 py-2 rounded font-bold">Отмена</button>
-                    <button onclick="saveGym()" class="flex-1 bg-green-600 py-2 rounded font-bold">Создать</button>
+                    <button onclick="toggleGymForm(false)" class="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold">Cancel</button>
+                    <button onclick="saveGym()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold">Create</button>
                 </div>
             </div>
             <div id="gyms-list" class="w-full space-y-3"></div>
         </div>
 
-        <!-- 5. МАРШРУТЫ В ЗАЛЕ -->
+        <!-- 5. GYM ROUTES VIEW -->
         <div id="view-gym-routes" class="flex flex-col items-center hidden-view">
-            <h2 id="gym-title" class="text-2xl font-bold mb-2">Зал</h2>
-            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 font-bold py-2 rounded-lg mb-3 hidden-view">➕ Добавить маршрут</button>
+            <h2 id="gym-title" class="text-2xl font-bold mb-2">Gym Name</h2>
+            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view">➕ Add Route</button>
             
             <div class="flex space-x-1 w-full bg-black p-1 rounded-lg mb-4 overflow-x-auto">
-                <button onclick="switchTab('official')" id="tab-official" class="flex-1 py-1 px-2 rounded text-xs font-bold bg-blue-600">Official</button>
-                <button onclick="switchTab('custom')" id="tab-custom" class="flex-1 py-1 px-2 rounded text-xs font-bold bg-gray-800">Custom</button>
-                <button onclick="switchTab('climbers')" id="tab-climbers" class="flex-1 py-1 px-2 rounded text-xs font-bold bg-gray-800">Climbers</button>
-                <button onclick="switchTab('admin')" id="tab-admin" class="flex-1 py-1 px-2 rounded text-xs font-bold bg-gray-800 hidden-view">Admin</button>
+                <button onclick="switchTab('official')" id="tab-official" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-blue-600 transition-colors">Official</button>
+                <button onclick="switchTab('custom')" id="tab-custom" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors">Custom</button>
+                <button onclick="switchTab('climbers')" id="tab-climbers" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors">Climbers</button>
+                <button onclick="switchTab('admin')" id="tab-admin" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors hidden-view">Admin</button>
             </div>
 
-            <!-- Контент вкладок залы -->
+            <!-- Gym Tabs Content -->
             <div id="tab-content-gallery" class="w-full space-y-3"></div>
             <div id="tab-content-climbers" class="w-full space-y-3 hidden-view"></div>
             <div id="tab-content-admin" class="w-full space-y-3 hidden-view">
-                <h3 class="font-bold text-orange-400">Сеттеры залы:</h3>
+                <h3 class="font-bold text-orange-400">Gym Setters:</h3>
                 <div id="admin-setters-list" class="space-y-2"></div>
                 <hr class="border-gray-700 my-4">
-                <h3 class="font-bold">Назначить сеттера:</h3>
+                <h3 class="font-bold">Assign Setter:</h3>
                 <div class="flex space-x-2">
-                    <input id="admin-search-input" placeholder="Поиск по имени/email" class="flex-1 p-2 bg-gray-800 rounded border border-gray-700">
-                    <button onclick="searchUsersForAdmin()" class="bg-blue-600 px-4 rounded font-bold">Искать</button>
+                    <input id="admin-search-input" placeholder="Search by Name/Email" class="flex-1 p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500">
+                    <button onclick="searchUsersForAdmin()" class="bg-blue-600 hover:bg-blue-500 px-4 rounded font-bold">Search</button>
                 </div>
                 <div id="admin-search-results" class="space-y-2 mt-2"></div>
             </div>
         </div>
 
-        <!-- 6. ПОШАГОВОЕ СОЗДАНИЕ МАРШРУТА (WIZARD) -->
-        <div id="view-create-route" class="flex flex-col items-center hidden-view">
-            <h2 class="text-xl font-bold mb-3">Создание маршрута</h2>
+        <!-- 6. WIZARD: CREATE ROUTE -->
+        <div id="view-create-route" class="flex flex-col items-center hidden-view w-full">
+            <h2 class="text-xl font-bold mb-3">Create Route</h2>
             
-            <!-- Шаг 1: Загрузка фото -->
+            <!-- Step 1: Upload Photo -->
             <div id="wizard-step-1" class="w-full flex flex-col items-center">
-                <label class="w-full h-80 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer">
+                <label class="w-full h-80 bg-gray-800 hover:bg-gray-700 transition-colors border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer">
                     <span class="text-4xl mb-2">📷</span>
-                    <span class="font-bold">Загрузить фото стены</span>
+                    <span class="font-bold text-gray-300">Upload wall photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
-                <button onclick="switchTab('official')" class="w-full bg-gray-700 font-bold py-2 rounded-lg mt-3">Назад</button>
+                <button onclick="switchTab('official')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4">Cancel</button>
             </div>
 
-            <!-- Шаг 2: Расстановка зацепов -->
+            <!-- Step 2: Place Holds -->
             <div id="wizard-step-2" class="w-full flex flex-col items-center hidden-view">
                 <div class="flex space-x-2 mb-3">
-                    <button onclick="setHoldColor('green')" class="bg-green-600 px-3 py-1 rounded font-bold text-xs">Start</button>
-                    <button onclick="setHoldColor('blue')" class="bg-blue-600 px-3 py-1 rounded font-bold text-xs">Route</button>
-                    <button onclick="setHoldColor('red')" class="bg-red-600 px-3 py-1 rounded font-bold text-xs">Top</button>
-                    <button onclick="setHoldColor('erase')" class="bg-orange-600 px-3 py-1 rounded font-bold text-xs">Удалить</button>
+                    <button onclick="setHoldColor('green')" class="bg-green-600 px-3 py-2 rounded font-bold text-xs">Start</button>
+                    <button onclick="setHoldColor('blue')" class="bg-blue-600 px-3 py-2 rounded font-bold text-xs">Route</button>
+                    <button onclick="setHoldColor('red')" class="bg-red-600 px-3 py-2 rounded font-bold text-xs">Top</button>
+                    <button onclick="setHoldColor('erase')" class="bg-orange-600 px-3 py-2 rounded font-bold text-xs">Erase</button>
                 </div>
                 
-                <div id="canvas-container" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700" onclick="handleCanvasClick(event)">
+                <div id="canvas-container" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 cursor-crosshair" onclick="handleCanvasClick(event)">
                     <img id="wizard-wall-img" class="w-full h-full object-contain pointer-events-none">
                 </div>
 
-                <div class="flex space-x-2 w-full mt-3">
-                    <button onclick="wizardStep(1)" class="flex-1 bg-gray-700 py-2 rounded font-bold">Назад</button>
-                    <button onclick="wizardStep(3)" class="flex-1 bg-blue-600 py-2 rounded font-bold">Далее</button>
+                <div class="flex space-x-2 w-full mt-4">
+                    <button onclick="wizardStep(1)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold">Back</button>
+                    <button onclick="wizardStep(3)" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold">Next</button>
                 </div>
             </div>
 
-            <!-- Шаг 3: Детали маршрута -->
+            <!-- Step 3: Route Details -->
             <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
-                <input id="route-name" placeholder="Название (необязательно)" class="w-full p-2 bg-gray-800 rounded border border-gray-700">
-                <select id="route-grade" class="w-full p-2 bg-gray-800 rounded border border-gray-700">
-                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option>
+                <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
+                <select id="route-grade" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
+                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="8A">8A</option>
                 </select>
-                <textarea id="route-desc" placeholder="Описание" class="w-full p-2 bg-gray-800 rounded border border-gray-700"></textarea>
-                <div class="flex space-x-2">
-                    <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 py-2 rounded font-bold">Назад</button>
-                    <button onclick="saveNewRoute()" class="flex-1 bg-purple-600 py-2 rounded font-bold">Сохранить</button>
+                <textarea id="route-desc" placeholder="Description" rows="3" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500"></textarea>
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold">Back</button>
+                    <button onclick="saveNewRoute()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-3 rounded font-bold">Save</button>
                 </div>
             </div>
         </div>
 
-        <!-- 7. ПРОСМОТР МАРШРУТА -->
+        <!-- 7. ROUTE DETAIL VIEW -->
         <div id="view-route-detail" class="flex flex-col items-center hidden-view">
-            <h2 id="detail-title" class="text-xl font-bold mb-1">Название</h2>
+            <h2 id="detail-title" class="text-xl font-bold mb-1">Route Name</h2>
             <p id="detail-author" class="text-gray-400 text-xs mb-3"></p>
             
             <div id="detail-canvas" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 mb-4">
@@ -184,44 +186,44 @@
             </div>
 
             <div class="flex flex-wrap gap-2 w-full justify-center">
-                <button onclick="navigate('gym-routes')" class="bg-gray-700 px-4 py-2 rounded font-bold text-sm">Назад</button>
-                <button id="detail-complete-btn" onclick="toggleCompleteRoute()" class="bg-gray-600 px-4 py-2 rounded font-bold text-sm">Пройдено</button>
-                <button id="detail-delete-btn" onclick="deleteRoute()" class="bg-red-600 px-4 py-2 rounded font-bold text-sm hidden-view">Удалить</button>
+                <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-5 py-2 rounded font-bold text-sm">Back</button>
+                <button id="detail-complete-btn" onclick="toggleCompleteRoute()" class="bg-gray-600 px-5 py-2 rounded font-bold text-sm">Mark Complete</button>
+                <button id="detail-delete-btn" onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm hidden-view">Delete</button>
             </div>
         </div>
 
-        <!-- 8. ПРОФИЛЬ ДРУГОГО ЧУВАКА -->
+        <!-- 8. OTHER USER PROFILE -->
         <div id="view-other-profile" class="flex flex-col items-center hidden-view">
             <img id="op-avatar" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg mt-4">
-            <h2 id="op-name" class="text-2xl font-bold mt-3">Имя</h2>
+            <h2 id="op-name" class="text-2xl font-bold mt-3">Name</h2>
             <p id="op-realname" class="text-gray-400 text-xs"></p>
             <p id="op-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
-            <button id="op-action-btn" onclick="handleOpAction()" class="mt-4 px-6 py-2 rounded font-bold bg-blue-600">Добавить в друзья</button>
+            <button id="op-action-btn" onclick="handleOpAction()" class="mt-4 px-6 py-2 rounded font-bold bg-blue-600">Add Friend</button>
             
             <div id="op-stats-box" class="w-full mt-6 space-y-3">
                 <div class="w-full grid grid-cols-2 gap-3">
-                    <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs">Макс Категория</p><p id="op-stat-max" class="text-xl font-bold text-red-500">-</p></div>
-                    <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs">Пройдено</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
+                    <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="op-stat-max" class="text-xl font-bold text-red-500">-</p></div>
+                    <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
                 </div>
             </div>
-            <button onclick="history.back()" class="mt-6 bg-gray-700 px-4 py-2 rounded font-bold text-sm">Назад</button>
+            <button onclick="history.back()" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm">Back</button>
         </div>
 
-        <!-- 9. НАСТРОЙКИ -->
-        <div id="view-settings" class="flex flex-col items-center hidden-view">
-            <h2 class="text-2xl font-bold mb-6">Настройки</h2>
-            <div class="w-full bg-red-900 bg-opacity-30 border border-red-600 p-4 rounded-lg">
-                <h3 class="font-bold text-red-500 mb-1">Опасная зона</h3>
-                <p class="text-gray-400 text-xs mb-3">Удаление аккаунта со всеми данными.</p>
-                <button onclick="deleteAccount()" class="w-full bg-red-600 font-bold py-2 rounded">Удалить аккаунт</button>
+        <!-- 9. SETTINGS -->
+        <div id="view-settings" class="flex flex-col items-center hidden-view w-full">
+            <h2 class="text-2xl font-bold mb-6">Settings</h2>
+            <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-5 rounded-lg">
+                <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
+                <p class="text-gray-400 text-xs mb-4">Delete account and all associated data permanently.</p>
+                <button onclick="deleteAccount()" class="w-full bg-red-600 hover:bg-red-500 font-bold py-3 rounded">Delete Account</button>
             </div>
         </div>
 
     </div>
 
-    <!-- ЛОГИКА -->
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        const ALL_GRADES = ["6A", "6A+", "6B", "6B+", "6C", "7A", "7A+", "7B"];
+        const ALL_GRADES = ["6A", "6A+", "6B", "6B+", "6C", "7A", "7A+", "7B", "7B+", "7C", "8A"];
         let currentGymId = null, currentGymRole = 'user', currentTab = 'official';
         let wizardColor = 'green', wizardMarkers = [], currentBoulderId = null, currentOtherUserId = null;
 
@@ -254,58 +256,61 @@
         }
 
         function navigate(viewName) {
-            toggleMenu();
+            if(!document.getElementById('drawer').classList.contains('-translate-x-full')) toggleMenu();
             if(viewName === 'home') { loadHomeView(); showView('view-home'); }
             else if(viewName === 'friends') { loadFriendsView(); showView('view-friends'); }
             else if(viewName === 'gyms') { loadGymsView(); showView('view-gyms'); }
+            else if(viewName === 'gym-routes') { showView('view-gym-routes'); loadGallery(); }
             else if(viewName === 'settings') { showView('view-settings'); }
         }
 
-        // АВТОРИЗАЦИЯ
+        // --- AUTH ---
         let isLoginMode = true;
         function switchAuthMode() {
             isLoginMode = !isLoginMode;
-            document.getElementById('auth-title').innerText = isLoginMode ? "Вход" : "Регистрация";
-            document.getElementById('auth-btn').innerText = isLoginMode ? "Войти" : "Создать аккаунт";
-            document.getElementById('auth-switch').innerText = isLoginMode ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти";
+            document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Sign Up";
+            document.getElementById('auth-btn').innerText = isLoginMode ? "Login" : "Create Account";
+            document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
         }
 
         async function processAuth() {
             const email = document.getElementById('auth-email').value.trim().toLowerCase().replace(/\./g, ',');
             const pwd = document.getElementById('auth-password').value.trim();
-            if(!email || !pwd) return showNotify("Заполните все поля", true);
+            if(!email || !pwd) return showNotify("Fill all fields", true);
 
             const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
             const hashedPwd = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
             if (!isLoginMode) {
                 const existing = await apiCall('/api/db/get', { path: `auth_users/${email}` });
-                if(existing) return showNotify("Email уже занят!", true);
+                if(existing) return showNotify("Email already registered!", true);
                 const newUid = crypto.randomUUID();
                 await apiCall('/api/db/save', { path: `auth_users/${email}`, payload: { uid: newUid, password: hashedPwd } });
                 const profile = { user_id: newUid, email: email, name: `User_${newUid.substring(0,5)}`, bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [] };
                 await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 loadHomeView(); showView('view-home');
+                showNotify("Account created!");
             } else {
                 const userCreds = await apiCall('/api/db/get', { path: `auth_users/${email}` });
-                if(!userCreds || userCreds.password !== hashedPwd) return showNotify("Неверный email или пароль", true);
+                if(!userCreds || userCreds.password !== hashedPwd) return showNotify("Invalid email or password", true);
                 let profile = await apiCall('/api/db/get', { path: `users/${userCreds.uid}` });
                 profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${userCreds.uid}` }) || [];
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 loadHomeView(); showView('view-home');
+                showNotify("Welcome back!");
             }
         }
 
         function logout() { localStorage.removeItem('user_profile'); showView('view-auth'); }
 
-        // ПРОФИЛЬ
+        // --- PROFILE ---
         async function loadHomeView() {
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
             profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${profile.user_id}` }) || [];
             localStorage.setItem('user_profile', JSON.stringify(profile));
 
-            document.getElementById('profile-name').innerText = profile.name || "Без имени";
+            document.getElementById('profile-name').innerText = profile.name || "Unnamed";
             document.getElementById('profile-realname').innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
             document.getElementById('profile-bio').innerText = profile.bio || "";
             if(profile.avatar_url) document.getElementById('profile-avatar').src = profile.avatar_url;
@@ -315,12 +320,18 @@
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
             
+            // Grade Breakdown Calculation
+            const counts = {};
+            grades.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
+            const breakdownStr = Object.entries(counts).sort((a,b) => ALL_GRADES.indexOf(a[0]) - ALL_GRADES.indexOf(b[0])).map(e => `${e[0]}: ${e[1]}`).join(' | ');
+            document.getElementById('stat-breakdown').innerText = breakdownStr || "No ascents yet";
+
             loadFriendRequests();
         }
 
         async function uploadAvatar(input) {
             const file = input.files[0]; if(!file) return;
-            showNotify("Загрузка аватара... ⏳");
+            showNotify("Uploading avatar... ⏳");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
@@ -329,11 +340,13 @@
                 profile.avatar_url = res.url;
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
-                loadHomeView(); showNotify("Аватар обновлен!");
+                loadHomeView(); showNotify("Avatar updated!");
+            } else {
+                showNotify("Upload failed", true);
             }
         }
 
-        // ДРУЗЬЯ И ЗАПРОСЫ
+        // --- FRIENDS & REQUESTS ---
         async function loadFriendRequests() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const reqs = await apiCall('/api/db/get', { path: `friend_requests/${profile.user_id}` }) || {};
@@ -345,7 +358,7 @@
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             for(let senderId in reqs) {
                 const u = allUsers[senderId] || {};
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-2 py-1 rounded text-xs mr-1">✔</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-2 py-1 rounded text-xs">✕</button></div></div>`;
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2">✔</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs">✕</button></div></div>`;
             }
         }
 
@@ -355,7 +368,7 @@
             if(accept) {
                 await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${senderId}`, payload: true });
                 await apiCall('/api/db/save', { path: `friends/${senderId}/${profile.user_id}`, payload: true });
-                showNotify("Друг добавлен!");
+                showNotify("Friend added!");
             }
             loadFriendRequests();
         }
@@ -366,14 +379,14 @@
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             const list = document.getElementById('friends-list');
             list.innerHTML = '';
-            if(Object.keys(friends).length === 0) { list.innerHTML = '<p class="text-gray-500 text-center">Нет друзей</p>'; return; }
+            if(Object.keys(friends).length === 0) { list.innerHTML = '<p class="text-gray-500 text-center mt-4">No friends yet</p>'; return; }
             for(let fId in friends) {
                 const u = allUsers[fId] || {};
-                list.innerHTML += `<div onclick="openOtherProfile('${fId}')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer"><span>@${u.nickname || 'User'}</span><span class="text-blue-400 text-sm">Профиль ></span></div>`;
+                list.innerHTML += `<div onclick="openOtherProfile('${fId}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2"><span>@${u.nickname || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`;
             }
         }
 
-        // ЗАЛЫ
+        // --- GYMS ---
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             if(profile.is_global_admin) document.getElementById('create-gym-btn').classList.remove('hidden-view');
@@ -382,7 +395,7 @@
             list.innerHTML = '';
             for(let gId in gyms) {
                 const g = gyms[gId];
-                list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || ''}</p></div><span class="text-blue-400 font-bold">Войти -></span></div>`;
+                list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown City'}</p></div><span class="text-blue-400 font-bold">Enter -></span></div>`;
             }
         }
 
@@ -395,7 +408,7 @@
             await apiCall('/api/db/save', { path: `gyms/${gId}`, payload: { id: gId, name, city } });
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             await apiCall('/api/db/save', { path: `gym_roles/${gId}/${profile.user_id}`, payload: 'admin' });
-            toggleGymForm(false); loadGymsView(); showNotify("Зал создан!");
+            toggleGymForm(false); loadGymsView(); showNotify("Gym created!");
         }
 
         async function openGym(gymId, gymName) {
@@ -409,14 +422,14 @@
             }
             document.getElementById('tab-admin').classList.toggle('hidden-view', currentGymRole !== 'admin');
             switchTab('official');
-            showView('view-gym-routes');
+            navigate('gym-routes');
         }
 
         function switchTab(tabName) {
             currentTab = tabName;
             ['official', 'custom', 'climbers', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
-                if(btn) btn.className = `flex-1 py-1 px-2 rounded text-xs font-bold ${t === tabName ? 'bg-blue-600' : 'bg-gray-800'}`;
+                if(btn) btn.className = `flex-1 py-2 px-2 rounded text-xs font-bold transition-colors ${t === tabName ? 'bg-blue-600' : 'bg-gray-800'}`;
             });
             document.getElementById('tab-content-gallery').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin');
             document.getElementById('tab-content-climbers').classList.toggle('hidden-view', tabName !== 'climbers');
@@ -436,15 +449,19 @@
             list.innerHTML = '';
             const completedIds = (profile.ascents_history || []).map(a => a.boulder_id);
             let found = false;
-            for(let bId in boulders) {
+            // Iterate in reverse for newest first
+            const bKeys = Object.keys(boulders).reverse();
+            for(let bId of bKeys) {
                 const b = boulders[bId];
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
                     found = true;
                     const isDone = completedIds.includes(b.id);
-                    list.innerHTML += `<div onclick='openRouteDetail(${JSON.stringify(b)})' class="bg-gray-800 p-4 rounded-lg cursor-pointer flex justify-between items-center"><div><h4 class="font-bold">${b.name}</h4><p class="text-gray-400 text-xs">Категория: ${b.grade} | Автор: ${b.author}</p></div>${isDone ? '<span class="text-green-500 font-bold">✔</span>' : ''}</div>`;
+                    // Safe stringify for onclick
+                    const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                    list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}</p></div>${isDone ? '<span class="text-green-500 font-bold text-xl">✔</span>' : ''}</div>`;
                 }
             }
-            if(!found) list.innerHTML = '<p class="text-gray-500 text-center">Нет маршрутов</p>';
+            if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No ${currentTab} routes here yet.</p>`;
         }
 
         async function loadGymClimbers() {
@@ -454,7 +471,8 @@
             list.innerHTML = '';
             for(let uid in roles) {
                 const u = allUsers[uid] || {};
-                list.innerHTML += `<div onclick="openOtherProfile('${uid}')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer"><span>@${u.nickname || 'User'}</span><span class="text-orange-400 text-xs">${roles[uid]}</span></div>`;
+                const rBadge = roles[uid] === 'admin' ? '👑 Admin' : (roles[uid] === 'setter' ? '🛠️ Setter' : '');
+                list.innerHTML += `<div onclick="openOtherProfile('${uid}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700"><span>@${u.nickname || 'User'}</span><span class="text-orange-400 text-xs font-bold">${rBadge}</span></div>`;
             }
         }
 
@@ -466,7 +484,7 @@
             for(let uid in roles) {
                 if(roles[uid] === 'setter') {
                     const u = allUsers[uid] || {};
-                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-2 rounded"><span>@${u.nickname || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 px-2 py-1 rounded text-xs">Снять</button></div>`;
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2"><span>@${u.nickname || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold">Demote</button></div>`;
                 }
             }
         }
@@ -479,17 +497,17 @@
             for(let uid in allUsers) {
                 const u = allUsers[uid];
                 if((u.nickname || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
-                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 px-2 py-1 rounded text-xs">Сеттер</button></div>`;
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold">Make Setter</button></div>`;
                 }
             }
         }
 
         async function setGymRole(uid, role) {
             await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role });
-            showNotify("Роль обновлена!"); loadAdminPanel();
+            showNotify("Role updated!"); loadAdminPanel();
         }
 
-        // СОЗДАНИЕ МАРШРУТА (WIZARD)
+        // --- CREATE ROUTE (WIZARD) ---
         function startCreateRoute() {
             wizardMarkers = []; document.getElementById('wizard-wall-img').src = '';
             wizardStep(1); showView('view-create-route');
@@ -503,13 +521,15 @@
 
         async function loadWallPhoto(input) {
             const file = input.files[0]; if(!file) return;
-            showNotify("Загрузка фото стены... ⏳");
+            showNotify("Uploading wall photo... ⏳");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
                 document.getElementById('wizard-wall-img').src = res.url;
                 document.getElementById('detail-wall-img').src = res.url;
-                wizardStep(2); showNotify("Фото загружено!");
+                wizardStep(2); showNotify("Photo uploaded!");
+            } else {
+                showNotify("Upload failed", true);
             }
         }
 
@@ -517,9 +537,7 @@
         function handleCanvasClick(e) {
             const rect = e.target.getBoundingClientRect();
             const x = e.clientX - rect.left, y = e.clientY - rect.top;
-            const container = document.getElementById('canvas-container');
             if(wizardColor === 'erase') {
-                // Удаление ближайшего маркера
                 wizardMarkers = wizardMarkers.filter(m => Math.hypot(m.x - x, m.y - y) > 20);
             } else {
                 wizardMarkers.push({ x, y, color: wizardColor });
@@ -532,7 +550,7 @@
             container.querySelectorAll('.marker').forEach(el => el.remove());
             wizardMarkers.forEach(m => {
                 const dot = document.createElement('div');
-                dot.className = 'marker absolute w-7 h-7 rounded-full border-4 pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
+                dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
                 dot.style.left = m.x + 'px'; dot.style.top = m.y + 'px';
                 dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444';
                 container.appendChild(dot);
@@ -542,33 +560,39 @@
         async function saveNewRoute() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const bId = 'boulder_' + Math.random().toString(36).substring(2, 9);
+            const rGrade = document.getElementById('route-grade').value;
             const bData = {
                 id: bId, gym_id: currentGymId, route_type: currentTab,
-                name: document.getElementById('route-name').value || 'Без названия',
-                grade: document.getElementById('route-grade').value,
+                name: document.getElementById('route-name').value || 'Unnamed',
+                grade: rGrade,
                 description: document.getElementById('route-desc').value,
                 author: profile.name, author_id: profile.user_id,
                 image_url: document.getElementById('wizard-wall-img').src,
                 markers: wizardMarkers
             };
             await apiCall('/api/db/save', { path: `boulders/${bId}`, payload: bData });
-            showNotify("Маршрут создан!");
-            switchTab(currentTab); showView('view-gym-routes');
+            showNotify("Route created!");
+            
+            // Clear inputs
+            document.getElementById('route-name').value = '';
+            document.getElementById('route-desc').value = '';
+            
+            navigate('gym-routes');
         }
 
-        // ПРОСМОТР МАРШРУТА
+        // --- ROUTE DETAIL ---
         let activeBoulder = null;
         function openRouteDetail(b) {
             activeBoulder = b;
-            document.getElementById('detail-title').innerText = `${b.name} (${b.grade})`;
-            document.getElementById('detail-author').innerText = `Автор: ${b.author} | ${b.description || ''}`;
+            document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} (${b.grade})`;
+            document.getElementById('detail-author').innerText = `Author: ${b.author || 'Unknown'} | ${b.description || ''}`;
             document.getElementById('detail-wall-img').src = b.image_url;
             
             const container = document.getElementById('detail-canvas');
             container.querySelectorAll('.marker').forEach(el => el.remove());
             (b.markers || []).forEach(m => {
                 const dot = document.createElement('div');
-                dot.className = 'marker absolute w-7 h-7 rounded-full border-4 pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
+                dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
                 dot.style.left = m.x + 'px'; dot.style.top = m.y + 'px';
                 dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444';
                 container.appendChild(dot);
@@ -577,8 +601,8 @@
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const isDone = (profile.ascents_history || []).some(a => a.boulder_id === b.id);
             const btnComp = document.getElementById('detail-complete-btn');
-            btnComp.innerText = isDone ? "Пройдено" : "Отметить проход";
-            btnComp.className = `px-4 py-2 rounded font-bold text-sm ${isDone ? 'bg-green-600' : 'bg-gray-600'}`;
+            btnComp.innerText = isDone ? "Completed" : "Mark Complete";
+            btnComp.className = `px-5 py-2 rounded font-bold text-sm transition-colors ${isDone ? 'bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`;
 
             const canDelete = currentGymRole === 'admin' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
             document.getElementById('detail-delete-btn').classList.toggle('hidden-view', !canDelete);
@@ -596,26 +620,30 @@
             profile.ascents_history = history;
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
-            openRouteDetail(activeBoulder); showNotify("Статистика обновлена!");
+            openRouteDetail(activeBoulder); 
+            showNotify("Stats updated!");
         }
 
         async function deleteRoute() {
+            if(!confirm("Delete this route permanently?")) return;
             await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, method: 'DELETE' });
             if(activeBoulder.image_url) apiCall('/api/delete_image', { url: activeBoulder.image_url });
-            showNotify("Маршрут удален!"); switchTab(currentTab); showView('view-gym-routes');
+            showNotify("Route deleted!"); 
+            navigate('gym-routes');
         }
 
-        // ПРОФИЛЬ ДРУГОГО И НАСТРОЙКИ
+        // --- OTHER PROFILE ---
         async function openOtherProfile(uid) {
             currentOtherUserId = uid;
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             if(uid === profile.user_id) { navigate('home'); return; }
+            
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             const u = allUsers[uid] || {};
             document.getElementById('op-name').innerText = `@${u.nickname || 'User'}`;
             document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim();
             document.getElementById('op-bio').innerText = u.bio || "";
-            document.getElementById('op-avatar').src = u.avatar_url || 'https://via.placeholder.com/150';
+            document.getElementById('op-avatar').src = u.avatar_url || 'https://via.placeholder.com/150/444444/FFFFFF?text=No+Img';
             
             const history = await apiCall('/api/db/get', { path: `user_ascents/${uid}` }) || [];
             document.getElementById('op-stat-total').innerText = history.length;
@@ -625,9 +653,9 @@
             const isFriend = await apiCall('/api/db/get', { path: `friends/${profile.user_id}/${uid}` });
             const sentReq = await apiCall('/api/db/get', { path: `friend_requests/${uid}/${profile.user_id}` });
             const btn = document.getElementById('op-action-btn');
-            if(isFriend) { btn.innerText = "Удалить из друзей"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600"; }
-            else if(sentReq) { btn.innerText = "Запрос отправлен"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; }
-            else { btn.innerText = "Добавить в друзья"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600"; }
+            if(isFriend) { btn.innerText = "Remove Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600 hover:bg-red-500"; }
+            else if(sentReq) { btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; }
+            else { btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500"; }
 
             showView('view-other-profile');
         }
@@ -635,24 +663,29 @@
         async function handleOpAction() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const btn = document.getElementById('op-action-btn');
-            if(btn.innerText === "Добавить в друзья") {
+            if(btn.innerText === "Add Friend") {
                 await apiCall('/api/db/save', { path: `friend_requests/${currentOtherUserId}/${profile.user_id}`, payload: true });
-                showNotify("Запрос отправлен!"); btn.innerText = "Запрос отправлен"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600";
-            } else if(btn.innerText === "Удалить из друзей") {
+                showNotify("Friend request sent!"); 
+                btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600";
+            } else if(btn.innerText === "Remove Friend") {
                 await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' });
                 await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' });
-                showNotify("Удален из друзей"); btn.innerText = "Добавить в друзья"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600";
+                showNotify("Removed from friends"); 
+                btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500";
             }
         }
 
+        // --- SETTINGS ---
         async function deleteAccount() {
-            if(!confirm("Точно удалить аккаунт?")) return;
+            if(!confirm("Are you sure you want to delete your account? This cannot be undone.")) return;
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: 'DELETE' });
             await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, method: 'DELETE' });
-            localStorage.clear(); logout(); showNotify("Аккаунт удален");
+            if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
+            localStorage.clear(); logout(); showNotify("Account deleted");
         }
 
+        // --- INIT ---
         window.onload = () => {
             if(localStorage.getItem('user_profile')) { loadHomeView(); showView('view-home'); }
             else { showView('view-auth'); }
