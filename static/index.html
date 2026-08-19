@@ -45,8 +45,6 @@
             <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Friends</button>
             <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Gyms</button>
             <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Settings</button>
-            
-            <!-- СЕКРЕТНАЯ КНОПКА АДМИНА -->
             <button id="nav-super-admin" onclick="navigate('super-admin')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors text-purple-400 hidden-view">App Management</button>
         </div>
     </div>
@@ -193,9 +191,11 @@
                 <button onclick="switchTab('admin')" id="tab-admin" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors hidden-view">Admin</button>
             </div>
 
-            <!-- SECTORS BAR -->
+            <!-- SECTORS AND GRADES BAR -->
             <div id="sector-bar-container" class="w-full hidden-view mb-4">
-                <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide"></div>
+                <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 mb-2 scrollbar-hide"></div>
+                <!-- НОВАЯ ЛЕНТА ФИЛЬТРОВ ПО КАТЕГОРИЯМ -->
+                <div id="grade-filters" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide"></div>
                 
                 <div id="add-sector-form" class="mt-2 flex space-x-2 hidden-view bg-gray-800 p-2 rounded-lg">
                     <input id="new-sector-name" placeholder="Sector Name" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
@@ -218,7 +218,6 @@
                 <div id="climbers-list-container" class="space-y-2"></div>
             </div>
 
-            <!-- ADMIN TAB WITH NEW DELETE GYM BUTTON -->
             <div id="tab-content-admin" class="w-full space-y-3 hidden-view">
                 <h3 class="font-bold text-orange-400">Gym Setters:</h3>
                 <div id="admin-setters-list" class="space-y-2"></div>
@@ -230,7 +229,6 @@
                 </div>
                 <div id="admin-search-results" class="space-y-2 mt-2"></div>
 
-                <!-- DELETE GYM BUTTON (DANGER ZONE) -->
                 <hr class="border-gray-700 my-4">
                 <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-4 rounded-lg mt-4">
                     <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
@@ -274,7 +272,6 @@
             <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
                 <select id="route-sector" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500 hidden-view"></select>
                 <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
-                
                 <select id="route-grade" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
                     <option value="1">1</option><option value="2">2</option><option value="3">3</option>
                     <option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
@@ -285,7 +282,6 @@
                     <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option>
                     <option value="8B+">8B+</option><option value="8C">8C</option>
                 </select>
-
                 <textarea id="route-desc" placeholder="Description" rows="3" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500"></textarea>
                 <div class="flex space-x-2 mt-2">
                     <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
@@ -303,10 +299,34 @@
                 <img id="detail-wall-img" class="w-full h-full object-contain pointer-events-none">
             </div>
 
-            <div class="flex flex-wrap gap-2 w-full justify-center">
-                <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-5 py-2 rounded font-bold text-sm transition-colors">Back</button>
-                <button id="detail-complete-btn" onclick="toggleCompleteRoute()" class="bg-gray-600 hover:bg-gray-500 px-5 py-2 rounded font-bold text-sm transition-colors">Mark Complete</button>
-                <button id="detail-delete-btn" onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm hidden-view transition-colors">Delete</button>
+            <!-- БЛОК ПРОЛАЗОВ (FLASH / REDPOINT) -->
+            <div id="detail-actions" class="flex flex-wrap gap-2 w-full justify-center mb-4"></div>
+
+            <!-- БЛОК АДМИНА (EDIT / DELETE) -->
+            <div id="detail-admin-actions" class="flex flex-wrap gap-2 w-full justify-center hidden-view">
+                <button onclick="toggleEditRouteForm()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded font-bold text-sm transition-colors">Edit Route</button>
+                <button onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm transition-colors">Delete Route</button>
+            </div>
+
+            <!-- ФОРМА РЕДАКТИРОВАНИЯ (Скрыта по умолчанию) -->
+            <div id="edit-route-form" class="hidden-view w-full space-y-2 mt-4 bg-gray-800 p-4 rounded-lg">
+                <h3 class="font-bold text-sm text-gray-300 mb-2">Edit Details</h3>
+                <input id="edit-rt-name" placeholder="Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
+                <select id="edit-rt-grade" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
+                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option>
+                    <option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
+                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option>
+                    <option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
+                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option>
+                    <option value="8B+">8B+</option><option value="8C">8C</option>
+                </select>
+                <textarea id="edit-rt-desc" placeholder="Description" rows="2" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm"></textarea>
+                <div class="flex space-x-2">
+                    <button onclick="toggleEditRouteForm()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-1.5 rounded font-bold text-sm transition-colors">Cancel</button>
+                    <button onclick="saveRouteEdit()" class="flex-1 bg-green-600 hover:bg-green-500 py-1.5 rounded font-bold text-sm transition-colors">Save</button>
+                </div>
             </div>
         </div>
 
@@ -384,7 +404,6 @@
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // ТВОЙ УНИКАЛЬНЫЙ UID СОЗДАТЕЛЯ
         const MASTER_UID = "8Js6S97qXKMPt0S2WqPgtZIfUKk2";
 
         if ('serviceWorker' in navigator) {
@@ -400,7 +419,7 @@
         
         let currentGymId = null, currentGymRole = 'user', currentTab = 'official';
         let wizardColor = 'green', wizardMarkers = [], currentBoulderId = null, currentOtherUserId = null;
-        let gymSectors = {}; let currentSector = 'all';
+        let gymSectors = {}; let currentSector = 'all'; let currentGradeFilter = 'all';
         let currentClimbersData = [];
         let profileBackTarget = 'home'; 
 
@@ -481,49 +500,34 @@
                     await user.sendEmailVerification();
                     
                     const profile = { user_id: user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false, can_create_gyms: false };
-                    
-                    // ЕСЛИ РЕГАЕТСЯ БОСС - ДАЕМ ПРАВА
                     if (user.uid === MASTER_UID) profile.is_global_admin = true;
 
                     await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
                     localStorage.setItem('user_profile', JSON.stringify(profile));
-                    
                     showNotify("Account created! Check your email to verify.", false);
                     showView('view-onboarding');
-                } catch (error) {
-                    showNotify(error.message.replace("Firebase: ", ""), true);
-                }
+                } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
             } else {
                 try {
                     showNotify("Logging in...");
                     const userCred = await auth.signInWithEmailAndPassword(rawEmail, pwd);
                     const user = userCred.user;
-                    
-                    if (!user.emailVerified) {
-                        return showNotify("Please verify your email first! Check your inbox.", true);
-                    }
+                    if (!user.emailVerified) return showNotify("Please verify your email first! Check your inbox.", true);
 
                     let profile = await apiCall('/api/db/get', { path: `users/${user.uid}` });
                     if (!profile) profile = { user_id: user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", ascents_history: [], is_global_admin: false, can_create_gyms: false };
-                    
-                    // ЕСЛИ ВХОДИТ БОСС - АВТОМАТИЧЕСКИ ДЕЛАЕМ БОГОМ
                     if (user.uid === MASTER_UID && !profile.is_global_admin) {
-                        profile.is_global_admin = true;
-                        await apiCall('/api/db/save', { path: `users/${user.uid}/is_global_admin`, payload: true });
+                        profile.is_global_admin = true; await apiCall('/api/db/save', { path: `users/${user.uid}/is_global_admin`, payload: true });
                     }
 
                     profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
                     localStorage.setItem('user_profile', JSON.stringify(profile));
-                    
                     if (!profile.name) showView('view-onboarding');
                     else { loadHomeView(); showView('view-home'); showNotify("Welcome back!"); }
-                } catch (error) {
-                    showNotify(error.message.replace("Firebase: ", ""), true);
-                }
+                } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
             }
         }
 
-        // --- GOOGLE SIGN IN ---
         async function googleSignIn() {
             try {
                 showNotify("Connecting to Google...");
@@ -534,31 +538,19 @@
                 if (!profile) {
                     profile = { 
                         user_id: user.uid, email: user.email, 
-                        name: user.displayName || "", 
-                        first_name: (user.displayName || "").split(" ")[0],
-                        last_name: (user.displayName || "").split(" ").slice(1).join(" "),
-                        bio: "Bouldering Enthusiast", 
-                        avatar_url: user.photoURL || "", 
+                        name: user.displayName || "", first_name: (user.displayName || "").split(" ")[0], last_name: (user.displayName || "").split(" ").slice(1).join(" "),
+                        bio: "Bouldering Enthusiast", avatar_url: user.photoURL || "", 
                         ascents_history: [], is_global_admin: false, can_create_gyms: false 
                     };
                 }
-                
-                // ЕСЛИ ВХОДИТ БОСС - АВТОМАТИЧЕСКИ ДЕЛАЕМ БОГОМ
-                if (user.uid === MASTER_UID && !profile.is_global_admin) {
-                    profile.is_global_admin = true;
-                }
+                if (user.uid === MASTER_UID && !profile.is_global_admin) profile.is_global_admin = true;
                 
                 await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
-                
                 profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
                 localStorage.setItem('user_profile', JSON.stringify(profile));
-                
                 if (!profile.name) showView('view-onboarding');
                 else { loadHomeView(); showView('view-home'); showNotify("Welcome back!"); }
-                
-            } catch (error) {
-                showNotify(error.message.replace("Firebase: ", ""), true);
-            }
+            } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
         }
 
         function logout() { 
@@ -567,7 +559,6 @@
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
             document.getElementById('auth-password-confirm').value = '';
-            
             document.getElementById('auth-password').type = 'password';
             document.getElementById('eye-open').classList.remove('hidden-view');
             document.getElementById('eye-closed').classList.add('hidden-view');
@@ -576,23 +567,17 @@
 
         // --- SUPER ADMIN LOGIC ---
         async function searchUserForDirector() {
-            const q = document.getElementById('sa-search-input').value.toLowerCase().trim();
-            if (!q) return;
+            const q = document.getElementById('sa-search-input').value.toLowerCase().trim(); if (!q) return;
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('sa-search-results');
-            list.innerHTML = '';
+            const list = document.getElementById('sa-search-results'); list.innerHTML = '';
             let found = false;
             for(let uid in allUsers) {
                 const u = allUsers[uid];
                 if((u.email || '').toLowerCase() === q) {
-                    found = true;
-                    const isDir = u.can_create_gyms ? '<span class="text-green-500 text-xs font-bold ml-2">[DIRECTOR]</span>' : '';
+                    found = true; const isDir = u.can_create_gyms ? '<span class="text-green-500 text-xs font-bold ml-2">[DIRECTOR]</span>' : '';
                     list.innerHTML += `
                         <div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2">
-                            <div>
-                                <span>@${u.nickname || u.name}</span> <br> 
-                                <span class="text-xs text-gray-500">${u.email}</span> ${isDir}
-                            </div>
+                            <div><span>@${u.nickname || u.name}</span> <br> <span class="text-xs text-gray-500">${u.email}</span> ${isDir}</div>
                             <button onclick="makeGymDirector('${uid}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-xs font-bold transition-colors">Grant Rights</button>
                         </div>`;
                 }
@@ -602,44 +587,31 @@
 
         async function makeGymDirector(uid) {
             await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true });
-            showNotify("Gym Director rights granted!");
-            searchUserForDirector();
+            showNotify("Gym Director rights granted!"); searchUserForDirector();
         }
 
         // --- ONBOARDING ---
         async function uploadOnboardAvatar(input) {
-            const file = input.files[0]; if(!file) return;
-            showNotify("Uploading avatar...");
+            const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
-                profile.avatar_url = res.url;
-                localStorage.setItem('user_profile', JSON.stringify(profile));
+                profile.avatar_url = res.url; localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
-                document.getElementById('onboard-avatar').src = res.url;
-                showNotify("Avatar uploaded!");
+                document.getElementById('onboard-avatar').src = res.url; showNotify("Avatar uploaded!");
             } else { showNotify("Upload failed", true); }
         }
 
         async function completeOnboarding() {
-            const nickname = document.getElementById('onb-nickname').value.trim();
-            if (!nickname) return showNotify("Nickname is required!", true);
-
-            const realname = document.getElementById('onb-realname').value.trim();
-            const bio = document.getElementById('onb-bio').value.trim();
-
-            const parts = realname.split(' ');
+            const nickname = document.getElementById('onb-nickname').value.trim(); if (!nickname) return showNotify("Nickname is required!", true);
+            const parts = document.getElementById('onb-realname').value.trim().split(' ');
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
-            profile.name = nickname;
-            profile.first_name = parts[0] || '';
-            profile.last_name = parts.slice(1).join(' ') || '';
-            if (bio) profile.bio = bio;
-
+            profile.name = nickname; profile.first_name = parts[0] || ''; profile.last_name = parts.slice(1).join(' ') || '';
+            const bio = document.getElementById('onb-bio').value.trim(); if (bio) profile.bio = bio;
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
-
             loadHomeView(); showView('view-home'); showNotify("Setup Complete!");
         }
 
@@ -656,53 +628,32 @@
         }
 
         async function saveProfile() {
-            const name = document.getElementById('edit-name').value.trim();
-            const realname = document.getElementById('edit-realname').value.trim();
-            const bio = document.getElementById('edit-bio').value.trim();
-            
-            if(!name) return showNotify("Nickname is required!", true);
-
-            const parts = realname.split(' ');
+            const name = document.getElementById('edit-name').value.trim(); if(!name) return showNotify("Nickname is required!", true);
+            const parts = document.getElementById('edit-realname').value.trim().split(' ');
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
-            profile.name = name;
-            profile.first_name = parts[0] || '';
-            profile.last_name = parts.slice(1).join(' ') || '';
-            profile.bio = bio;
-
+            profile.name = name; profile.first_name = parts[0] || ''; profile.last_name = parts.slice(1).join(' ') || '';
+            profile.bio = document.getElementById('edit-bio').value.trim();
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
-
             loadHomeView(); toggleEditProfile(false); showNotify("Profile updated!");
         }
 
-        // --- BAR CHART RENDERER ---
         function renderGradeChart(containerId, gradesArray) {
-            const chartContainer = document.getElementById(containerId);
-            chartContainer.innerHTML = '';
-            const counts = {};
-            gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
-
-            if (Object.keys(counts).length === 0) {
-                chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-sm">No ascents yet</p>'; return;
-            }
-
+            const chartContainer = document.getElementById(containerId); chartContainer.innerHTML = '';
+            const counts = {}; gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
+            if (Object.keys(counts).length === 0) { chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-sm">No ascents yet</p>'; return; }
             const maxCount = Math.max(...Object.values(counts));
-            const sortedGrades = Object.keys(counts).sort((a,b) => ALL_GRADES.indexOf(a) - ALL_GRADES.indexOf(b));
-
-            sortedGrades.forEach(grade => {
-                const count = counts[grade];
-                const heightPercent = (count / maxCount) * 100;
+            Object.keys(counts).sort((a,b) => ALL_GRADES.indexOf(a) - ALL_GRADES.indexOf(b)).forEach(grade => {
+                const heightPercent = (counts[grade] / maxCount) * 100;
                 chartContainer.innerHTML += `
                     <div class="flex flex-col items-center flex-1 min-w-[24px]">
-                        <span class="text-[10px] text-gray-400 mb-1">${count}</span>
+                        <span class="text-[10px] text-gray-400 mb-1">${counts[grade]}</span>
                         <div class="w-full bg-red-500 rounded-t-sm transition-all duration-500 hover:bg-red-400" style="height: ${heightPercent}%"></div>
                         <span class="text-[10px] font-bold mt-1 text-gray-300">${grade}</span>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
-        // --- HOME / PROFILE DATA ---
         async function loadHomeView() {
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
             profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${profile.user_id}` }) || [];
@@ -713,46 +664,34 @@
             document.getElementById('profile-bio').innerText = profile.bio || "";
             if(profile.avatar_url) document.getElementById('profile-avatar').src = profile.avatar_url;
 
-            if(profile.is_global_admin) {
-                document.getElementById('nav-super-admin').classList.remove('hidden-view');
-            } else {
-                document.getElementById('nav-super-admin').classList.add('hidden-view');
-            }
+            if(profile.is_global_admin) document.getElementById('nav-super-admin').classList.remove('hidden-view');
+            else document.getElementById('nav-super-admin').classList.add('hidden-view');
 
-            const history = profile.ascents_history;
-            document.getElementById('stat-total').innerText = history.length;
+            const history = profile.ascents_history; document.getElementById('stat-total').innerText = history.length;
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
-            
-            renderGradeChart('stat-chart', grades);
-            loadFriendRequests();
+            renderGradeChart('stat-chart', grades); loadFriendRequests();
         }
 
         async function uploadAvatar(input) {
-            const file = input.files[0]; if(!file) return;
-            showNotify("Uploading avatar...");
+            const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
-                profile.avatar_url = res.url;
-                localStorage.setItem('user_profile', JSON.stringify(profile));
+                profile.avatar_url = res.url; localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
                 loadHomeView(); showNotify("Avatar updated!");
             } else { showNotify("Upload failed", true); }
         }
 
-        // --- FRIENDS & REQUESTS ---
         async function loadFriendRequests() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const reqs = await apiCall('/api/db/get', { path: `friend_requests/${profile.user_id}` }) || {};
-            const box = document.getElementById('friend-requests-box');
-            const list = document.getElementById('friend-requests-list');
-            list.innerHTML = '';
+            const box = document.getElementById('friend-requests-box'); const list = document.getElementById('friend-requests-list'); list.innerHTML = '';
             if(Object.keys(reqs).length === 0) { box.classList.add('hidden-view'); return; }
-            box.classList.remove('hidden-view');
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+            box.classList.remove('hidden-view'); const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             for(let senderId in reqs) {
                 const u = allUsers[senderId] || {};
                 list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">Decline</button></div></div>`;
@@ -764,8 +703,7 @@
             await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" });
             if(accept) {
                 await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${senderId}`, payload: true });
-                await apiCall('/api/db/save', { path: `friends/${senderId}/${profile.user_id}`, payload: true });
-                showNotify("Friend added!");
+                await apiCall('/api/db/save', { path: `friends/${senderId}/${profile.user_id}`, payload: true }); showNotify("Friend added!");
             }
             loadFriendRequests();
         }
@@ -774,8 +712,7 @@
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const friends = await apiCall('/api/db/get', { path: `friends/${profile.user_id}` }) || {};
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('friends-list');
-            list.innerHTML = '';
+            const list = document.getElementById('friends-list'); list.innerHTML = '';
             if(Object.keys(friends).length === 0) { list.innerHTML = '<p class="text-gray-500 text-center mt-4">No friends yet</p>'; return; }
             for(let fId in friends) {
                 const u = allUsers[fId] || {};
@@ -783,19 +720,12 @@
             }
         }
 
-        // --- GYMS & SECTORS ---
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            
-            if(profile.is_global_admin || profile.can_create_gyms) {
-                document.getElementById('create-gym-btn').classList.remove('hidden-view');
-            } else {
-                document.getElementById('create-gym-btn').classList.add('hidden-view');
-            }
-            
+            if(profile.is_global_admin || profile.can_create_gyms) document.getElementById('create-gym-btn').classList.remove('hidden-view');
+            else document.getElementById('create-gym-btn').classList.add('hidden-view');
             const gyms = await apiCall('/api/db/get', { path: `gyms` }) || {};
-            const list = document.getElementById('gyms-list');
-            list.innerHTML = '';
+            const list = document.getElementById('gyms-list'); list.innerHTML = '';
             for(let gId in gyms) {
                 const g = gyms[gId];
                 list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown City'}</p></div><span class="text-blue-400 font-bold">Enter ></span></div>`;
@@ -803,11 +733,8 @@
         }
 
         function toggleGymForm(show) { document.getElementById('gym-form').classList.toggle('hidden-view', !show); }
-        
         async function saveGym() {
-            const name = document.getElementById('gym-name').value;
-            const city = document.getElementById('gym-city').value;
-            if(!name) return;
+            const name = document.getElementById('gym-name').value; const city = document.getElementById('gym-city').value; if(!name) return;
             const gId = 'gym_' + Math.floor(Math.random()*100000);
             await apiCall('/api/db/save', { path: `gyms/${gId}`, payload: { id: gId, name, city } });
             const profile = JSON.parse(localStorage.getItem('user_profile'));
@@ -816,17 +743,11 @@
         }
 
         async function openGym(gymId, gymName) {
-            currentGymId = gymId;
-            document.getElementById('gym-title').innerText = gymName;
+            currentGymId = gymId; document.getElementById('gym-title').innerText = gymName;
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            
             let roles = await apiCall('/api/db/get', { path: `gym_roles/${gymId}` }) || {};
-            if (!profile.is_global_admin && !roles[profile.user_id]) {
-                await apiCall('/api/db/save', { path: `gym_roles/${gymId}/${profile.user_id}`, payload: 'user' });
-                roles[profile.user_id] = 'user';
-            }
+            if (!profile.is_global_admin && !roles[profile.user_id]) { await apiCall('/api/db/save', { path: `gym_roles/${gymId}/${profile.user_id}`, payload: 'user' }); roles[profile.user_id] = 'user'; }
             currentGymRole = profile.is_global_admin ? 'admin' : (roles[profile.user_id] || 'user');
-            
             document.getElementById('tab-admin').classList.toggle('hidden-view', currentGymRole !== 'admin');
             await loadSectors(); switchTab('official'); navigate('gym-routes');
         }
@@ -835,29 +756,31 @@
 
         function renderSectors() {
             const container = document.getElementById('sector-filters');
-            container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All</button>`;
-            for(let sId in gymSectors) {
-                container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`;
-            }
-            if(currentGymRole === 'admin') container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
-
+            container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All Sectors</button>`;
+            for(let sId in gymSectors) { container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`; }
+            if(currentGymRole === 'admin') container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold bg-gray-700 hover:bg-gray-600 transition-colors">+ Add Sector</button>`;
+            
             const actionsBlock = document.getElementById('sector-actions');
-            if (currentSector !== 'all' && (currentGymRole === 'admin' || currentGymRole === 'setter')) actionsBlock.classList.remove('hidden-view');
-            else actionsBlock.classList.add('hidden-view');
+            if (currentSector !== 'all' && (currentGymRole === 'admin' || currentGymRole === 'setter')) actionsBlock.classList.remove('hidden-view'); else actionsBlock.classList.add('hidden-view');
         }
 
         function selectSector(sId) { currentSector = sId; renderSectors(); loadGallery(); }
 
-        function toggleSectorForm(show) {
-            document.getElementById('add-sector-form').classList.toggle('hidden-view', !show);
-            if(show) { document.getElementById('new-sector-name').value = ''; document.getElementById('new-sector-name').focus(); }
+        // --- GRADE FILTERS ---
+        function renderGradeFilters() {
+            const container = document.getElementById('grade-filters');
+            container.innerHTML = `<button onclick="selectGradeFilter('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentGradeFilter === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All Grades</button>`;
+            ALL_GRADES.forEach(g => {
+                container.innerHTML += `<button onclick="selectGradeFilter('${g}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentGradeFilter === g ? 'bg-blue-600' : 'bg-gray-800'}">${g}</button>`;
+            });
         }
+        function selectGradeFilter(g) { currentGradeFilter = g; renderGradeFilters(); loadGallery(); }
 
+        function toggleSectorForm(show) { document.getElementById('add-sector-form').classList.toggle('hidden-view', !show); if(show) { document.getElementById('new-sector-name').value = ''; document.getElementById('new-sector-name').focus(); } }
         async function saveSector() {
             const name = document.getElementById('new-sector-name').value.trim(); if(!name) return;
             const sId = 'sec_' + Math.random().toString(36).substring(2,9);
-            await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${sId}`, payload: name });
-            toggleSectorForm(false); await loadSectors(); showNotify("Sector added!");
+            await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${sId}`, payload: name }); toggleSectorForm(false); await loadSectors(); showNotify("Sector added!");
         }
 
         async function clearSector() {
@@ -865,10 +788,9 @@
             showNotify("Clearing sector...");
             const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
             for(let bId in boulders) {
-                const b = boulders[bId];
-                if(b.gym_id === currentGymId && b.sector_id === currentSector) {
+                if(boulders[bId].gym_id === currentGymId && boulders[bId].sector_id === currentSector) {
                     await apiCall('/api/db/save', { path: `boulders/${bId}`, method: 'DELETE' });
-                    if(b.image_url) apiCall('/api/delete_image', { url: b.image_url });
+                    if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
                 }
             }
             showNotify("Sector cleared!"); loadGallery();
@@ -879,22 +801,18 @@
             showNotify("Deleting sector...");
             const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
             for(let bId in boulders) {
-                const b = boulders[bId];
-                if(b.gym_id === currentGymId && b.sector_id === currentSector) {
+                if(boulders[bId].gym_id === currentGymId && boulders[bId].sector_id === currentSector) {
                     await apiCall('/api/db/save', { path: `boulders/${bId}`, method: 'DELETE' });
-                    if(b.image_url) apiCall('/api/delete_image', { url: b.image_url });
+                    if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
                 }
             }
             await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${currentSector}`, method: 'DELETE' });
             showNotify("Sector deleted!"); currentSector = 'all'; await loadSectors(); loadGallery();
         }
 
-        // --- УДАЛЕНИЕ ЦЕЛОГО ЗАЛА (ДЛЯ АДМИНА) ---
         async function deleteCurrentGym() {
             if(!confirm("Are you SURE you want to delete this ENTIRE GYM? All sectors, routes, and roles will be lost forever! This cannot be undone.")) return;
             showNotify("Deleting gym...");
-            
-            // 1. Сносим все трассы и фотки
             const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
             for(let bId in boulders) {
                 if(boulders[bId].gym_id === currentGymId) {
@@ -902,26 +820,18 @@
                     if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
                 }
             }
-            
-            // 2. Сносим сектора, роли и сам зал
             await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}`, method: 'DELETE' });
             await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}`, method: 'DELETE' });
             await apiCall('/api/db/save', { path: `gyms/${currentGymId}`, method: 'DELETE' });
-            
-            showNotify("Gym deleted successfully!");
-            navigate('gyms');
+            showNotify("Gym deleted successfully!"); navigate('gyms');
         }
 
         function switchTab(tabName) {
             currentTab = tabName;
             ['official', 'custom', 'climbers', 'admin'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
-                if(btn) {
-                    if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800'); } 
-                    else { btn.classList.add('bg-gray-800'); btn.classList.remove('bg-blue-600'); }
-                }
+                if(btn) { if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800'); } else { btn.classList.add('bg-gray-800'); btn.classList.remove('bg-blue-600'); } }
             });
-            
             document.getElementById('tab-content-gallery').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin');
             document.getElementById('tab-content-climbers').classList.toggle('hidden-view', tabName !== 'climbers');
             document.getElementById('tab-content-admin').classList.toggle('hidden-view', tabName !== 'admin');
@@ -929,6 +839,8 @@
             const showSectors = (tabName === 'official' || tabName === 'custom');
             document.getElementById('sector-bar-container').classList.toggle('hidden-view', !showSectors);
             document.getElementById('add-route-btn').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin' || (tabName === 'official' && currentGymRole === 'user'));
+
+            if(showSectors) renderGradeFilters(); // Рендерим фильтры категорий
 
             if(tabName === 'climbers') loadGymClimbers(); else if(tabName === 'admin') loadAdminPanel(); else loadGallery();
         }
@@ -939,11 +851,23 @@
             const list = document.getElementById('tab-content-gallery'); list.innerHTML = '';
             const completedIds = (profile.ascents_history || []).map(a => a.boulder_id);
             let found = false; const bKeys = Object.keys(boulders).reverse();
+            
             for(let bId of bKeys) {
                 const b = boulders[bId];
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
                     if (currentSector !== 'all' && b.sector_id !== currentSector) continue;
-                    found = true; const isDone = completedIds.includes(b.id);
+                    // ФИЛЬТР ПО КАТЕГОРИЯМ
+                    if (currentGradeFilter !== 'all' && b.grade !== currentGradeFilter) continue;
+
+                    found = true; 
+                    const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
+                    let badge = '';
+                    if (ascent) {
+                        badge = ascent.style === 'flash' 
+                            ? '<span class="text-yellow-500 font-bold text-lg">⚡</span>' 
+                            : '<span class="text-red-500 font-bold text-lg">🔴</span>';
+                    }
+
                     const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
                     const ascentsCount = b.ascents || 0;
@@ -955,19 +879,17 @@
                                 <p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}${secName}</p>
                                 <p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${ascentsCount}</p>
                             </div>
-                            ${isDone ? '<span class="text-green-500 font-bold text-xl">✓</span>' : ''}
+                            ${badge}
                         </div>`;
                 }
             }
-            if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No ${currentTab} routes here yet.</p>`;
+            if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No routes found.</p>`;
         }
 
-        // --- CLIMBERS TAB ---
         async function loadGymClimbers() {
             const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             const allAscents = await apiCall('/api/db/get', { path: `user_ascents` }) || {};
-
             currentClimbersData = [];
             for(let uid in roles) {
                 const u = allUsers[uid] || {}; const history = allAscents[uid] || [];
@@ -976,7 +898,6 @@
                 const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : '-';
                 currentClimbersData.push({ uid: uid, user: u, maxGradeIdx: maxGradeIdx, maxGrade: maxGrade, totalAscents: grades.length });
             }
-
             currentClimbersData.sort((a, b) => { if (b.maxGradeIdx !== a.maxGradeIdx) return b.maxGradeIdx - a.maxGradeIdx; return b.totalAscents - a.totalAscents; });
             document.getElementById('climbers-search').value = ''; renderClimbers();
         }
@@ -989,25 +910,15 @@
                 const nameStr = (c.user.nickname || c.user.name || 'User').toLowerCase();
                 const realStr = ((c.user.first_name || '') + ' ' + (c.user.last_name || '')).toLowerCase();
                 const emailStr = (c.user.email || '').toLowerCase();
-
                 if (nameStr.includes(q) || realStr.includes(q) || emailStr.includes(q)) {
                     let rankColor = "text-gray-400";
                     if (rank === 1) rankColor = "text-yellow-500 font-extrabold";
                     else if (rank === 2) rankColor = "text-gray-300 font-extrabold";
                     else if (rank === 3) rankColor = "text-orange-400 font-extrabold";
-
                     container.innerHTML += `
                         <div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors">
-                            <div class="flex items-center space-x-3">
-                                <span class="w-6 text-center text-lg ${rankColor}">#${rank}</span>
-                                <div>
-                                    <p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p>
-                                    <p class="text-xs text-gray-400">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p>
-                                </div>
-                            </div>
-                            <span class="text-blue-400 text-sm font-bold">></span>
-                        </div>
-                    `;
+                            <div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><p class="text-xs text-gray-400">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span>
+                        </div>`;
                 }
                 rank++;
             });
@@ -1039,7 +950,6 @@
 
         async function setGymRole(uid, role) { await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role }); showNotify("Role updated!"); loadAdminPanel(); }
 
-        // --- CREATE ROUTE ---
         function startCreateRoute() {
             wizardMarkers = []; document.getElementById('wizard-wall-img').src = '';
             const secSelect = document.getElementById('route-sector'); secSelect.innerHTML = '';
@@ -1099,9 +1009,13 @@
         // --- ROUTE DETAIL ---
         let activeBoulder = null;
         function openRouteDetail(b) {
-            activeBoulder = b; document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} (${b.grade})`;
+            activeBoulder = b; 
+            document.getElementById('edit-route-form').classList.add('hidden-view'); // Прячем форму если была открыта
+            
+            document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} (${b.grade})`;
             document.getElementById('detail-author').innerText = `Author: ${b.author || 'Unknown'} | Ascents: ${b.ascents || 0}\n${b.description || ''}`;
             document.getElementById('detail-wall-img').src = b.image_url;
+            
             const container = document.getElementById('detail-canvas'); container.querySelectorAll('.marker').forEach(el => el.remove());
             (b.markers || []).forEach(m => {
                 const dot = document.createElement('div');
@@ -1111,29 +1025,73 @@
                 container.appendChild(dot);
             });
 
+            // FLASH / REDPOINT BUTTONS
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            const isDone = (profile.ascents_history || []).some(a => a.boulder_id === b.id);
-            const btnComp = document.getElementById('detail-complete-btn');
-            btnComp.innerText = isDone ? "Completed" : "Mark Complete"; btnComp.className = `px-5 py-2 rounded font-bold text-sm transition-colors ${isDone ? 'bg-green-600' : 'bg-gray-600 hover:bg-gray-500'}`;
+            const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
+            const actionsDiv = document.getElementById('detail-actions');
+            
+            if (ascent) {
+                const label = ascent.style === 'flash' ? '⚡ Flashed' : '🔴 Redpointed';
+                actionsDiv.innerHTML = `
+                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                    <div class="bg-green-600 px-4 py-2 rounded font-bold text-sm">✓ ${label}</div>
+                    <button onclick="toggleCompleteRoute('remove')" class="bg-red-600 bg-opacity-50 hover:bg-opacity-100 px-4 py-2 rounded font-bold text-sm transition-colors">X</button>
+                `;
+            } else {
+                actionsDiv.innerHTML = `
+                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                    <button onclick="toggleCompleteRoute('flash')" class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded font-bold text-sm transition-colors">⚡ Flash</button>
+                    <button onclick="toggleCompleteRoute('redpoint')" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded font-bold text-sm transition-colors">🔴 Redpoint</button>
+                `;
+            }
 
-            const canDelete = currentGymRole === 'admin' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
-            document.getElementById('detail-delete-btn').classList.toggle('hidden-view', !canDelete); showView('view-route-detail');
+            const canAdmin = currentGymRole === 'admin' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
+            document.getElementById('detail-admin-actions').classList.toggle('hidden-view', !canAdmin);
+            showView('view-route-detail');
         }
 
-        async function toggleCompleteRoute() {
+        async function toggleCompleteRoute(style) {
             let profile = JSON.parse(localStorage.getItem('user_profile')); let history = profile.ascents_history || [];
             const idx = history.findIndex(a => a.boulder_id === activeBoulder.id);
-            const freshBoulder = await apiCall('/api/db/get', { path: `boulders/${activeBoulder.id}` }) || {}; let currentAscents = freshBoulder.ascents || 0;
-            if(idx > -1) { history.splice(idx, 1); currentAscents = Math.max(0, currentAscents - 1); } 
-            else { history.push({ boulder_id: activeBoulder.id, grade: activeBoulder.grade, timestamp: Date.now() }); currentAscents += 1; }
+            const freshBoulder = await apiCall('/api/db/get', { path: `boulders/${activeBoulder.id}` }) || {}; 
+            let currentAscents = freshBoulder.ascents || 0;
+            
+            if(style === 'remove' && idx > -1) { 
+                history.splice(idx, 1); 
+                currentAscents = Math.max(0, currentAscents - 1); 
+            } else if (style !== 'remove' && idx === -1) { 
+                history.push({ boulder_id: activeBoulder.id, grade: activeBoulder.grade, style: style, timestamp: Date.now() }); 
+                currentAscents += 1; 
+            }
+            
             profile.ascents_history = history; localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
             activeBoulder.ascents = currentAscents; await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}/ascents`, payload: currentAscents });
             openRouteDetail(activeBoulder); showNotify("Stats updated!");
         }
 
+        // --- EDIT ROUTE ---
+        function toggleEditRouteForm() {
+            const form = document.getElementById('edit-route-form');
+            form.classList.toggle('hidden-view');
+            if(!form.classList.contains('hidden-view')) {
+                document.getElementById('edit-rt-name').value = activeBoulder.name || '';
+                document.getElementById('edit-rt-grade').value = activeBoulder.grade || '1';
+                document.getElementById('edit-rt-desc').value = activeBoulder.description || '';
+            }
+        }
+
+        async function saveRouteEdit() {
+            activeBoulder.name = document.getElementById('edit-rt-name').value || 'Unnamed';
+            activeBoulder.grade = document.getElementById('edit-rt-grade').value;
+            activeBoulder.description = document.getElementById('edit-rt-desc').value;
+
+            await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder });
+            showNotify("Route updated!"); toggleEditRouteForm(); openRouteDetail(activeBoulder);
+        }
+
         async function deleteRoute() {
-            if(!confirm("Delete this route permanently?")) return;
+            if(!confirm("Are you sure you want to delete this route permanently?")) return;
             await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, method: 'DELETE' });
             if(activeBoulder.image_url) apiCall('/api/delete_image', { url: activeBoulder.image_url });
             showNotify("Route deleted!"); navigate('gym-routes');
