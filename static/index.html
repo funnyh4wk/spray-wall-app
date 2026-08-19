@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192.png">
     
-    <!-- === FIREBASE SDK (ДЛЯ БЕЗОПАСНОСТИ И GOOGLE LOGIN) === -->
+    <!-- === FIREBASE SDK === -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
     
@@ -45,6 +45,9 @@
             <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Friends</button>
             <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Gyms</button>
             <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Settings</button>
+            
+            <!-- СЕКРЕТНАЯ КНОПКА АДМИНА -->
+            <button id="nav-super-admin" onclick="navigate('super-admin')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors text-purple-400 hidden-view">App Management</button>
         </div>
     </div>
     <div id="drawer-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden-view"></div>
@@ -52,7 +55,7 @@
     <!-- MAIN CONTAINER -->
     <div class="w-full max-w-md p-4 flex-1 flex flex-col pb-20">
 
-        <!-- 1. AUTH VIEW (ОБНОВЛЕННЫЙ С GOOGLE И ПОДТВЕРЖДЕНИЕМ ПАРОЛЯ) -->
+        <!-- 1. AUTH VIEW -->
         <div id="view-auth" class="flex flex-col items-center mt-12 hidden-view">
             <h2 id="auth-title" class="text-3xl font-bold mb-6">Login</h2>
             
@@ -147,7 +150,6 @@
                 <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="stat-total" class="text-xl font-bold text-green-500">0</p></div>
             </div>
             
-            <!-- ГРАФИК (CHART) -->
             <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
@@ -341,6 +343,20 @@
             </div>
         </div>
 
+        <!-- 10. SECRET SUPER ADMIN PANEL -->
+        <div id="view-super-admin" class="flex flex-col items-center hidden-view w-full">
+            <h2 class="text-2xl font-bold mb-4 text-purple-400">App Management</h2>
+            <div class="w-full bg-gray-800 p-4 rounded-lg mb-4">
+                <h3 class="font-bold mb-2">Grant Gym Director Rights</h3>
+                <p class="text-xs text-gray-400 mb-3">Search user by email to give them access to create new climbing gyms.</p>
+                <div class="flex space-x-2">
+                    <input id="sa-search-input" placeholder="User Email" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500">
+                    <button onclick="searchUserForDirector()" class="bg-purple-600 hover:bg-purple-500 px-4 rounded font-bold transition-colors">Search</button>
+                </div>
+                <div id="sa-search-results" class="space-y-2 mt-4"></div>
+            </div>
+        </div>
+
     </div>
 
     <!-- JAVASCRIPT LOGIC -->
@@ -358,6 +374,9 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // ТВОЙ УНИКАЛЬНЫЙ UID СОЗДАТЕЛЯ
+        const MASTER_UID = "8Js6S97qXKMPt0S2WqPgtZIfUKk2";
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
@@ -413,6 +432,7 @@
             else if(viewName === 'gyms') { loadGymsView(); showView('view-gyms'); }
             else if(viewName === 'gym-routes') { showView('view-gym-routes'); switchTab(currentTab); }
             else if(viewName === 'settings') { showView('view-settings'); }
+            else if(viewName === 'super-admin') { showView('view-super-admin'); } // <--- СЕКРЕТНАЯ ВКЛАДКА
         }
 
         // --- AUTH С FIREBASE ---
@@ -422,7 +442,6 @@
             document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Sign Up";
             document.getElementById('auth-btn').innerText = isLoginMode ? "Login" : "Create Account";
             document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
-            // Показываем поле Confirm Password только при регистрации
             document.getElementById('confirm-pwd-container').classList.toggle('hidden-view', isLoginMode);
         }
 
@@ -442,18 +461,7 @@
             const pwd = document.getElementById('auth-password').value.trim();
             if(!rawEmail || !pwd) return showNotify("Fill all fields", true);
 
-            // БЭКДОР ДЛЯ ТЕБЯ (Админский доступ без Гугла)
-            if (rawEmail === 'admin' && pwd === 'admin') {
-                const newUid = "global_admin_boss";
-                const profile = { user_id: newUid, email: "admin@system.local", name: "Creator", first_name: "Global", last_name: "Admin", bio: "System Administrator", avatar_url: "", ascents_history: [], is_global_admin: true };
-                await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
-                localStorage.setItem('user_profile', JSON.stringify(profile));
-                loadHomeView(); showView('view-home');
-                return showNotify("Welcome back, Boss!");
-            }
-
             if (!isLoginMode) {
-                // РЕГИСТРАЦИЯ ЧЕРЕЗ FIREBASE
                 const pwdConfirm = document.getElementById('auth-password-confirm').value.trim();
                 if (pwd !== pwdConfirm) return showNotify("Passwords do not match!", true);
                 
@@ -463,8 +471,11 @@
                     const user = userCred.user;
                     await user.sendEmailVerification();
                     
-                    // Создаем профиль в нашей базе, используя защищенный UID от Google
-                    const profile = { user_id: user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false };
+                    const profile = { user_id: user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false, can_create_gyms: false };
+                    
+                    // ЕСЛИ РЕГАЕТСЯ БОСС - ДАЕМ ПРАВА
+                    if (user.uid === MASTER_UID) profile.is_global_admin = true;
+
                     await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
                     localStorage.setItem('user_profile', JSON.stringify(profile));
                     
@@ -474,7 +485,6 @@
                     showNotify(error.message.replace("Firebase: ", ""), true);
                 }
             } else {
-                // ЛОГИН ЧЕРЕЗ FIREBASE
                 try {
                     showNotify("Logging in...");
                     const userCred = await auth.signInWithEmailAndPassword(rawEmail, pwd);
@@ -485,8 +495,14 @@
                     }
 
                     let profile = await apiCall('/api/db/get', { path: `users/${user.uid}` });
-                    if (!profile) profile = { user_id: user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", ascents_history: [], is_global_admin: false };
+                    if (!profile) profile = { user_id: user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", ascents_history: [], is_global_admin: false, can_create_gyms: false };
                     
+                    // ЕСЛИ ВХОДИТ БОСС - АВТОМАТИЧЕСКИ ДЕЛАЕМ БОГОМ
+                    if (user.uid === MASTER_UID && !profile.is_global_admin) {
+                        profile.is_global_admin = true;
+                        await apiCall('/api/db/save', { path: `users/${user.uid}/is_global_admin`, payload: true });
+                    }
+
                     profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
                     localStorage.setItem('user_profile', JSON.stringify(profile));
                     
@@ -514,10 +530,16 @@
                         last_name: (user.displayName || "").split(" ").slice(1).join(" "),
                         bio: "Bouldering Enthusiast", 
                         avatar_url: user.photoURL || "", 
-                        ascents_history: [], is_global_admin: false 
+                        ascents_history: [], is_global_admin: false, can_create_gyms: false 
                     };
-                    await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
                 }
+                
+                // ЕСЛИ ВХОДИТ БОСС - АВТОМАТИЧЕСКИ ДЕЛАЕМ БОГОМ
+                if (user.uid === MASTER_UID && !profile.is_global_admin) {
+                    profile.is_global_admin = true;
+                }
+                
+                await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
                 
                 profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
                 localStorage.setItem('user_profile', JSON.stringify(profile));
@@ -531,7 +553,7 @@
         }
 
         function logout() { 
-            auth.signOut(); // Выход из Гугла
+            auth.signOut(); 
             localStorage.removeItem('user_profile'); 
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
@@ -541,6 +563,38 @@
             document.getElementById('eye-open').classList.remove('hidden-view');
             document.getElementById('eye-closed').classList.add('hidden-view');
             showView('view-auth'); 
+        }
+
+        // --- SUPER ADMIN LOGIC ---
+        async function searchUserForDirector() {
+            const q = document.getElementById('sa-search-input').value.toLowerCase().trim();
+            if (!q) return;
+            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+            const list = document.getElementById('sa-search-results');
+            list.innerHTML = '';
+            let found = false;
+            for(let uid in allUsers) {
+                const u = allUsers[uid];
+                if((u.email || '').toLowerCase() === q) {
+                    found = true;
+                    const isDir = u.can_create_gyms ? '<span class="text-green-500 text-xs font-bold ml-2">[DIRECTOR]</span>' : '';
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2">
+                            <div>
+                                <span>@${u.nickname || u.name}</span> <br> 
+                                <span class="text-xs text-gray-500">${u.email}</span> ${isDir}
+                            </div>
+                            <button onclick="makeGymDirector('${uid}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-xs font-bold transition-colors">Grant Rights</button>
+                        </div>`;
+                }
+            }
+            if(!found) list.innerHTML = '<p class="text-gray-500 text-sm">User not found</p>';
+        }
+
+        async function makeGymDirector(uid) {
+            await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true });
+            showNotify("Gym Director rights granted!");
+            searchUserForDirector();
         }
 
         // --- ONBOARDING ---
@@ -650,6 +704,13 @@
             document.getElementById('profile-bio').innerText = profile.bio || "";
             if(profile.avatar_url) document.getElementById('profile-avatar').src = profile.avatar_url;
 
+            // Показываем секретную кнопку в меню, только если ты Глобал Админ
+            if(profile.is_global_admin) {
+                document.getElementById('nav-super-admin').classList.remove('hidden-view');
+            } else {
+                document.getElementById('nav-super-admin').classList.add('hidden-view');
+            }
+
             const history = profile.ascents_history;
             document.getElementById('stat-total').innerText = history.length;
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
@@ -717,8 +778,14 @@
         // --- GYMS & SECTORS ---
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            if(profile.is_global_admin) document.getElementById('create-gym-btn').classList.remove('hidden-view');
-            else document.getElementById('create-gym-btn').classList.add('hidden-view');
+            
+            // Кнопка "Создать зал" показывается только Тебе ИЛИ Директорам залов
+            if(profile.is_global_admin || profile.can_create_gyms) {
+                document.getElementById('create-gym-btn').classList.remove('hidden-view');
+            } else {
+                document.getElementById('create-gym-btn').classList.add('hidden-view');
+            }
+            
             const gyms = await apiCall('/api/db/get', { path: `gyms` }) || {};
             const list = document.getElementById('gyms-list');
             list.innerHTML = '';
@@ -858,7 +925,7 @@
                                 <p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}${secName}</p>
                                 <p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${ascentsCount}</p>
                             </div>
-                            ${isDone ? '<span class="text-green-500 font-bold text-xl">[ DONE ]</span>' : ''}
+                            ${isDone ? '<span class="text-green-500 font-bold text-xl">✓</span>' : ''}
                         </div>`;
                 }
             }
