@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .hidden-view { display: none !important; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center">
@@ -28,10 +30,10 @@
             <button onclick="toggleMenu()" class="text-gray-400 text-xl">✕</button>
         </div>
         <div class="flex flex-col space-y-4">
-            <button onclick="navigate('home')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">👤 Profile</button>
-            <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">👥 Friends</button>
-            <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">🧗 Gyms</button>
-            <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold">⚙️ Settings</button>
+            <button onclick="navigate('home')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Profile</button>
+            <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Friends</button>
+            <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Gyms</button>
+            <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Settings</button>
         </div>
     </div>
     <div id="drawer-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden-view"></div>
@@ -42,15 +44,42 @@
         <!-- 1. AUTH VIEW -->
         <div id="view-auth" class="flex flex-col items-center mt-20 hidden-view">
             <h2 id="auth-title" class="text-3xl font-bold mb-8">Login</h2>
+            
             <input id="auth-email" type="text" placeholder="Email (or admin)" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
-            <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 mb-6 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
+            
+            <div class="relative w-full mb-6">
+                <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
+                <button onclick="togglePassword()" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                </button>
+            </div>
+
             <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4 transition-colors">Login</button>
             <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm">Don't have an account? Sign Up</button>
         </div>
 
+        <!-- 1.5. ONBOARDING VIEW -->
+        <div id="view-onboarding" class="flex flex-col items-center mt-10 hidden-view w-full">
+            <h2 class="text-3xl font-bold mb-2">Welcome!</h2>
+            <p class="text-gray-400 mb-6 text-center text-sm">Let's set up your profile before we start.</p>
+
+            <label class="relative cursor-pointer mb-6 inline-block">
+                <img id="onboard-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-28 h-28 rounded-full object-cover border-4 border-gray-700 shadow-lg">
+                <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 border-2 border-gray-900 shadow-lg hover:bg-blue-500 transition-colors">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
+                <input type="file" accept="image/*" class="hidden" onchange="uploadOnboardAvatar(this)">
+            </label>
+
+            <input id="onb-nickname" type="text" placeholder="Nickname *" class="w-full p-3 mb-3 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center">
+            <input id="onb-realname" type="text" placeholder="First & Last Name" class="w-full p-3 mb-3 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center">
+            <textarea id="onb-bio" placeholder="About Me" rows="2" class="w-full p-3 mb-6 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center"></textarea>
+
+            <button onclick="completeOnboarding()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-3 rounded-lg transition-colors text-lg">Let's Climb!</button>
+        </div>
+
         <!-- 2. HOME / PROFILE VIEW -->
         <div id="view-home" class="flex flex-col items-center hidden-view">
-            <!-- Avatar -->
             <label class="relative cursor-pointer mt-4 inline-block">
                 <img id="profile-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg">
                 <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 border-2 border-gray-900 shadow-lg hover:bg-blue-500 transition-colors">
@@ -59,7 +88,6 @@
                 <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
             </label>
             
-            <!-- Display Mode -->
             <div id="profile-display" class="flex flex-col items-center w-full mt-3">
                 <h2 id="profile-name" class="text-2xl font-bold">Name</h2>
                 <p id="profile-realname" class="text-gray-400 text-xs"></p>
@@ -67,7 +95,6 @@
                 <button onclick="toggleEditProfile(true)" class="mt-3 bg-gray-800 hover:bg-gray-700 px-5 py-1.5 rounded-lg text-sm font-bold transition-colors">Edit Profile</button>
             </div>
 
-            <!-- Edit Mode -->
             <div id="profile-edit" class="flex flex-col items-center w-full mt-3 hidden-view space-y-3">
                 <input id="edit-name" placeholder="Nickname" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center">
                 <input id="edit-realname" placeholder="First & Last Name" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center">
@@ -102,7 +129,7 @@
         <!-- 4. GYMS VIEW -->
         <div id="view-gyms" class="flex flex-col items-center hidden-view">
             <h2 class="text-2xl font-bold mb-4">Climbing Gyms</h2>
-            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view transition-colors">➕ Create Gym</button>
+            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view transition-colors">+ Create Gym</button>
             
             <div id="gym-form" class="w-full bg-gray-800 p-4 rounded-lg mb-4 hidden-view space-y-3">
                 <h3 class="font-bold">New Gym</h3>
@@ -119,13 +146,25 @@
         <!-- 5. GYM ROUTES VIEW -->
         <div id="view-gym-routes" class="flex flex-col items-center hidden-view">
             <h2 id="gym-title" class="text-2xl font-bold mb-2">Gym Name</h2>
-            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view transition-colors">➕ Add Route</button>
+            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view transition-colors">+ Add Route</button>
             
-            <div class="flex space-x-1 w-full bg-black p-1 rounded-lg mb-4 overflow-x-auto">
+            <div class="flex space-x-1 w-full bg-black p-1 rounded-lg mb-4 overflow-x-auto scrollbar-hide">
                 <button onclick="switchTab('official')" id="tab-official" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-blue-600 transition-colors">Official</button>
                 <button onclick="switchTab('custom')" id="tab-custom" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors">Custom</button>
                 <button onclick="switchTab('climbers')" id="tab-climbers" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors">Climbers</button>
                 <button onclick="switchTab('admin')" id="tab-admin" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors hidden-view">Admin</button>
+            </div>
+
+            <!-- SECTORS BAR (Visible in Official & Custom) -->
+            <div id="sector-bar-container" class="w-full hidden-view mb-4">
+                <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <!-- Dynamic Sectors -->
+                </div>
+                <div id="add-sector-form" class="mt-2 flex space-x-2 hidden-view bg-gray-800 p-2 rounded-lg">
+                    <input id="new-sector-name" placeholder="Sector Name" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
+                    <button onclick="saveSector()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-bold text-sm">Save</button>
+                    <button onclick="toggleSectorForm(false)" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded font-bold text-sm">Cancel</button>
+                </div>
             </div>
 
             <!-- Gym Tabs Content -->
@@ -151,7 +190,7 @@
             <!-- Step 1: Upload Photo -->
             <div id="wizard-step-1" class="w-full flex flex-col items-center">
                 <label class="w-full h-80 bg-gray-800 hover:bg-gray-700 transition-colors border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer">
-                    <span class="text-4xl mb-2">📷</span>
+                    <svg class="w-12 h-12 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <span class="font-bold text-gray-300">Upload wall photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
@@ -179,6 +218,7 @@
 
             <!-- Step 3: Route Details -->
             <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
+                <select id="route-sector" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500 hidden-view"></select>
                 <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
                 <select id="route-grade" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
                     <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="8A">8A</option>
@@ -241,6 +281,7 @@
         const ALL_GRADES = ["6A", "6A+", "6B", "6B+", "6C", "7A", "7A+", "7B", "7B+", "7C", "8A"];
         let currentGymId = null, currentGymRole = 'user', currentTab = 'official';
         let wizardColor = 'green', wizardMarkers = [], currentBoulderId = null, currentOtherUserId = null;
+        let gymSectors = {}; let currentSector = 'all';
 
         function showNotify(msg, isError = false) {
             const box = document.getElementById('notify-box');
@@ -266,8 +307,11 @@
             document.querySelectorAll('.w-full.max-w-md > div[id^="view-"]').forEach(el => el.classList.add('hidden-view'));
             document.getElementById(viewId).classList.remove('hidden-view');
             const appBar = document.getElementById('app-bar');
-            if(viewId === 'view-auth') appBar.classList.add('hidden-view');
-            else appBar.classList.remove('hidden-view');
+            if(viewId === 'view-auth' || viewId === 'view-onboarding') {
+                appBar.classList.add('hidden-view');
+            } else {
+                appBar.classList.remove('hidden-view');
+            }
         }
 
         function navigate(viewName) {
@@ -288,12 +332,20 @@
             document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
         }
 
+        function togglePassword() {
+            const pwdInput = document.getElementById('auth-password');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+            } else {
+                pwdInput.type = 'password';
+            }
+        }
+
         async function processAuth() {
             const rawEmail = document.getElementById('auth-email').value.trim();
             const pwd = document.getElementById('auth-password').value.trim();
             if(!rawEmail || !pwd) return showNotify("Fill all fields", true);
 
-            // SECRET ADMIN LOGIN
             if (rawEmail === 'admin' && pwd === 'admin') {
                 const newUid = "global_admin_boss";
                 const profile = { 
@@ -316,19 +368,27 @@
                 if(existing) return showNotify("Email already registered!", true);
                 const newUid = crypto.randomUUID();
                 await apiCall('/api/db/save', { path: `auth_users/${email}`, payload: { uid: newUid, password: hashedPwd } });
-                const profile = { user_id: newUid, email: email, name: `User_${newUid.substring(0,5)}`, bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false };
+                
+                const profile = { user_id: newUid, email: email, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false };
                 await apiCall('/api/db/save', { path: `users/${newUid}`, payload: profile });
                 localStorage.setItem('user_profile', JSON.stringify(profile));
-                loadHomeView(); showView('view-home');
-                showNotify("Account created!");
+                
+                showView('view-onboarding');
+                showNotify("Account created! Let's set it up.");
             } else {
                 const userCreds = await apiCall('/api/db/get', { path: `auth_users/${email}` });
                 if(!userCreds || userCreds.password !== hashedPwd) return showNotify("Invalid email or password", true);
+                
                 let profile = await apiCall('/api/db/get', { path: `users/${userCreds.uid}` });
                 profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${userCreds.uid}` }) || [];
                 localStorage.setItem('user_profile', JSON.stringify(profile));
-                loadHomeView(); showView('view-home');
-                showNotify("Welcome back!");
+                
+                if (!profile.name) {
+                    showView('view-onboarding');
+                } else {
+                    loadHomeView(); showView('view-home');
+                    showNotify("Welcome back!");
+                }
             }
         }
 
@@ -337,6 +397,51 @@
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
             showView('view-auth'); 
+        }
+
+        // --- ONBOARDING ---
+        async function uploadOnboardAvatar(input) {
+            const file = input.files[0]; if(!file) return;
+            showNotify("Uploading avatar...");
+            const formData = new FormData(); formData.append("file", file);
+            const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
+            if(res.status === "ok") {
+                let profile = JSON.parse(localStorage.getItem('user_profile'));
+                if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
+                profile.avatar_url = res.url;
+                localStorage.setItem('user_profile', JSON.stringify(profile));
+                await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
+                
+                document.getElementById('onboard-avatar').src = res.url;
+                showNotify("Avatar uploaded!");
+            } else {
+                showNotify("Upload failed", true);
+            }
+        }
+
+        async function completeOnboarding() {
+            const nickname = document.getElementById('onb-nickname').value.trim();
+            if (!nickname) return showNotify("Nickname is required!", true);
+
+            const realname = document.getElementById('onb-realname').value.trim();
+            const bio = document.getElementById('onb-bio').value.trim();
+
+            const parts = realname.split(' ');
+            const first_name = parts[0] || '';
+            const last_name = parts.slice(1).join(' ') || '';
+
+            let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+            profile.name = nickname;
+            profile.first_name = first_name;
+            profile.last_name = last_name;
+            if (bio) profile.bio = bio;
+
+            localStorage.setItem('user_profile', JSON.stringify(profile));
+            await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
+
+            loadHomeView();
+            showView('view-home');
+            showNotify("Setup Complete!");
         }
 
         // --- PROFILE EDIT ---
@@ -368,7 +473,6 @@
             profile.last_name = last_name;
             profile.bio = bio;
 
-            // ЗДЕСЬ МЫ СПАСАЕМ БАЗУ: Отправляем ВЕСЬ профиль целиком, чтобы ничего не затерлось!
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
 
@@ -403,7 +507,7 @@
 
         async function uploadAvatar(input) {
             const file = input.files[0]; if(!file) return;
-            showNotify("Uploading avatar... ⏳");
+            showNotify("Uploading avatar...");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
@@ -411,7 +515,6 @@
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
                 profile.avatar_url = res.url;
                 
-                // СНОВА СПАСАЕМ БАЗУ: Обновляем и сохраняем ВЕСЬ профиль
                 localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
                 
@@ -433,7 +536,7 @@
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
             for(let senderId in reqs) {
                 const u = allUsers[senderId] || {};
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2">✔</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs">✕</button></div></div>`;
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">Decline</button></div></div>`;
             }
         }
 
@@ -461,7 +564,7 @@
             }
         }
 
-        // --- GYMS ---
+        // --- GYMS & SECTORS ---
         async function loadGymsView() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             if(profile.is_global_admin) {
@@ -504,8 +607,54 @@
             }
             
             document.getElementById('tab-admin').classList.toggle('hidden-view', currentGymRole !== 'admin');
+            
+            await loadSectors();
             switchTab('official');
             navigate('gym-routes');
+        }
+
+        async function loadSectors() {
+            gymSectors = await apiCall('/api/db/get', { path: `gym_sectors/${currentGymId}` }) || {};
+            renderSectors();
+        }
+
+        function renderSectors() {
+            const container = document.getElementById('sector-filters');
+            container.innerHTML = '';
+            
+            container.innerHTML += `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All</button>`;
+            
+            for(let sId in gymSectors) {
+                container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`;
+            }
+            
+            if(currentGymRole === 'admin') {
+                container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
+            }
+        }
+
+        function selectSector(sId) {
+            currentSector = sId;
+            renderSectors();
+            loadGallery();
+        }
+
+        function toggleSectorForm(show) {
+            document.getElementById('add-sector-form').classList.toggle('hidden-view', !show);
+            if(show) {
+                document.getElementById('new-sector-name').value = '';
+                document.getElementById('new-sector-name').focus();
+            }
+        }
+
+        async function saveSector() {
+            const name = document.getElementById('new-sector-name').value.trim();
+            if(!name) return;
+            const sId = 'sec_' + Math.random().toString(36).substring(2,9);
+            await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${sId}`, payload: name });
+            toggleSectorForm(false);
+            await loadSectors();
+            showNotify("Sector added!");
         }
 
         function switchTab(tabName) {
@@ -527,6 +676,9 @@
             document.getElementById('tab-content-climbers').classList.toggle('hidden-view', tabName !== 'climbers');
             document.getElementById('tab-content-admin').classList.toggle('hidden-view', tabName !== 'admin');
             
+            const showSectors = (tabName === 'official' || tabName === 'custom');
+            document.getElementById('sector-bar-container').classList.toggle('hidden-view', !showSectors);
+
             document.getElementById('add-route-btn').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin' || (tabName === 'official' && currentGymRole === 'user'));
 
             if(tabName === 'climbers') loadGymClimbers();
@@ -545,10 +697,16 @@
             for(let bId of bKeys) {
                 const b = boulders[bId];
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
+                    
+                    if (currentSector !== 'all' && b.sector_id !== currentSector) continue;
+
                     found = true;
                     const isDone = completedIds.includes(b.id);
                     const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-                    list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}</p></div>${isDone ? '<span class="text-green-500 font-bold text-xl">✔</span>' : ''}</div>`;
+                    
+                    const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
+                    
+                    list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}${secName}</p></div>${isDone ? '<span class="text-green-500 font-bold text-xl">✓</span>' : ''}</div>`;
                 }
             }
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No ${currentTab} routes here yet.</p>`;
@@ -561,8 +719,7 @@
             list.innerHTML = '';
             for(let uid in roles) {
                 const u = allUsers[uid] || {};
-                const rBadge = roles[uid] === 'admin' ? '👑 Admin' : (roles[uid] === 'setter' ? '🛠️ Setter' : '');
-                list.innerHTML += `<div onclick="openOtherProfile('${uid}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-orange-400 text-xs font-bold">${rBadge}</span></div>`;
+                list.innerHTML += `<div onclick="openOtherProfile('${uid}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`;
             }
         }
 
@@ -600,6 +757,19 @@
         // --- CREATE ROUTE (WIZARD) ---
         function startCreateRoute() {
             wizardMarkers = []; document.getElementById('wizard-wall-img').src = '';
+            
+            const secSelect = document.getElementById('route-sector');
+            secSelect.innerHTML = '';
+            const sKeys = Object.keys(gymSectors);
+            if(sKeys.length > 0) {
+                secSelect.classList.remove('hidden-view');
+                sKeys.forEach(k => {
+                    secSelect.innerHTML += `<option value="${k}">${gymSectors[k]}</option>`;
+                });
+            } else {
+                secSelect.classList.add('hidden-view');
+            }
+
             wizardStep(1); showView('view-create-route');
         }
 
@@ -611,7 +781,7 @@
 
         async function loadWallPhoto(input) {
             const file = input.files[0]; if(!file) return;
-            showNotify("Uploading wall photo... ⏳");
+            showNotify("Uploading wall photo...");
             const formData = new FormData(); formData.append("file", file);
             const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
             if(res.status === "ok") {
@@ -651,8 +821,11 @@
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const bId = 'boulder_' + Math.random().toString(36).substring(2, 9);
             const rGrade = document.getElementById('route-grade').value;
+            
+            const secVal = document.getElementById('route-sector').value;
             const bData = {
                 id: bId, gym_id: currentGymId, route_type: currentTab,
+                sector_id: secVal || null,
                 name: document.getElementById('route-name').value || 'Unnamed',
                 grade: rGrade,
                 description: document.getElementById('route-desc').value,
@@ -776,7 +949,16 @@
 
         // --- INIT ---
         window.onload = () => {
-            if(localStorage.getItem('user_profile')) { loadHomeView(); showView('view-home'); }
+            const profileStr = localStorage.getItem('user_profile');
+            if(profileStr) { 
+                const profile = JSON.parse(profileStr);
+                if (!profile.name) {
+                    showView('view-onboarding');
+                } else {
+                    loadHomeView(); 
+                    showView('view-home'); 
+                }
+            }
             else { showView('view-auth'); }
         };
     </script>
