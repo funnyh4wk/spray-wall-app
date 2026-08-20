@@ -1,20 +1,20 @@
 {
-  "name": "Spray Wall App",
-  "short_name": "Spray Wall",
-  "start_url": "./index.html",
+  "name": "SprayWall",
+  "short_name": "SprayWall",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#111827",
   "theme_color": "#111827",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
