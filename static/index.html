@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Spray Wall App</title>
     
-    <!-- === PWA SETUP (ОБНОВЛЕННЫЙ С ТВОЕЙ ИКОНКОЙ) === -->
+    <!-- === PWA SETUP === -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#111827">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SprayWall">
-    <!-- Иконка для вкладки браузера и для Apple устройств -->
     <link rel="icon" href="icon.jpg" type="image/jpeg">
     <link rel="apple-touch-icon" href="icon.jpg">
     
@@ -416,9 +415,21 @@
             setTimeout(() => box.style.opacity = '0', 4000);
         }
 
+        // === НАША НОВАЯ ГЛАВНАЯ ФУНКЦИЯ ЗАПРОСОВ (Теперь с пропуском JWT) ===
         async function apiCall(endpoint, payload = {}) {
             try {
-                const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                let token = "";
+                if (auth.currentUser) {
+                    token = await auth.currentUser.getIdToken();
+                }
+                const res = await fetch(endpoint, { 
+                    method: 'POST', 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }, 
+                    body: JSON.stringify(payload) 
+                });
                 return await res.json();
             } catch(e) { return null; }
         }
@@ -549,6 +560,21 @@
 
         async function makeGymDirector(uid) { await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true }); showNotify("Gym Director rights granted!"); searchUserForDirector(); }
 
+        // === ЗАГРУЗКА АВАТАРКИ ПРИ РЕГИСТРАЦИИ (Тоже с пропуском) ===
+        async function uploadOnboardAvatar(input) {
+            const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
+            const formData = new FormData(); formData.append("file", file);
+            let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+            const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
+            if(res.status === "ok") {
+                let profile = JSON.parse(localStorage.getItem('user_profile'));
+                if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
+                profile.avatar_url = res.url; localStorage.setItem('user_profile', JSON.stringify(profile));
+                await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
+                document.getElementById('onboard-avatar').src = res.url; showNotify("Avatar uploaded!");
+            } else { showNotify("Upload failed", true); }
+        }
+
         async function completeOnboarding() {
             const nickname = document.getElementById('onb-nickname').value.trim(); if (!nickname) return showNotify("Nickname is required!", true);
             const parts = document.getElementById('onb-realname').value.trim().split(' ');
@@ -670,10 +696,12 @@
             loadFriendRequests();
         }
 
+        // === ЗАГРУЗКА АВАТАРКИ В ПРОФИЛЕ ===
         async function uploadAvatar(input) {
             const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
             const formData = new FormData(); formData.append("file", file);
-            const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
+            let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+            const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
             if(res.status === "ok") {
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
@@ -1066,10 +1094,12 @@
             document.getElementById('wizard-step-3').classList.toggle('hidden-view', step !== 3);
         }
 
+        // === ЗАГРУЗКА ФОТОГРАФИИ СТЕНЫ ДЛЯ ТРАССЫ (Тоже с пропуском) ===
         async function loadWallPhoto(input) {
             const file = input.files[0]; if(!file) return; showNotify("Uploading wall photo...");
             const formData = new FormData(); formData.append("file", file);
-            const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
+            let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+            const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
             if(res.status === "ok") {
                 document.getElementById('wizard-wall-img').src = res.url; document.getElementById('detail-wall-img').src = res.url;
                 wizardStep(2); showNotify("Photo uploaded!");
