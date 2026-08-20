@@ -377,7 +377,6 @@
             box.style.opacity = '1'; setTimeout(() => box.style.opacity = '0', 4000);
         }
 
-        // 🔥 ЖДЕМ ТОКЕН ОТ ГУГЛА
         async function getAuthToken() {
             if (auth.currentUser) return await auth.currentUser.getIdToken();
             return new Promise((resolve) => {
@@ -389,7 +388,6 @@
             });
         }
 
-        // 🔥 УМНЫЙ ЗАПРОС К СЕРВЕРУ
         async function apiCall(endpoint, payload = {}) {
             try {
                 let token = await getAuthToken();
@@ -399,11 +397,10 @@
                     body: JSON.stringify(payload) 
                 });
                 const data = await res.json();
-                
                 if (!res.ok) {
                     console.error("Backend Error:", data);
                     if (res.status >= 500) showNotify("Server DB Error! Check Logs.", true);
-                    return null; // ВАЖНО: возвращаем null, а не ошибку!
+                    return null;
                 }
                 return data;
             } catch(e) { return null; }
@@ -452,7 +449,8 @@
                     await userCred.user.sendEmailVerification();
                     const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
                     await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
-                    localStorage.setItem('user_profile', JSON.stringify(profile)); showNotify("Account created! Check your email to verify.", false); showView('view-onboarding');
+                    localStorage.setItem('user_profile', JSON.stringify(profile)); showNotify("Account created! Check your email to verify.", false); 
+                    showView('view-onboarding'); // ВХОД ПО ПОЧТЕ: ОТПРАВЛЯЕМ ЗАПОЛНЯТЬ ПРОФИЛЬ
                 } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
             } else {
                 try {
@@ -461,8 +459,10 @@
                     if (!userCred.user.emailVerified) return showNotify("Please verify your email first!", true);
                     let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
                     if (!profile || profile.detail || !profile.name) {
-                        profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
-                        localStorage.setItem('user_profile', JSON.stringify(profile)); showView('view-onboarding'); return;
+                        profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
+                        localStorage.setItem('user_profile', JSON.stringify(profile)); 
+                        showView('view-onboarding'); // ВХОД ПО ПОЧТЕ (если профиль пуст): ОТПРАВЛЯЕМ ЗАПОЛНЯТЬ ПРОФИЛЬ
+                        return;
                     }
                     if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { profile.is_global_admin = true; await apiCall('/api/db/save', { path: `users/${userCred.user.uid}/is_global_admin`, payload: true }); }
                     profile.ascents_history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${userCred.user.uid}` }));
@@ -471,36 +471,47 @@
             }
         }
 
+        // 🔥 ВХОД ЧЕРЕЗ GOOGLE (ПРОПУСКАЕМ ONBOARDING)
         async function googleSignIn() {
             try {
                 showNotify("Connecting to Google...");
                 const userCred = await auth.signInWithPopup(googleProvider);
                 let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
                 
-                // 🔥 ЗАЩИТА ОТ СЛОМАННОГО ПРОФИЛЯ
-                if (!profile || profile.detail || !profile.name) {
+                // Если профиля нет (или он был сломан ошибкой), создаем его сами из Гугл-данных
+                if (!profile || profile.detail) {
+                    const fallbackName = userCred.user.email ? userCred.user.email.split('@')[0] : "Climber";
+                    const displayName = userCred.user.displayName || fallbackName;
+                    
                     profile = { 
                         user_id: userCred.user.uid, 
                         email: userCred.user.email, 
-                        name: userCred.user.displayName || "", 
-                        first_name: (userCred.user.displayName || "").split(" ")[0], 
-                        last_name: (userCred.user.displayName || "").split(" ").slice(1).join(" "), 
+                        name: displayName, // БЕРЕМ ИМЯ ИЗ ГУГЛА!
+                        first_name: displayName.split(" ")[0] || "", 
+                        last_name: displayName.split(" ").slice(1).join(" ") || "", 
                         bio: "Bouldering Enthusiast", 
-                        avatar_url: userCred.user.photoURL || "", 
+                        avatar_url: userCred.user.photoURL || "", // БЕРЕМ ФОТКУ ИЗ ГУГЛА!
                         is_global_admin: userCred.user.uid === MASTER_UID, 
                         can_create_gyms: false 
                     };
                     await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
-                    localStorage.setItem('user_profile', JSON.stringify(profile)); showView('view-onboarding'); return;
                 }
                 
-                if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { profile.is_global_admin = true; await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile }); }
+                if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { 
+                    profile.is_global_admin = true; 
+                    await apiCall('/api/db/save', { path: `users/${userCred.user.uid}/is_global_admin`, payload: true }); 
+                }
+                
                 profile.ascents_history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${userCred.user.uid}` }));
-                localStorage.setItem('user_profile', JSON.stringify(profile)); loadHomeView(); showView('view-home'); showNotify("Welcome back!");
+                localStorage.setItem('user_profile', JSON.stringify(profile)); 
+                
+                // 🔥 СРАЗУ ИДЕМ НА ГЛАВНЫЙ ЭКРАН (ПРОПУСКАЯ ONBOARDING)
+                loadHomeView(); 
+                showView('view-home'); 
+                showNotify("Welcome!");
             } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
         }
 
-        // 🔥 ПОЛНАЯ ОЧИСТКА ПРИ ВЫХОДЕ
         function logout() { 
             auth.signOut(); 
             localStorage.removeItem('user_profile'); 
@@ -977,22 +988,14 @@
             const profile = JSON.parse(localStorage.getItem('user_profile')); await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: 'DELETE' }); await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, method: 'DELETE' }); if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); localStorage.clear(); logout(); showNotify("Account deleted");
         }
 
-        // 🔥 ФИЛЬТР-ПЫЛЕСОС ПРИ ЗАГРУЗКЕ САЙТА
         window.onload = () => {
             const profileStr = localStorage.getItem('user_profile');
             if(profileStr) { 
                 const profile = JSON.parse(profileStr); 
-                // Убиваем сломанный профиль, если он отравлен ошибкой!
-                if (profile.detail || !profile.user_id) {
-                    localStorage.removeItem('user_profile');
-                    showView('view-auth');
-                    return;
-                }
+                if (profile.detail || !profile.user_id) { localStorage.removeItem('user_profile'); showView('view-auth'); return; }
                 if (!profile.name) showView('view-onboarding'); 
                 else { loadHomeView(); showView('view-home'); } 
-            } else {
-                showView('view-auth');
-            }
+            } else showView('view-auth');
         };
     </script>
 </body>
