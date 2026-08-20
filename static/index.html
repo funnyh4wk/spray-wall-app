@@ -333,7 +333,7 @@
                 <h3 class="font-bold mb-2">Grant Gym Director Rights</h3>
                 <p class="text-xs text-gray-400 mb-3">Search user by email to give them access to create new climbing gyms.</p>
                 <div class="flex space-x-2">
-                    <input id="sa-search-input" placeholder="funnyh4wk@gmail.com" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500">
+                    <input id="sa-search-input" placeholder="User Email" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500">
                     <button onclick="searchUserForDirector()" class="bg-purple-600 hover:bg-purple-500 px-4 rounded font-bold transition-colors">Search</button>
                 </div>
                 <div id="sa-search-results" class="space-y-2 mt-4"></div>
@@ -357,8 +357,8 @@
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
         
-        // 🔥 ВПИШИ СЮДА СВОЮ ГУГЛОВСКУЮ ПОЧТУ (маленькими буквами) 🔥
-        const MASTER_EMAIL = "ТВОЯ_ПОЧТА@gmail.com"; 
+        // 🔥 ТВОЯ ПОЧТА ВШИТА СЮДА 🔥
+        const MASTER_EMAIL = "funnyh4wk@gmail.com"; 
 
         if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 
@@ -659,7 +659,7 @@
                 if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
                 profile.avatar_url = res.url; localStorage.setItem('user_profile', JSON.stringify(profile));
                 await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: res.url });
-                loadHomeView(); showNotify("Avatar updated!");
+                document.getElementById('onboard-avatar').src = res.url; showNotify("Avatar uploaded!");
             } else showNotify("Upload failed", true);
         }
 

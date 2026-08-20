@@ -12,7 +12,7 @@ from typing import Any, Optional
 import firebase_admin
 from firebase_admin import credentials, db, auth as firebase_auth
 
-# 🔥 ВПИШИ СЮДА СВОЮ ГУГЛОВСКУЮ ПОЧТУ (маленькими буквами) 🔥
+# 🔥 ТВОЯ ПОЧТА ВШИТА СЮДА 🔥
 MASTER_EMAIL = "funnyh4wk@gmail.com"
 
 # Подключаем ключ
