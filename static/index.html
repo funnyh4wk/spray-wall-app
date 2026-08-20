@@ -56,9 +56,7 @@
         <!-- 1. AUTH VIEW -->
         <div id="view-auth" class="flex flex-col items-center mt-12 hidden-view">
             <h2 id="auth-title" class="text-3xl font-bold mb-6">Login</h2>
-            
             <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
-            
             <div class="relative w-full mb-4">
                 <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
                 <button onclick="togglePassword('auth-password', 'eye-open', 'eye-closed')" type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
@@ -66,23 +64,13 @@
                     <svg id="eye-closed" class="w-6 h-6 hidden-view" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
                 </button>
             </div>
-
             <div id="confirm-pwd-container" class="relative w-full mb-6 hidden-view">
                 <input id="auth-password-confirm" type="password" placeholder="Confirm Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
-                <button onclick="togglePassword('auth-password-confirm', 'eye-open-c', 'eye-closed-c')" type="button" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-white transition-colors">
-                    <svg id="eye-open-c" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <svg id="eye-closed-c" class="w-6 h-6 hidden-view" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
-                </button>
             </div>
-
             <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4 transition-colors">Login</button>
             <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm mb-4">Don't have an account? Sign Up</button>
-
-            <!-- КНОПКА GOOGLE -->
             <div class="flex items-center my-4 w-full">
-                <hr class="flex-grow border-gray-700">
-                <span class="px-3 text-gray-500 text-sm">OR</span>
-                <hr class="flex-grow border-gray-700">
+                <hr class="flex-grow border-gray-700"><span class="px-3 text-gray-500 text-sm">OR</span><hr class="flex-grow border-gray-700">
             </div>
             <button onclick="googleSignIn()" class="w-full bg-white text-black hover:bg-gray-200 font-bold py-3 rounded-lg mt-2 transition-colors flex items-center justify-center">
                 <svg class="w-5 h-5 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571c.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
@@ -94,29 +82,20 @@
         <div id="view-onboarding" class="flex flex-col items-center mt-10 hidden-view w-full">
             <h2 class="text-3xl font-bold mb-2">Welcome!</h2>
             <p class="text-gray-400 mb-6 text-center text-sm">Let's set up your profile before we start.</p>
-
             <label class="relative cursor-pointer mb-6 inline-block">
                 <img id="onboard-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-28 h-28 rounded-full object-cover border-4 border-gray-700 shadow-lg">
-                <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 border-2 border-gray-900 shadow-lg hover:bg-blue-500 transition-colors">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </div>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadOnboardAvatar(this)">
             </label>
-
             <input id="onb-nickname" type="text" placeholder="Nickname *" class="w-full p-3 mb-3 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center">
             <input id="onb-realname" type="text" placeholder="First & Last Name" class="w-full p-3 mb-3 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center">
             <textarea id="onb-bio" placeholder="About Me" rows="2" class="w-full p-3 mb-6 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center"></textarea>
-
             <button onclick="completeOnboarding()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-3 rounded-lg transition-colors text-lg">Let's Climb!</button>
         </div>
 
         <!-- 2. HOME / PROFILE VIEW -->
-        <div id="view-home" class="flex flex-col items-center hidden-view">
+        <div id="view-home" class="flex flex-col items-center hidden-view w-full">
             <label class="relative cursor-pointer mt-4 inline-block">
                 <img id="profile-avatar" src="https://via.placeholder.com/150/444444/FFFFFF?text=No+Img" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg">
-                <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 border-2 border-gray-900 shadow-lg hover:bg-blue-500 transition-colors">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </div>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
             </label>
             
@@ -146,6 +125,13 @@
                 <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="stat-max" class="text-xl font-bold text-red-500">-</p></div>
                 <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="stat-total" class="text-xl font-bold text-green-500">0</p></div>
             </div>
+
+            <!-- === НОВЫЙ БЛОК: ЖУРНАЛ ТРЕНИРОВОК === -->
+            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
+                <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider mb-3">Training Logbook (Last 7 Days)</h3>
+                <div id="logbook-days" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide w-full"></div>
+                <div id="logbook-entries" class="mt-3 space-y-2"></div>
+            </div>
             
             <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
                 <div class="flex justify-between items-center mb-4">
@@ -162,10 +148,9 @@
         </div>
 
         <!-- 4. GYMS VIEW -->
-        <div id="view-gyms" class="flex flex-col items-center hidden-view">
+        <div id="view-gyms" class="flex flex-col items-center hidden-view w-full">
             <h2 class="text-2xl font-bold mb-4">Climbing Gyms</h2>
             <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view transition-colors">Create Gym</button>
-            
             <div id="gym-form" class="w-full bg-gray-800 p-4 rounded-lg mb-4 hidden-view space-y-3">
                 <h3 class="font-bold">New Gym</h3>
                 <input id="gym-name" placeholder="Gym Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
@@ -179,7 +164,7 @@
         </div>
 
         <!-- 5. GYM ROUTES VIEW -->
-        <div id="view-gym-routes" class="flex flex-col items-center hidden-view">
+        <div id="view-gym-routes" class="flex flex-col items-center hidden-view w-full">
             <h2 id="gym-title" class="text-2xl font-bold mb-2">Gym Name</h2>
             <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view transition-colors">Add Route</button>
             
@@ -239,16 +224,13 @@
         <!-- 6. WIZARD: CREATE ROUTE -->
         <div id="view-create-route" class="flex flex-col items-center hidden-view w-full">
             <h2 class="text-xl font-bold mb-3">Create Route</h2>
-            
             <div id="wizard-step-1" class="w-full flex flex-col items-center">
                 <label class="w-full h-80 bg-gray-800 hover:bg-gray-700 transition-colors border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer">
-                    <svg class="w-12 h-12 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <span class="font-bold text-gray-300">Upload wall photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
                 <button onclick="navigate('gym-routes')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4 transition-colors">Cancel</button>
             </div>
-
             <div id="wizard-step-2" class="w-full flex flex-col items-center hidden-view">
                 <div class="flex space-x-2 mb-3">
                     <button onclick="setHoldColor('green')" class="bg-green-600 hover:bg-green-500 px-3 py-2 rounded font-bold text-xs transition-colors">Start</button>
@@ -256,29 +238,22 @@
                     <button onclick="setHoldColor('red')" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded font-bold text-xs transition-colors">Top</button>
                     <button onclick="setHoldColor('erase')" class="bg-orange-600 hover:bg-orange-500 px-3 py-2 rounded font-bold text-xs transition-colors">Erase</button>
                 </div>
-                
                 <div id="canvas-container" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 cursor-crosshair" onclick="handleCanvasClick(event)">
                     <img id="wizard-wall-img" class="w-full h-full object-contain pointer-events-none">
                 </div>
-
                 <div class="flex space-x-2 w-full mt-4">
                     <button onclick="wizardStep(1)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
                     <button onclick="wizardStep(3)" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold transition-colors">Next</button>
                 </div>
             </div>
-
             <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
                 <select id="route-sector" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500 hidden-view"></select>
                 <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
                 <select id="route-grade" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
-                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                    <option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
-                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option>
-                    <option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
-                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option>
-                    <option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
-                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option>
-                    <option value="8B+">8B+</option><option value="8C">8C</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
+                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
+                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
+                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option><option value="8B+">8B+</option><option value="8C">8C</option>
                 </select>
                 <textarea id="route-desc" placeholder="Description" rows="3" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500"></textarea>
                 <div class="flex space-x-2 mt-2">
@@ -289,12 +264,26 @@
         </div>
 
         <!-- 7. ROUTE DETAIL VIEW -->
-        <div id="view-route-detail" class="flex flex-col items-center hidden-view">
+        <div id="view-route-detail" class="flex flex-col items-center hidden-view w-full">
             <h2 id="detail-title" class="text-xl font-bold mb-1">Route Name</h2>
             <p id="detail-author" class="text-gray-400 text-xs mb-3 text-center"></p>
             
             <div id="detail-canvas" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 mb-4">
                 <img id="detail-wall-img" class="w-full h-full object-contain pointer-events-none">
+            </div>
+
+            <!-- === НОВЫЙ БЛОК ОЦЕНКИ (Скрыт по умолчанию) === -->
+            <div id="grade-suggest-box" class="w-full max-w-[350px] bg-gray-800 p-4 rounded-lg hidden-view mb-4 border border-purple-500 border-opacity-50">
+                <p class="text-center font-bold text-sm mb-3 text-gray-300">Suggest Consensus Grade:</p>
+                <div class="flex justify-center items-center space-x-6 mb-4">
+                    <button onclick="changeSuggestGrade(-1)" class="bg-gray-700 hover:bg-gray-600 w-12 h-12 rounded-full font-bold text-2xl transition-colors">-</button>
+                    <span id="suggested-grade-display" class="font-bold text-3xl text-purple-400 w-16 text-center">6A</span>
+                    <button onclick="changeSuggestGrade(1)" class="bg-gray-700 hover:bg-gray-600 w-12 h-12 rounded-full font-bold text-2xl transition-colors">+</button>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="cancelSuggestGrade()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-bold transition-colors text-sm">Cancel</button>
+                    <button onclick="confirmCompleteRoute()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors text-sm">Save Ascent</button>
+                </div>
             </div>
 
             <!-- БЛОК ПРОЛАЗОВ (FLASH / REDPOINT) -->
@@ -306,19 +295,14 @@
                 <button onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm transition-colors">Delete Route</button>
             </div>
 
-            <!-- ФОРМА РЕДАКТИРОВАНИЯ (Скрыта по умолчанию) -->
-            <div id="edit-route-form" class="hidden-view w-full space-y-2 mt-4 bg-gray-800 p-4 rounded-lg">
+            <div id="edit-route-form" class="hidden-view w-full max-w-[350px] space-y-2 mt-4 bg-gray-800 p-4 rounded-lg">
                 <h3 class="font-bold text-sm text-gray-300 mb-2">Edit Details</h3>
                 <input id="edit-rt-name" placeholder="Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
                 <select id="edit-rt-grade" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
-                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                    <option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
-                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option>
-                    <option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
-                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option>
-                    <option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
-                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option>
-                    <option value="8B+">8B+</option><option value="8C">8C</option>
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
+                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
+                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
+                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option><option value="8B+">8B+</option><option value="8C">8C</option>
                 </select>
                 <textarea id="edit-rt-desc" placeholder="Description" rows="2" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm"></textarea>
                 <div class="flex space-x-2">
@@ -329,40 +313,35 @@
         </div>
 
         <!-- 8. OTHER USER PROFILE -->
-        <div id="view-other-profile" class="flex flex-col items-center hidden-view">
+        <div id="view-other-profile" class="flex flex-col items-center hidden-view w-full">
             <img id="op-avatar" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg mt-4">
             <h2 id="op-name" class="text-2xl font-bold mt-3">Name</h2>
             <p id="op-realname" class="text-gray-400 text-xs"></p>
             <p id="op-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
             <button id="op-action-btn" onclick="handleOpAction()" class="mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors">Add Friend</button>
-            
             <div id="op-stats-box" class="w-full mt-6 space-y-3">
                 <div class="w-full grid grid-cols-2 gap-3">
                     <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="op-stat-max" class="text-xl font-bold text-red-500">-</p></div>
                     <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
                 </div>
             </div>
-
             <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
                 </div>
                 <div id="op-stat-chart" class="flex items-end space-x-1 h-32 overflow-x-auto pb-2 scrollbar-hide w-full"></div>
             </div>
-
             <button onclick="navigate(profileBackTarget)" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm transition-colors">Back</button>
         </div>
 
         <!-- 9. SETTINGS -->
         <div id="view-settings" class="flex flex-col items-center hidden-view w-full">
             <h2 class="text-2xl font-bold mb-6">Settings</h2>
-            
             <div class="w-full bg-gray-800 p-5 rounded-lg mb-6">
                 <h3 class="font-bold mb-2">Account Actions</h3>
                 <p class="text-gray-400 text-xs mb-4">Sign out of your current session on this device.</p>
                 <button onclick="logout()" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded transition-colors">Logout</button>
             </div>
-
             <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-5 rounded-lg">
                 <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
                 <p class="text-gray-400 text-xs mb-4">Delete account and all associated data permanently.</p>
@@ -420,6 +399,12 @@
         let gymSectors = {}; let currentSector = 'all'; let currentGradeFilter = 'all';
         let currentClimbersData = [];
         let profileBackTarget = 'home'; 
+        
+        // Переменные для Народного рейтинга
+        let tempAscentStyle = '';
+        let tempSuggestIdx = 0;
+        // Переменная для Календаря
+        let logbookSelectedDate = null;
 
         function showNotify(msg, isError = false) {
             const box = document.getElementById('notify-box');
@@ -474,11 +459,8 @@
             const pwdInput = document.getElementById(inputId);
             const eyeOpen = document.getElementById(eyeOpenId);
             const eyeClosed = document.getElementById(eyeClosedId);
-            if (pwdInput.type === 'password') {
-                pwdInput.type = 'text'; eyeOpen.classList.add('hidden-view'); eyeClosed.classList.remove('hidden-view');
-            } else {
-                pwdInput.type = 'password'; eyeOpen.classList.remove('hidden-view'); eyeClosed.classList.add('hidden-view');
-            }
+            if (pwdInput.type === 'password') { pwdInput.type = 'text'; eyeOpen.classList.add('hidden-view'); eyeClosed.classList.remove('hidden-view');
+            } else { pwdInput.type = 'password'; eyeOpen.classList.remove('hidden-view'); eyeClosed.classList.add('hidden-view'); }
         }
 
         async function processAuth() {
@@ -489,16 +471,13 @@
             if (!isLoginMode) {
                 const pwdConfirm = document.getElementById('auth-password-confirm').value.trim();
                 if (pwd !== pwdConfirm) return showNotify("Passwords do not match!", true);
-                
                 try {
                     showNotify("Creating secure account...");
                     const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
                     const user = userCred.user;
                     await user.sendEmailVerification();
-                    
                     const profile = { user_id: user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", ascents_history: [], is_global_admin: false, can_create_gyms: false };
                     if (user.uid === MASTER_UID) profile.is_global_admin = true;
-
                     await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
                     localStorage.setItem('user_profile', JSON.stringify(profile));
                     showNotify("Account created! Check your email to verify.", false);
@@ -510,13 +489,11 @@
                     const userCred = await auth.signInWithEmailAndPassword(rawEmail, pwd);
                     const user = userCred.user;
                     if (!user.emailVerified) return showNotify("Please verify your email first! Check your inbox.", true);
-
                     let profile = await apiCall('/api/db/get', { path: `users/${user.uid}` });
                     if (!profile) profile = { user_id: user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", ascents_history: [], is_global_admin: false, can_create_gyms: false };
                     if (user.uid === MASTER_UID && !profile.is_global_admin) {
                         profile.is_global_admin = true; await apiCall('/api/db/save', { path: `users/${user.uid}/is_global_admin`, payload: true });
                     }
-
                     profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
                     localStorage.setItem('user_profile', JSON.stringify(profile));
                     if (!profile.name) showView('view-onboarding');
@@ -530,18 +507,15 @@
                 showNotify("Connecting to Google...");
                 const userCred = await auth.signInWithPopup(googleProvider);
                 const user = userCred.user;
-                
                 let profile = await apiCall('/api/db/get', { path: `users/${user.uid}` });
                 if (!profile) {
                     profile = { 
                         user_id: user.uid, email: user.email, 
                         name: user.displayName || "", first_name: (user.displayName || "").split(" ")[0], last_name: (user.displayName || "").split(" ").slice(1).join(" "),
-                        bio: "Bouldering Enthusiast", avatar_url: user.photoURL || "", 
-                        ascents_history: [], is_global_admin: false, can_create_gyms: false 
+                        bio: "Bouldering Enthusiast", avatar_url: user.photoURL || "", ascents_history: [], is_global_admin: false, can_create_gyms: false 
                     };
                 }
                 if (user.uid === MASTER_UID && !profile.is_global_admin) profile.is_global_admin = true;
-                
                 await apiCall('/api/db/save', { path: `users/${user.uid}`, payload: profile });
                 profile.ascents_history = await apiCall('/api/db/get', { path: `user_ascents/${user.uid}` }) || [];
                 localStorage.setItem('user_profile', JSON.stringify(profile));
@@ -551,53 +525,27 @@
         }
 
         function logout() { 
-            auth.signOut(); 
-            localStorage.removeItem('user_profile'); 
-            document.getElementById('auth-email').value = '';
-            document.getElementById('auth-password').value = '';
-            document.getElementById('auth-password-confirm').value = '';
-            document.getElementById('auth-password').type = 'password';
-            document.getElementById('eye-open').classList.remove('hidden-view');
-            document.getElementById('eye-closed').classList.add('hidden-view');
+            auth.signOut(); localStorage.removeItem('user_profile'); 
+            document.getElementById('auth-email').value = ''; document.getElementById('auth-password').value = ''; document.getElementById('auth-password-confirm').value = '';
+            document.getElementById('auth-password').type = 'password'; document.getElementById('eye-open').classList.remove('hidden-view'); document.getElementById('eye-closed').classList.add('hidden-view');
             showView('view-auth'); 
         }
 
         async function searchUserForDirector() {
             const q = document.getElementById('sa-search-input').value.toLowerCase().trim(); if (!q) return;
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('sa-search-results'); list.innerHTML = '';
-            let found = false;
+            const list = document.getElementById('sa-search-results'); list.innerHTML = ''; let found = false;
             for(let uid in allUsers) {
                 const u = allUsers[uid];
                 if((u.email || '').toLowerCase() === q) {
                     found = true; const isDir = u.can_create_gyms ? '<span class="text-green-500 text-xs font-bold ml-2">[DIRECTOR]</span>' : '';
-                    list.innerHTML += `
-                        <div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2">
-                            <div><span>@${u.nickname || u.name}</span> <br> <span class="text-xs text-gray-500">${u.email}</span> ${isDir}</div>
-                            <button onclick="makeGymDirector('${uid}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-xs font-bold transition-colors">Grant Rights</button>
-                        </div>`;
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><div><span>@${u.nickname || u.name}</span> <br> <span class="text-xs text-gray-500">${u.email}</span> ${isDir}</div><button onclick="makeGymDirector('${uid}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-xs font-bold transition-colors">Grant Rights</button></div>`;
                 }
             }
             if(!found) list.innerHTML = '<p class="text-gray-500 text-sm">User not found</p>';
         }
 
-        async function makeGymDirector(uid) {
-            await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true });
-            showNotify("Gym Director rights granted!"); searchUserForDirector();
-        }
-
-        async function uploadOnboardAvatar(input) {
-            const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
-            const formData = new FormData(); formData.append("file", file);
-            const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
-            if(res.status === "ok") {
-                let profile = JSON.parse(localStorage.getItem('user_profile'));
-                if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
-                profile.avatar_url = res.url; localStorage.setItem('user_profile', JSON.stringify(profile));
-                await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PATCH", payload: { avatar_url: res.url } });
-                document.getElementById('onboard-avatar').src = res.url; showNotify("Avatar uploaded!");
-            } else { showNotify("Upload failed", true); }
-        }
+        async function makeGymDirector(uid) { await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true }); showNotify("Gym Director rights granted!"); searchUserForDirector(); }
 
         async function completeOnboarding() {
             const nickname = document.getElementById('onb-nickname').value.trim(); if (!nickname) return showNotify("Nickname is required!", true);
@@ -611,13 +559,10 @@
         }
 
         function toggleEditProfile(show) {
-            document.getElementById('profile-display').classList.toggle('hidden-view', show);
-            document.getElementById('profile-edit').classList.toggle('hidden-view', !show);
+            document.getElementById('profile-display').classList.toggle('hidden-view', show); document.getElementById('profile-edit').classList.toggle('hidden-view', !show);
             if(show) {
                 const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
-                document.getElementById('edit-name').value = profile.name || '';
-                document.getElementById('edit-realname').value = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-                document.getElementById('edit-bio').value = profile.bio || '';
+                document.getElementById('edit-name').value = profile.name || ''; document.getElementById('edit-realname').value = `${profile.first_name || ''} ${profile.last_name || ''}`.trim(); document.getElementById('edit-bio').value = profile.bio || '';
             }
         }
 
@@ -625,8 +570,7 @@
             const name = document.getElementById('edit-name').value.trim(); if(!name) return showNotify("Nickname is required!", true);
             const parts = document.getElementById('edit-realname').value.trim().split(' ');
             let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
-            profile.name = name; profile.first_name = parts[0] || ''; profile.last_name = parts.slice(1).join(' ') || '';
-            profile.bio = document.getElementById('edit-bio').value.trim();
+            profile.name = name; profile.first_name = parts[0] || ''; profile.last_name = parts.slice(1).join(' ') || ''; profile.bio = document.getElementById('edit-bio').value.trim();
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
             loadHomeView(); toggleEditProfile(false); showNotify("Profile updated!");
@@ -639,13 +583,72 @@
             const maxCount = Math.max(...Object.values(counts));
             Object.keys(counts).sort((a,b) => ALL_GRADES.indexOf(a) - ALL_GRADES.indexOf(b)).forEach(grade => {
                 const heightPercent = (counts[grade] / maxCount) * 100;
-                chartContainer.innerHTML += `
-                    <div class="flex flex-col items-center flex-1 min-w-[24px]">
-                        <span class="text-[10px] text-gray-400 mb-1">${counts[grade]}</span>
-                        <div class="w-full bg-red-500 rounded-t-sm transition-all duration-500 hover:bg-red-400" style="height: ${heightPercent}%"></div>
-                        <span class="text-[10px] font-bold mt-1 text-gray-300">${grade}</span>
-                    </div>`;
+                chartContainer.innerHTML += `<div class="flex flex-col items-center flex-1 min-w-[24px]"><span class="text-[10px] text-gray-400 mb-1">${counts[grade]}</span><div class="w-full bg-red-500 rounded-t-sm transition-all duration-500 hover:bg-red-400" style="height: ${heightPercent}%"></div><span class="text-[10px] font-bold mt-1 text-gray-300">${grade}</span></div>`;
             });
+        }
+
+        // === ЖУРНАЛ ТРЕНИРОВОК (LOGBOOK) ===
+        function renderLogbook() {
+            const profile = JSON.parse(localStorage.getItem('user_profile'));
+            const history = profile.ascents_history || [];
+            const daysContainer = document.getElementById('logbook-days');
+            const entriesContainer = document.getElementById('logbook-entries');
+            
+            daysContainer.innerHTML = '';
+            const today = new Date(); today.setHours(0,0,0,0);
+            
+            // Если ничего не выбрано, выбираем сегодня
+            if(!logbookSelectedDate) logbookSelectedDate = today.getTime();
+
+            for(let i=6; i>=0; i--) {
+                const d = new Date(today); d.setDate(today.getDate() - i);
+                const dayName = d.toLocaleDateString('en-US', {weekday: 'short'});
+                const dayNum = d.getDate();
+                
+                // Проверяем, есть ли пролазы в этот день
+                const dayAscents = history.filter(a => {
+                    const ad = new Date(a.timestamp); ad.setHours(0,0,0,0);
+                    return ad.getTime() === d.getTime();
+                });
+                
+                const dot = dayAscents.length > 0 ? '<div class="w-1.5 h-1.5 bg-green-500 rounded-full mt-1"></div>' : '<div class="w-1.5 h-1.5 mt-1"></div>';
+                const bgClass = (logbookSelectedDate === d.getTime()) ? 'bg-blue-600' : 'bg-gray-700';
+                
+                daysContainer.innerHTML += `
+                    <button onclick="selectLogbookDate(${d.getTime()})" class="flex flex-col items-center justify-center min-w-[48px] p-2 rounded-lg ${bgClass} hover:bg-blue-500 transition-colors">
+                        <span class="text-[10px] text-gray-300 uppercase">${dayName}</span>
+                        <span class="font-bold text-lg leading-tight">${dayNum}</span>
+                        ${dot}
+                    </button>
+                `;
+            }
+
+            // Рендерим список трасс для выбранного дня
+            entriesContainer.innerHTML = '';
+            const selectedAscents = history.filter(a => {
+                const ad = new Date(a.timestamp); ad.setHours(0,0,0,0);
+                return ad.getTime() === logbookSelectedDate;
+            });
+
+            if(selectedAscents.length === 0) {
+                entriesContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-2">Rest day. No ascents logged.</p>';
+            } else {
+                selectedAscents.forEach(a => {
+                    const badge = a.style === 'flash' ? '⚡' : '🔴';
+                    const bName = a.boulder_name || 'Unknown Route';
+                    entriesContainer.innerHTML += `
+                        <div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700">
+                            <div><p class="font-bold text-sm">${bName}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div>
+                            <span class="text-xl">${badge}</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function selectLogbookDate(timestamp) {
+            logbookSelectedDate = timestamp;
+            renderLogbook();
         }
 
         async function loadHomeView() {
@@ -664,54 +667,9 @@
             const history = profile.ascents_history; document.getElementById('stat-total').innerText = history.length;
             const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
             document.getElementById('stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
-            renderGradeChart('stat-chart', grades); loadFriendRequests();
-        }
-
-        async function uploadAvatar(input) {
-            const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
-            const formData = new FormData(); formData.append("file", file);
-            const res = await (await fetch('/api/upload', { method: 'POST', body: formData })).json();
-            if(res.status === "ok") {
-                let profile = JSON.parse(localStorage.getItem('user_profile'));
-                if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
-                profile.avatar_url = res.url; localStorage.setItem('user_profile', JSON.stringify(profile));
-                await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: "PUT", payload: profile });
-                loadHomeView(); showNotify("Avatar updated!");
-            } else { showNotify("Upload failed", true); }
-        }
-
-        async function loadFriendRequests() {
-            const profile = JSON.parse(localStorage.getItem('user_profile'));
-            const reqs = await apiCall('/api/db/get', { path: `friend_requests/${profile.user_id}` }) || {};
-            const box = document.getElementById('friend-requests-box'); const list = document.getElementById('friend-requests-list'); list.innerHTML = '';
-            if(Object.keys(reqs).length === 0) { box.classList.add('hidden-view'); return; }
-            box.classList.remove('hidden-view'); const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            for(let senderId in reqs) {
-                const u = allUsers[senderId] || {};
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">Decline</button></div></div>`;
-            }
-        }
-
-        async function acceptFriend(senderId, accept) {
-            const profile = JSON.parse(localStorage.getItem('user_profile'));
-            await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" });
-            if(accept) {
-                await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${senderId}`, payload: true });
-                await apiCall('/api/db/save', { path: `friends/${senderId}/${profile.user_id}`, payload: true }); showNotify("Friend added!");
-            }
+            renderGradeChart('stat-chart', grades); 
+            renderLogbook(); // Рендерим Календарь
             loadFriendRequests();
-        }
-
-        async function loadFriendsView() {
-            const profile = JSON.parse(localStorage.getItem('user_profile'));
-            const friends = await apiCall('/api/db/get', { path: `friends/${profile.user_id}` }) || {};
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('friends-list'); list.innerHTML = '';
-            if(Object.keys(friends).length === 0) { list.innerHTML = '<p class="text-gray-500 text-center mt-4">No friends yet</p>'; return; }
-            for(let fId in friends) {
-                const u = allUsers[fId] || {};
-                list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`;
-            }
         }
 
         async function loadGymsView() {
@@ -776,49 +734,6 @@
             await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${sId}`, payload: name }); toggleSectorForm(false); await loadSectors(); showNotify("Sector added!");
         }
 
-        async function clearSector() {
-            if(!confirm("Are you sure you want to remove ALL boulders (Official and Custom) from this sector? This cannot be undone.")) return;
-            showNotify("Clearing sector...");
-            const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
-            for(let bId in boulders) {
-                if(boulders[bId].gym_id === currentGymId && boulders[bId].sector_id === currentSector) {
-                    await apiCall('/api/db/save', { path: `boulders/${bId}`, method: 'DELETE' });
-                    if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
-                }
-            }
-            showNotify("Sector cleared!"); loadGallery();
-        }
-
-        async function deleteSector() {
-            if(!confirm("Are you sure you want to delete this sector AND all its boulders (Official and Custom)? This cannot be undone.")) return;
-            showNotify("Deleting sector...");
-            const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
-            for(let bId in boulders) {
-                if(boulders[bId].gym_id === currentGymId && boulders[bId].sector_id === currentSector) {
-                    await apiCall('/api/db/save', { path: `boulders/${bId}`, method: 'DELETE' });
-                    if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
-                }
-            }
-            await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${currentSector}`, method: 'DELETE' });
-            showNotify("Sector deleted!"); currentSector = 'all'; await loadSectors(); loadGallery();
-        }
-
-        async function deleteCurrentGym() {
-            if(!confirm("Are you SURE you want to delete this ENTIRE GYM? All sectors, routes, and roles will be lost forever! This cannot be undone.")) return;
-            showNotify("Deleting gym...");
-            const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
-            for(let bId in boulders) {
-                if(boulders[bId].gym_id === currentGymId) {
-                    await apiCall('/api/db/save', { path: `boulders/${bId}`, method: 'DELETE' });
-                    if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url });
-                }
-            }
-            await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}`, method: 'DELETE' });
-            await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}`, method: 'DELETE' });
-            await apiCall('/api/db/save', { path: `gyms/${currentGymId}`, method: 'DELETE' });
-            showNotify("Gym deleted successfully!"); navigate('gyms');
-        }
-
         function switchTab(tabName) {
             currentTab = tabName;
             ['official', 'custom', 'climbers', 'admin'].forEach(t => {
@@ -849,16 +764,16 @@
                 const b = boulders[bId];
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
                     if (currentSector !== 'all' && b.sector_id !== currentSector) continue;
-                    if (currentGradeFilter !== 'all' && b.grade !== currentGradeFilter) continue;
+                    
+                    // Показываем народный рейтинг, если есть
+                    const displayGrade = b.consensus_grade ? `${b.grade} (Community: <span class="text-purple-400 font-bold">${b.consensus_grade}</span>)` : b.grade;
+
+                    if (currentGradeFilter !== 'all' && b.grade !== currentGradeFilter && b.consensus_grade !== currentGradeFilter) continue;
 
                     found = true; 
                     const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
                     let badge = '';
-                    if (ascent) {
-                        badge = ascent.style === 'flash' 
-                            ? '<span class="text-yellow-500 font-bold text-lg">⚡</span>' 
-                            : '<span class="text-red-500 font-bold text-lg">🔴</span>';
-                    }
+                    if (ascent) { badge = ascent.style === 'flash' ? '<span class="text-yellow-500 font-bold text-2xl">⚡</span>' : '<span class="text-red-500 font-bold text-2xl">🔴</span>'; }
 
                     const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
@@ -868,7 +783,7 @@
                         <div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2">
                             <div>
                                 <h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4>
-                                <p class="text-gray-400 text-xs">Grade: ${b.grade} | By: ${b.author || 'Unknown'}${secName}</p>
+                                <p class="text-gray-400 text-xs">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p>
                                 <p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${ascentsCount}</p>
                             </div>
                             ${badge}
@@ -878,69 +793,128 @@
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No routes found.</p>`;
         }
 
-        async function loadGymClimbers() {
-            const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const allAscents = await apiCall('/api/db/get', { path: `user_ascents` }) || {};
-            currentClimbersData = [];
-            for(let uid in roles) {
-                const u = allUsers[uid] || {}; const history = allAscents[uid] || [];
-                const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
-                const maxGradeIdx = grades.length ? Math.max(...grades.map(g => ALL_GRADES.indexOf(g))) : -1;
-                const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : '-';
-                currentClimbersData.push({ uid: uid, user: u, maxGradeIdx: maxGradeIdx, maxGrade: maxGrade, totalAscents: grades.length });
-            }
-            currentClimbersData.sort((a, b) => { if (b.maxGradeIdx !== a.maxGradeIdx) return b.maxGradeIdx - a.maxGradeIdx; return b.totalAscents - a.totalAscents; });
-            document.getElementById('climbers-search').value = ''; renderClimbers();
-        }
-
-        function renderClimbers() {
-            const container = document.getElementById('climbers-list-container'); container.innerHTML = '';
-            const q = (document.getElementById('climbers-search').value || '').toLowerCase();
-            let rank = 1;
-            currentClimbersData.forEach(c => {
-                const nameStr = (c.user.nickname || c.user.name || 'User').toLowerCase();
-                const realStr = ((c.user.first_name || '') + ' ' + (c.user.last_name || '')).toLowerCase();
-                const emailStr = (c.user.email || '').toLowerCase();
-                if (nameStr.includes(q) || realStr.includes(q) || emailStr.includes(q)) {
-                    let rankColor = "text-gray-400";
-                    if (rank === 1) rankColor = "text-yellow-500 font-extrabold";
-                    else if (rank === 2) rankColor = "text-gray-300 font-extrabold";
-                    else if (rank === 3) rankColor = "text-orange-400 font-extrabold";
-                    container.innerHTML += `
-                        <div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors">
-                            <div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><p class="text-xs text-gray-400">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span>
-                        </div>`;
-                }
-                rank++;
+        // --- ВЫВОД ДЕТАЛЕЙ ТРАССЫ И ОЦЕНКА ---
+        function openRouteDetail(b) {
+            activeBoulder = b; 
+            document.getElementById('edit-route-form').classList.add('hidden-view');
+            document.getElementById('grade-suggest-box').classList.add('hidden-view');
+            
+            const displayGrade = b.consensus_grade ? `${b.grade} (Community: ${b.consensus_grade})` : b.grade;
+            document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} - ${displayGrade}`;
+            document.getElementById('detail-author').innerText = `Author: ${b.author || 'Unknown'} | Ascents: ${b.ascents || 0}\n${b.description || ''}`;
+            document.getElementById('detail-wall-img').src = b.image_url;
+            
+            const container = document.getElementById('detail-canvas'); container.querySelectorAll('.marker').forEach(el => el.remove());
+            (b.markers || []).forEach(m => {
+                const dot = document.createElement('div');
+                dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
+                dot.style.left = m.x + 'px'; dot.style.top = m.y + 'px';
+                dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444';
+                container.appendChild(dot);
             });
-        }
 
-        async function loadAdminPanel() {
-            const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('admin-setters-list'); list.innerHTML = '';
-            for(let uid in roles) {
-                if(roles[uid] === 'setter') {
-                    const u = allUsers[uid] || {};
-                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2"><span>@${u.nickname || u.name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors">Demote</button></div>`;
-                }
+            const profile = JSON.parse(localStorage.getItem('user_profile'));
+            const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
+            const actionsDiv = document.getElementById('detail-actions');
+            actionsDiv.classList.remove('hidden-view');
+            
+            if (ascent) {
+                const label = ascent.style === 'flash' ? '⚡ Flashed' : '🔴 Redpointed';
+                actionsDiv.innerHTML = `
+                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                    <div class="bg-green-600 px-4 py-2 rounded font-bold text-sm flex items-center">✓ ${label}</div>
+                    <button onclick="removeAscent()" class="bg-red-600 bg-opacity-50 hover:bg-opacity-100 px-4 py-2 rounded font-bold text-sm transition-colors">X</button>
+                `;
+            } else {
+                actionsDiv.innerHTML = `
+                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                    <button onclick="startSuggestGrade('flash')" class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded font-bold text-sm transition-colors">⚡ Flash</button>
+                    <button onclick="startSuggestGrade('redpoint')" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded font-bold text-sm transition-colors">🔴 Redpoint</button>
+                `;
             }
+
+            const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
+            document.getElementById('detail-admin-actions').classList.toggle('hidden-view', !canAdmin);
+            showView('view-route-detail');
         }
 
-        async function searchUsersForAdmin() {
-            const q = document.getElementById('admin-search-input').value.toLowerCase();
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            const list = document.getElementById('admin-search-results'); list.innerHTML = '';
-            for(let uid in allUsers) {
-                const u = allUsers[uid];
-                if((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
-                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors">Make Setter</button></div>`;
-                }
+        // --- ЛОГИКА ОЦЕНКИ (CONSENSUS) ---
+        function startSuggestGrade(style) {
+            tempAscentStyle = style;
+            tempSuggestIdx = ALL_GRADES.indexOf(activeBoulder.consensus_grade || activeBoulder.grade);
+            if(tempSuggestIdx === -1) tempSuggestIdx = 0;
+            
+            document.getElementById('detail-actions').classList.add('hidden-view');
+            document.getElementById('grade-suggest-box').classList.remove('hidden-view');
+            document.getElementById('suggested-grade-display').innerText = ALL_GRADES[tempSuggestIdx];
+        }
+
+        function changeSuggestGrade(delta) {
+            tempSuggestIdx += delta;
+            if(tempSuggestIdx < 0) tempSuggestIdx = 0;
+            if(tempSuggestIdx >= ALL_GRADES.length) tempSuggestIdx = ALL_GRADES.length - 1;
+            document.getElementById('suggested-grade-display').innerText = ALL_GRADES[tempSuggestIdx];
+        }
+
+        function cancelSuggestGrade() {
+            document.getElementById('grade-suggest-box').classList.add('hidden-view');
+            document.getElementById('detail-actions').classList.remove('hidden-view');
+        }
+
+        function recalcConsensus(boulder) {
+            if(!boulder.grade_votes || Object.keys(boulder.grade_votes).length === 0) {
+                boulder.consensus_grade = null; return;
             }
+            let sum = 0; let count = 0;
+            for(let uid in boulder.grade_votes) { sum += boulder.grade_votes[uid]; count++; }
+            boulder.consensus_grade = ALL_GRADES[Math.round(sum/count)];
         }
 
-        async function setGymRole(uid, role) { await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role }); showNotify("Role updated!"); loadAdminPanel(); }
+        async function confirmCompleteRoute() {
+            let profile = JSON.parse(localStorage.getItem('user_profile'));
+            let history = profile.ascents_history || [];
+            
+            // Сохраняем имя трассы в историю для календаря
+            history.push({ 
+                boulder_id: activeBoulder.id, 
+                boulder_name: activeBoulder.name,
+                grade: ALL_GRADES[tempSuggestIdx], 
+                style: tempAscentStyle, 
+                timestamp: Date.now() 
+            });
+            profile.ascents_history = history;
+            localStorage.setItem('user_profile', JSON.stringify(profile));
+            await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
+
+            // Сохраняем голос и пересчитываем рейтинг
+            activeBoulder.grade_votes = activeBoulder.grade_votes || {};
+            activeBoulder.grade_votes[profile.user_id] = tempSuggestIdx;
+            recalcConsensus(activeBoulder);
+            activeBoulder.ascents = (activeBoulder.ascents || 0) + 1;
+            
+            await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder });
+            showNotify("Ascent logged!"); openRouteDetail(activeBoulder);
+        }
+
+        async function removeAscent() {
+            if(!confirm("Remove this ascent?")) return;
+            let profile = JSON.parse(localStorage.getItem('user_profile'));
+            let history = profile.ascents_history || [];
+            const idx = history.findIndex(a => a.boulder_id === activeBoulder.id);
+            if(idx > -1) history.splice(idx, 1);
+            
+            // Удаляем голос и пересчитываем
+            if(activeBoulder.grade_votes && activeBoulder.grade_votes[profile.user_id] !== undefined) {
+                delete activeBoulder.grade_votes[profile.user_id];
+                recalcConsensus(activeBoulder);
+            }
+            activeBoulder.ascents = Math.max(0, (activeBoulder.ascents || 1) - 1);
+            
+            profile.ascents_history = history; localStorage.setItem('user_profile', JSON.stringify(profile));
+            await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
+            await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder });
+            openRouteDetail(activeBoulder);
+        }
 
         function startCreateRoute() {
             wizardMarkers = []; document.getElementById('wizard-wall-img').src = '';
@@ -992,74 +966,10 @@
                 id: bId, gym_id: currentGymId, route_type: currentTab, sector_id: document.getElementById('route-sector').value || null,
                 name: document.getElementById('route-name').value || 'Unnamed', grade: document.getElementById('route-grade').value,
                 description: document.getElementById('route-desc').value, author: profile.name, author_id: profile.user_id,
-                image_url: document.getElementById('wizard-wall-img').src, markers: wizardMarkers, ascents: 0 
+                image_url: document.getElementById('wizard-wall-img').src, markers: wizardMarkers, ascents: 0, grade_votes: {} 
             };
             await apiCall('/api/db/save', { path: `boulders/${bId}`, payload: bData });
             showNotify("Route created!"); document.getElementById('route-name').value = ''; document.getElementById('route-desc').value = ''; navigate('gym-routes');
-        }
-
-        // --- ROUTE DETAIL ---
-        let activeBoulder = null;
-        function openRouteDetail(b) {
-            activeBoulder = b; 
-            document.getElementById('edit-route-form').classList.add('hidden-view');
-            
-            document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} (${b.grade})`;
-            document.getElementById('detail-author').innerText = `Author: ${b.author || 'Unknown'} | Ascents: ${b.ascents || 0}\n${b.description || ''}`;
-            document.getElementById('detail-wall-img').src = b.image_url;
-            
-            const container = document.getElementById('detail-canvas'); container.querySelectorAll('.marker').forEach(el => el.remove());
-            (b.markers || []).forEach(m => {
-                const dot = document.createElement('div');
-                dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2';
-                dot.style.left = m.x + 'px'; dot.style.top = m.y + 'px';
-                dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444';
-                container.appendChild(dot);
-            });
-
-            const profile = JSON.parse(localStorage.getItem('user_profile'));
-            const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
-            const actionsDiv = document.getElementById('detail-actions');
-            
-            if (ascent) {
-                const label = ascent.style === 'flash' ? '⚡ Flashed' : '🔴 Redpointed';
-                actionsDiv.innerHTML = `
-                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
-                    <div class="bg-green-600 px-4 py-2 rounded font-bold text-sm">✓ ${label}</div>
-                    <button onclick="toggleCompleteRoute('remove')" class="bg-red-600 bg-opacity-50 hover:bg-opacity-100 px-4 py-2 rounded font-bold text-sm transition-colors">X</button>
-                `;
-            } else {
-                actionsDiv.innerHTML = `
-                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
-                    <button onclick="toggleCompleteRoute('flash')" class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded font-bold text-sm transition-colors">⚡ Flash</button>
-                    <button onclick="toggleCompleteRoute('redpoint')" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded font-bold text-sm transition-colors">🔴 Redpoint</button>
-                `;
-            }
-
-            // ЗДЕСЬ ОБНОВЛЕННАЯ ЛОГИКА АДМИНА ДЛЯ СЕТТЕРОВ
-            const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
-            document.getElementById('detail-admin-actions').classList.toggle('hidden-view', !canAdmin);
-            showView('view-route-detail');
-        }
-
-        async function toggleCompleteRoute(style) {
-            let profile = JSON.parse(localStorage.getItem('user_profile')); let history = profile.ascents_history || [];
-            const idx = history.findIndex(a => a.boulder_id === activeBoulder.id);
-            const freshBoulder = await apiCall('/api/db/get', { path: `boulders/${activeBoulder.id}` }) || {}; 
-            let currentAscents = freshBoulder.ascents || 0;
-            
-            if(style === 'remove' && idx > -1) { 
-                history.splice(idx, 1); 
-                currentAscents = Math.max(0, currentAscents - 1); 
-            } else if (style !== 'remove' && idx === -1) { 
-                history.push({ boulder_id: activeBoulder.id, grade: activeBoulder.grade, style: style, timestamp: Date.now() }); 
-                currentAscents += 1; 
-            }
-            
-            profile.ascents_history = history; localStorage.setItem('user_profile', JSON.stringify(profile));
-            await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
-            activeBoulder.ascents = currentAscents; await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}/ascents`, payload: currentAscents });
-            openRouteDetail(activeBoulder); showNotify("Stats updated!");
         }
 
         function toggleEditRouteForm() {
@@ -1076,7 +986,6 @@
             activeBoulder.name = document.getElementById('edit-rt-name').value || 'Unnamed';
             activeBoulder.grade = document.getElementById('edit-rt-grade').value;
             activeBoulder.description = document.getElementById('edit-rt-desc').value;
-
             await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder });
             showNotify("Route updated!"); toggleEditRouteForm(); openRouteDetail(activeBoulder);
         }
@@ -1088,38 +997,66 @@
             showNotify("Route deleted!"); navigate('gym-routes');
         }
 
-        async function openOtherProfile(uid, source = 'home') {
-            profileBackTarget = source; currentOtherUserId = uid;
-            const profile = JSON.parse(localStorage.getItem('user_profile')); if(uid === profile.user_id) { navigate(source); return; }
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; const u = allUsers[uid] || {};
-            document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'User'}`;
-            document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim();
-            document.getElementById('op-bio').innerText = u.bio || "";
-            document.getElementById('op-avatar').src = u.avatar_url || 'https://via.placeholder.com/150/444444/FFFFFF?text=No+Img';
-            const history = await apiCall('/api/db/get', { path: `user_ascents/${uid}` }) || []; document.getElementById('op-stat-total').innerText = history.length;
-            const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
-            document.getElementById('op-stat-max').innerText = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
-            renderGradeChart('op-stat-chart', grades);
-            const isFriend = await apiCall('/api/db/get', { path: `friends/${profile.user_id}/${uid}` });
-            const sentReq = await apiCall('/api/db/get', { path: `friend_requests/${uid}/${profile.user_id}` });
-            const btn = document.getElementById('op-action-btn');
-            if(isFriend) { btn.innerText = "Remove Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600 hover:bg-red-500 transition-colors"; }
-            else if(sentReq) { btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; }
-            else { btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors"; }
-            showView('view-other-profile');
+        async function loadGymClimbers() {
+            const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
+            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+            const allAscents = await apiCall('/api/db/get', { path: `user_ascents` }) || {};
+            currentClimbersData = [];
+            for(let uid in roles) {
+                const u = allUsers[uid] || {}; const history = allAscents[uid] || [];
+                const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+                const maxGradeIdx = grades.length ? Math.max(...grades.map(g => ALL_GRADES.indexOf(g))) : -1;
+                const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : '-';
+                currentClimbersData.push({ uid: uid, user: u, maxGradeIdx: maxGradeIdx, maxGrade: maxGrade, totalAscents: grades.length });
+            }
+            currentClimbersData.sort((a, b) => { if (b.maxGradeIdx !== a.maxGradeIdx) return b.maxGradeIdx - a.maxGradeIdx; return b.totalAscents - a.totalAscents; });
+            document.getElementById('climbers-search').value = ''; renderClimbers();
         }
 
-        async function handleOpAction() {
-            const profile = JSON.parse(localStorage.getItem('user_profile')); const btn = document.getElementById('op-action-btn');
-            if(btn.innerText === "Add Friend") {
-                await apiCall('/api/db/save', { path: `friend_requests/${currentOtherUserId}/${profile.user_id}`, payload: true });
-                showNotify("Friend request sent!"); btn.innerText = "Request Sent"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600";
-            } else if(btn.innerText === "Remove Friend") {
-                await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' });
-                await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' });
-                showNotify("Removed from friends"); btn.innerText = "Add Friend"; btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors";
+        function renderClimbers() {
+            const container = document.getElementById('climbers-list-container'); container.innerHTML = '';
+            const q = (document.getElementById('climbers-search').value || '').toLowerCase();
+            let rank = 1;
+            currentClimbersData.forEach(c => {
+                const nameStr = (c.user.nickname || c.user.name || 'User').toLowerCase();
+                const realStr = ((c.user.first_name || '') + ' ' + (c.user.last_name || '')).toLowerCase();
+                const emailStr = (c.user.email || '').toLowerCase();
+                if (nameStr.includes(q) || realStr.includes(q) || emailStr.includes(q)) {
+                    let rankColor = "text-gray-400";
+                    if (rank === 1) rankColor = "text-yellow-500 font-extrabold";
+                    else if (rank === 2) rankColor = "text-gray-300 font-extrabold";
+                    else if (rank === 3) rankColor = "text-orange-400 font-extrabold";
+                    container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><p class="text-xs text-gray-400">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
+                }
+                rank++;
+            });
+        }
+
+        async function loadAdminPanel() {
+            const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {};
+            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+            const list = document.getElementById('admin-setters-list'); list.innerHTML = '';
+            for(let uid in roles) {
+                if(roles[uid] === 'setter') {
+                    const u = allUsers[uid] || {};
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2"><span>@${u.nickname || u.name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors">Demote</button></div>`;
+                }
             }
         }
+
+        async function searchUsersForAdmin() {
+            const q = document.getElementById('admin-search-input').value.toLowerCase();
+            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+            const list = document.getElementById('admin-search-results'); list.innerHTML = '';
+            for(let uid in allUsers) {
+                const u = allUsers[uid];
+                if((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)) {
+                    list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors">Make Setter</button></div>`;
+                }
+            }
+        }
+
+        async function setGymRole(uid, role) { await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role }); showNotify("Role updated!"); loadAdminPanel(); }
 
         async function deleteAccount() {
             if(!confirm("Are you sure you want to delete your account? This cannot be undone.")) return;
