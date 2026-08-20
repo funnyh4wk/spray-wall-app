@@ -39,12 +39,6 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs("static", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
 class DBRequest(BaseModel):
     path: str
     payload: Optional[Any] = None
@@ -156,10 +150,16 @@ async def upload_image(file: UploadFile = File(...), decoded_token: dict = Depen
     ext = file.filename.split(".")[-1]
     uid = decoded_token.get("uid", "user")
     filename = f"{int(time.time())}_{uid[:10]}.{ext}"
-    filepath = os.path.join(UPLOAD_DIR, filename)
+    filepath = os.path.join("uploads", filename)
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {"status": "ok", "url": f"/uploads/{filename}"}
+
+# 🔥 ПРАВИЛЬНЫЙ ПОРЯДОК: СТАТИКА ДОЛЖНА БЫТЬ В САМОМ НИЗУ! 🔥
+os.makedirs("uploads", exist_ok=True)
+os.makedirs("static", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
