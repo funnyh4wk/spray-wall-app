@@ -47,6 +47,10 @@ class DBRequest(BaseModel):
     payload: Optional[Any] = None
     method: Optional[str] = "PUT"
 
+# 🔥 КЛАСС ДЛЯ УДАЛЕНИЯ КАРТИНОК 🔥
+class ImageDeleteReq(BaseModel):
+    url: str
+
 # 🔥 УМНЫЙ ПРОВЕРЯЮЩИЙ ПРАВ
 def check_permissions(decoded_token: dict, path: str, method: str, payload: Any) -> bool:
     try:
@@ -68,7 +72,6 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
         # 2. Профили
         if root == "users":
             if len(parts) > 1 and parts[1] != uid: return False
-            # Наглухо закрываем хакерам прямой доступ к правам админа
             if len(parts) > 2 and parts[2] in ["is_global_admin", "can_create_gyms"]: return False
             if isinstance(payload, dict): 
                 payload.pop("is_global_admin", None)
@@ -127,7 +130,6 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
 
 @app.post("/api/db/save")
 def db_save(req: DBRequest, decoded_token: dict = Depends(verify_token)):
-    # Передаем весь токен (с почтой) проверяющему
     if not check_permissions(decoded_token, req.path, req.method, req.payload):
         raise HTTPException(status_code=403, detail="Access Denied. You do not have permission.")
 
@@ -160,6 +162,19 @@ async def upload_image(file: UploadFile = File(...), decoded_token: dict = Depen
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {"status": "ok", "url": f"/uploads/{filename}"}
+
+# 🔥 ФУНКЦИЯ УДАЛЕНИЯ КАРТИНОК, ИЗ-ЗА КОТОРОЙ ВЫЛЕТАЛА ОШИБКА 🔥
+@app.post("/api/delete_image")
+def delete_image(req: ImageDeleteReq, decoded_token: dict = Depends(verify_token)):
+    try:
+        # Достаем имя файла из ссылки и удаляем его с жесткого диска сервера
+        filename = req.url.split("/")[-1]
+        filepath = os.path.join("uploads", filename)
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("static", exist_ok=True)
