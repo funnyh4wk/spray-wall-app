@@ -124,7 +124,6 @@
                 <div id="logbook-entries" class="mt-3 space-y-2"></div>
             </div>
             
-            <!-- ОБНОВЛЕННЫЙ КОНТЕЙНЕР ДЛЯ ДИАГРАММЫ (BAR CHART) -->
             <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
@@ -254,12 +253,10 @@
                 <img id="detail-wall-img" class="w-full h-full object-contain pointer-events-none">
             </div>
             
-            <!-- GRADE SUGGESTION WIDGET (ONLY FOR CUSTOM) -->
             <div id="grade-suggest-box" class="w-full max-w-[350px] bg-gray-800 p-4 rounded-lg hidden-view mb-4 border border-purple-500 border-opacity-50">
                 <p class="text-center font-bold text-sm mb-3 text-gray-300">Suggest Consensus Grade:</p>
                 <div class="mb-4">
                     <select id="suggest-grade-select" class="w-full p-3 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500 text-center text-lg font-bold text-purple-400">
-                        <!-- Options generated dynamically -->
                     </select>
                 </div>
                 <div class="flex space-x-2">
@@ -336,7 +333,7 @@
                 <h3 class="font-bold mb-2">Grant Gym Director Rights</h3>
                 <p class="text-xs text-gray-400 mb-3">Search user by email to give them access to create new climbing gyms.</p>
                 <div class="flex space-x-2">
-                    <input id="sa-search-input" placeholder="User Email" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500">
+                    <input id="sa-search-input" placeholder="funnyh4wk@gmail.com" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500">
                     <button onclick="searchUserForDirector()" class="bg-purple-600 hover:bg-purple-500 px-4 rounded font-bold transition-colors">Search</button>
                 </div>
                 <div id="sa-search-results" class="space-y-2 mt-4"></div>
@@ -359,7 +356,9 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
-        const MASTER_UID = "8Js6S97qXKMPt0S2WqPgtZIfUKk2";
+        
+        // 🔥 ВПИШИ СЮДА СВОЮ ГУГЛОВСКУЮ ПОЧТУ (маленькими буквами) 🔥
+        const MASTER_EMAIL = "ТВОЯ_ПОЧТА@gmail.com"; 
 
         if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 
@@ -457,7 +456,7 @@
                     showNotify("Creating secure account...");
                     const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
                     await userCred.user.sendEmailVerification();
-                    const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
+                    const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: false, can_create_gyms: false };
                     const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
                     if (!res) return;
                     localStorage.setItem('user_profile', JSON.stringify(profile)); showNotify("Account created! Check your email to verify.", false); 
@@ -470,12 +469,12 @@
                     if (!userCred.user.emailVerified) return showNotify("Please verify your email first!", true);
                     let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
                     if (!profile || profile.detail || !profile.name) {
-                        profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
+                        profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: false, can_create_gyms: false };
                         localStorage.setItem('user_profile', JSON.stringify(profile)); 
                         showView('view-onboarding'); 
                         return;
                     }
-                    if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { 
+                    if (rawEmail.toLowerCase() === MASTER_EMAIL.toLowerCase() && !profile.is_global_admin) { 
                         profile.is_global_admin = true; 
                         await apiCall('/api/db/save', { path: `users/${userCred.user.uid}/is_global_admin`, payload: true }); 
                     }
@@ -499,13 +498,13 @@
                         user_id: userCred.user.uid, email: userCred.user.email, name: displayName, 
                         first_name: displayName.split(" ")[0] || "", last_name: displayName.split(" ").slice(1).join(" ") || "", 
                         bio: "Bouldering Enthusiast", avatar_url: userCred.user.photoURL || "", 
-                        is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false 
+                        is_global_admin: false, can_create_gyms: false 
                     };
                     const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
                     if (!res) return;
                 }
                 
-                if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { 
+                if (userCred.user.email && userCred.user.email.toLowerCase() === MASTER_EMAIL.toLowerCase() && !profile.is_global_admin) { 
                     profile.is_global_admin = true; 
                     await apiCall('/api/db/save', { path: `users/${userCred.user.uid}/is_global_admin`, payload: true }); 
                 }
@@ -586,7 +585,6 @@
             loadHomeView(); toggleEditProfile(false); showNotify("Profile updated!");
         }
 
-        // 🔥 ИСПРАВЛЕННЫЙ КОД ДЛЯ СТОЛБЧАТЫХ ДИАГРАММ (BAR CHARTS) 🔥
         function renderGradeChart(containerId, gradesArray) {
             const chartContainer = document.getElementById(containerId); chartContainer.innerHTML = '';
             const counts = {}; gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
@@ -595,9 +593,7 @@
             const maxCount = Math.max(...Object.values(counts));
             
             Object.keys(counts).sort((a,b) => ALL_GRADES.indexOf(a) - ALL_GRADES.indexOf(b)).forEach(grade => {
-                // Минимум 5% высоты, чтобы пустые или мелкие столбики были видны как квадратики
                 const heightPercent = Math.max((counts[grade] / maxCount) * 100, 5); 
-                
                 chartContainer.innerHTML += `
                 <div class="flex flex-col justify-end items-center flex-1 min-w-[32px] h-full mx-1">
                     <span class="text-[10px] text-gray-400 mb-1">${counts[grade]}</span>
@@ -859,7 +855,6 @@
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No routes found.</p>`;
         }
 
-        // 🔥 КНОПКА-TOGGLE И ЗАЩИТА ОТ МИСКЛИКОВ 🔥
         function openRouteDetail(b) {
             activeBoulder = b; 
             document.getElementById('edit-route-form').classList.add('hidden-view'); document.getElementById('grade-suggest-box').classList.add('hidden-view');
@@ -876,14 +871,12 @@
             const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
             const actionsDiv = document.getElementById('detail-actions'); actionsDiv.classList.remove('hidden-view');
             
-            // Если пролез -> Зеленая кнопка. Если нажать -> вызовет функцию отмены
             if (ascent) {
                 actionsDiv.innerHTML = `
                     <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded font-bold text-sm transition-colors flex-1 shadow-md">Back</button>
                     <button onclick="removeAscent()" class="bg-green-600 hover:bg-red-500 px-4 py-3 rounded font-bold text-sm transition-colors flex-[2] shadow-md">✓ Completed</button>
                 `;
             } else {
-            // Если не пролез -> Серая кнопка. Если нажать -> вызовет функцию пролаза
                 actionsDiv.innerHTML = `
                     <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded font-bold text-sm transition-colors flex-1 shadow-md">Back</button>
                     <button onclick="startCompleteRoute()" class="bg-gray-600 hover:bg-gray-500 px-4 py-3 rounded font-bold text-sm transition-colors text-gray-300 flex-[2] shadow-md">Complete Route</button>

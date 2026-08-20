@@ -12,6 +12,9 @@ from typing import Any, Optional
 import firebase_admin
 from firebase_admin import credentials, db, auth as firebase_auth
 
+# 🔥 ВПИШИ СЮДА СВОЮ ГУГЛОВСКУЮ ПОЧТУ (маленькими буквами) 🔥
+MASTER_EMAIL = "funnyh4wk@gmail.com"
+
 # Подключаем ключ
 firebase_cred_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
 
@@ -33,7 +36,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         decoded_token = firebase_auth.verify_id_token(token)
-        return decoded_token # Отдаем расшифрованный токен
+        return decoded_token # Отдаем расшифрованный токен (в нем есть email)
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -44,11 +47,16 @@ class DBRequest(BaseModel):
     payload: Optional[Any] = None
     method: Optional[str] = "PUT"
 
-# 🔥 УМНЫЙ ПРОВЕРЯЮЩИЙ ПРАВ (ТОТАЛЬНАЯ ЗАЩИТА)
-def check_permissions(uid: str, path: str, method: str, payload: Any) -> bool:
+# 🔥 УМНЫЙ ПРОВЕРЯЮЩИЙ ПРАВ
+def check_permissions(decoded_token: dict, path: str, method: str, payload: Any) -> bool:
     try:
+        uid = decoded_token.get("uid")
+        email = decoded_token.get("email", "")
+
+        # 1. Бог-админ по Почте! (Может вообще всё)
+        if email.lower() == MASTER_EMAIL.lower(): return True
+        
         user_data = db.reference(f"users/{uid}").get() or {}
-        # 1. Бог-админ (MASTER_UID) может всё
         if user_data.get("is_global_admin", False): return True
         
         can_create_gyms = user_data.get("can_create_gyms", False)
@@ -57,15 +65,17 @@ def check_permissions(uid: str, path: str, method: str, payload: Any) -> bool:
         if not parts: return False
         root = parts[0]
 
-        # 2. Профили: каждый меняет только свой
+        # 2. Профили
         if root == "users":
             if len(parts) > 1 and parts[1] != uid: return False
-            if isinstance(payload, dict): # Защита от повышения прав
+            # Наглухо закрываем хакерам прямой доступ к правам админа
+            if len(parts) > 2 and parts[2] in ["is_global_admin", "can_create_gyms"]: return False
+            if isinstance(payload, dict): 
                 payload.pop("is_global_admin", None)
                 payload.pop("can_create_gyms", None)
             return True
 
-        # 3. Журнал пролазов: каждый пишет только себе
+        # 3. Журнал пролазов
         if root == "user_ascents":
             if len(parts) > 1 and parts[1] != uid: return False
             return True
@@ -80,12 +90,12 @@ def check_permissions(uid: str, path: str, method: str, payload: Any) -> bool:
             if method == "DELETE" and len(parts) > 1:
                 return db.reference(f"gym_roles/{parts[1]}/{uid}").get() == "admin"
 
-        # 6. Роли на скалодроме
+        # 6. Роли
         if root == "gym_roles":
             if len(parts) > 1:
                 gym_id = parts[1]
                 if method in ["PUT", "PATCH"] and len(parts) > 2 and parts[2] == uid and payload == "admin":
-                    return can_create_gyms # Разрешаем создателю зала выдать себе админа
+                    return can_create_gyms
                 return db.reference(f"gym_roles/{gym_id}/{uid}").get() == "admin"
 
         # 7. Сектора
@@ -96,21 +106,19 @@ def check_permissions(uid: str, path: str, method: str, payload: Any) -> bool:
         # 8. Трассы
         if root == "boulders":
             boulder_id = parts[1] if len(parts) > 1 else None
-            # Удаление трассы
             if method == "DELETE":
                 b_data = db.reference(f"boulders/{boulder_id}").get() or {}
-                if b_data.get("author_id") == uid: return True # Автор может удалить свою
+                if b_data.get("author_id") == uid: return True
                 return db.reference(f"gym_roles/{b_data.get('gym_id')}/{uid}").get() in ["admin", "setter"]
             
-            # Создание / Редактирование
             if method in ["PUT", "PATCH"]:
                 b_data = db.reference(f"boulders/{boulder_id}").get()
-                if not b_data: # Если трасса новая
+                if not b_data: 
                     r_type = payload.get("route_type") if isinstance(payload, dict) else "custom"
                     if r_type == "official":
                         gym_id = payload.get("gym_id") if isinstance(payload, dict) else None
                         return db.reference(f"gym_roles/{gym_id}/{uid}").get() in ["admin", "setter"]
-                return True # Все могут добавлять кастомные трассы или обновлять счетчик пролазов
+                return True
                 
         return False
     except Exception as e:
@@ -119,10 +127,8 @@ def check_permissions(uid: str, path: str, method: str, payload: Any) -> bool:
 
 @app.post("/api/db/save")
 def db_save(req: DBRequest, decoded_token: dict = Depends(verify_token)):
-    uid = decoded_token.get("uid")
-    
-    # Запрашиваем пропуск у нашего проверяющего
-    if not check_permissions(uid, req.path, req.method, req.payload):
+    # Передаем весь токен (с почтой) проверяющему
+    if not check_permissions(decoded_token, req.path, req.method, req.payload):
         raise HTTPException(status_code=403, detail="Access Denied. You do not have permission.")
 
     ref = db.reference(req.path)
@@ -155,7 +161,6 @@ async def upload_image(file: UploadFile = File(...), decoded_token: dict = Depen
         shutil.copyfileobj(file.file, buffer)
     return {"status": "ok", "url": f"/uploads/{filename}"}
 
-# 🔥 ПРАВИЛЬНЫЙ ПОРЯДОК: СТАТИКА ДОЛЖНА БЫТЬ В САМОМ НИЗУ! 🔥
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("static", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
