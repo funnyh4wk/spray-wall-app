@@ -1,7 +1,7 @@
 import os
 import time
 import shutil
-import requests
+import json
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,21 +10,33 @@ from pydantic import BaseModel
 from typing import Any, Optional
 
 import firebase_admin
-from firebase_admin import auth as firebase_auth
+from firebase_admin import credentials, db, auth as firebase_auth
+
+# --- 1. АБСОЛЮТНАЯ ЗАЩИТА: Читаем секретный ключ из переменных Render ---
+firebase_cred_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
 
 if not firebase_admin._apps:
-    firebase_admin.initialize_app(options={'projectId': 'spray-wall-v2'})
+    if firebase_cred_json:
+        # Если мы на Render, берем ключ из надежного сейфа (переменных)
+        cred_dict = json.loads(firebase_cred_json)
+        cred = credentials.Certificate(cred_dict)
+    else:
+        # ЗАЩИТА ОТ ДУРАКА: Если ты запустил код на домашнем компе и забыл про ключ, 
+        # Питон попытается найти файл serviceAccountKey.json рядом с main.py
+        # (Никогда не заливай этот файл на GitHub!)
+        cred = credentials.Certificate("serviceAccountKey.json")
+        
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app',
+        'projectId': 'spray-wall-v2'
+    })
 
 app = FastAPI()
 security = HTTPBearer()
 
-# 🔥 ТВОЙ ВЕЧНЫЙ FIREBASE (Данные больше никогда не удалятся)
-DB_URL = "https://spray-wall-v2-default-rtdb.europe-west1.firebasedatabase.app"
-
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
-        # Проверяем токен и передаем его дальше
         firebase_auth.verify_id_token(token)
         return token 
     except Exception as e:
@@ -45,22 +57,28 @@ class DBRequest(BaseModel):
 
 @app.post("/api/db/save")
 def db_save(req: DBRequest, token: str = Depends(verify_token)):
-    url = f"{DB_URL}/{req.path}.json?auth={token}"
-    if req.method == "DELETE":
-        requests.delete(url)
-    elif req.method == "PATCH":
-        requests.patch(url, json=req.payload)
-    else:
-        requests.put(url, json=req.payload)
-    return {"status": "ok"}
+    ref = db.reference(req.path)
+    try:
+        if req.method == "DELETE":
+            ref.delete()
+        elif req.method == "PATCH":
+            ref.update(req.payload)
+        else:
+            ref.set(req.payload)
+        return {"status": "ok"}
+    except Exception as e:
+        print("Firebase DB Error:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/db/get")
 def db_get(req: DBRequest, token: str = Depends(verify_token)):
-    url = f"{DB_URL}/{req.path}.json?auth={token}"
-    resp = requests.get(url)
-    if resp.status_code == 200:
-        return resp.json()
-    return None
+    ref = db.reference(req.path)
+    try:
+        data = ref.get()
+        return data
+    except Exception as e:
+        print("Firebase DB Error:", str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), token: str = Depends(verify_token)):
