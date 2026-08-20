@@ -842,6 +842,7 @@
             if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No routes found.</p>`;
         }
 
+        // 🔥 КНОПКА-TOGGLE (ПЕРЕКЛЮЧАТЕЛЬ) 🔥
         function openRouteDetail(b) {
             activeBoulder = b; 
             document.getElementById('edit-route-form').classList.add('hidden-view'); document.getElementById('grade-suggest-box').classList.add('hidden-view');
@@ -853,13 +854,23 @@
             (b.markers || []).forEach(m => {
                 const dot = document.createElement('div'); dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2'; dot.style.left = m.x + 'px'; dot.style.top = m.y + 'px'; dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444'; container.appendChild(dot);
             });
-            const profile = JSON.parse(localStorage.getItem('user_profile')); const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
+            
+            const profile = JSON.parse(localStorage.getItem('user_profile')); 
+            const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
             const actionsDiv = document.getElementById('detail-actions'); actionsDiv.classList.remove('hidden-view');
             
+            // Если пролез -> Зеленая кнопка. Если нажать -> отменит пролаз
             if (ascent) {
-                actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button><div class="bg-green-600 px-4 py-2 rounded font-bold text-sm flex items-center">✓ Completed</div><button onclick="removeAscent()" class="bg-red-600 bg-opacity-50 hover:bg-opacity-100 px-4 py-2 rounded font-bold text-sm transition-colors">X</button>`;
+                actionsDiv.innerHTML = `
+                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                    <button onclick="removeAscent()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-bold text-sm transition-colors w-36">✓ Completed</button>
+                `;
             } else {
-                actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button><button onclick="startCompleteRoute()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-bold text-sm transition-colors">✓ Completed</button>`;
+            // Если не пролез -> Серая кнопка. Если нажать -> сохранит пролаз
+                actionsDiv.innerHTML = `
+                    <button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button>
+                    <button onclick="startCompleteRoute()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded font-bold text-sm transition-colors w-36 text-gray-300">Complete</button>
+                `;
             }
             
             const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
@@ -868,10 +879,8 @@
 
         function startCompleteRoute() {
             if ((activeBoulder.route_type || 'custom') === 'official') {
-                // Официальные трассы не предлагают голосование за категорию, сохраняем напрямую
                 confirmCompleteRoute(true);
             } else {
-                // Кастомные трассы открывают удобный скролл (Select) для голосования
                 document.getElementById('detail-actions').classList.add('hidden-view'); 
                 document.getElementById('grade-suggest-box').classList.remove('hidden-view');
                 
@@ -897,7 +906,6 @@
             
             let gradeToLog = activeBoulder.grade;
             
-            // Если кастомная трасса, считываем категорию из скролла и обновляем консенсус
             if (!isOfficial && (activeBoulder.route_type || 'custom') !== 'official') {
                 gradeToLog = document.getElementById('suggest-grade-select').value;
                 const gradeIdx = ALL_GRADES.indexOf(gradeToLog);
@@ -915,14 +923,15 @@
             showNotify("Ascent logged!"); openRouteDetail(activeBoulder);
         }
 
+        // 🔥 ОТМЕНА ПРОЛАЗА (БЕЗ ВОПРОСОВ) 🔥
         async function removeAscent() {
-            if(!confirm("Remove this ascent?")) return;
             let profile = JSON.parse(localStorage.getItem('user_profile')); let history = profile.ascents_history || [];
             const idx = history.findIndex(a => a.boulder_id === activeBoulder.id); if(idx > -1) history.splice(idx, 1);
             if(activeBoulder.grade_votes && activeBoulder.grade_votes[profile.user_id] !== undefined) { delete activeBoulder.grade_votes[profile.user_id]; recalcConsensus(activeBoulder); }
             activeBoulder.ascents = Math.max(0, (activeBoulder.ascents || 1) - 1);
             profile.ascents_history = history; localStorage.setItem('user_profile', JSON.stringify(profile));
-            await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history }); await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); openRouteDetail(activeBoulder);
+            await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history }); await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
+            showNotify("Ascent removed!"); openRouteDetail(activeBoulder);
         }
 
         async function loadGymClimbers() {
