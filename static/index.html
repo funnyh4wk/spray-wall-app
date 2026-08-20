@@ -251,18 +251,21 @@
             <div id="detail-canvas" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 mb-4">
                 <img id="detail-wall-img" class="w-full h-full object-contain pointer-events-none">
             </div>
+            
+            <!-- GRADE SUGGESTION WIDGET (ONLY FOR CUSTOM) -->
             <div id="grade-suggest-box" class="w-full max-w-[350px] bg-gray-800 p-4 rounded-lg hidden-view mb-4 border border-purple-500 border-opacity-50">
                 <p class="text-center font-bold text-sm mb-3 text-gray-300">Suggest Consensus Grade:</p>
-                <div class="flex justify-center items-center space-x-6 mb-4">
-                    <button onclick="changeSuggestGrade(-1)" class="bg-gray-700 hover:bg-gray-600 w-12 h-12 rounded-full font-bold text-2xl transition-colors">-</button>
-                    <span id="suggested-grade-display" class="font-bold text-3xl text-purple-400 w-16 text-center">6A</span>
-                    <button onclick="changeSuggestGrade(1)" class="bg-gray-700 hover:bg-gray-600 w-12 h-12 rounded-full font-bold text-2xl transition-colors">+</button>
+                <div class="mb-4">
+                    <select id="suggest-grade-select" class="w-full p-3 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500 text-center text-lg font-bold text-purple-400">
+                        <!-- Options generated dynamically -->
+                    </select>
                 </div>
                 <div class="flex space-x-2">
                     <button onclick="cancelSuggestGrade()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-bold transition-colors text-sm">Cancel</button>
                     <button onclick="confirmCompleteRoute()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors text-sm">Save Ascent</button>
                 </div>
             </div>
+            
             <div id="detail-actions" class="flex flex-wrap gap-2 w-full justify-center mb-4"></div>
             <div id="detail-admin-actions" class="flex flex-wrap gap-2 w-full justify-center hidden-view">
                 <button onclick="toggleEditRouteForm()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded font-bold text-sm transition-colors">Edit Route</button>
@@ -361,7 +364,7 @@
         let wizardColor = 'green', wizardMarkers = [], currentBoulderId = null, currentOtherUserId = null;
         let gymSectors = {}, currentSector = 'all', currentGradeFilter = 'all';
         let currentClimbersData = [], profileBackTarget = 'home'; 
-        let tempAscentStyle = '', tempSuggestIdx = 0, logbookSelectedDate = null;
+        let logbookSelectedDate = null;
 
         function normArr(d) {
             if (!d) return [];
@@ -388,7 +391,6 @@
             });
         }
 
-        // 🔥 ТЕПЕРЬ ОН НЕ МОЛЧИТ, ЕСЛИ ОШИБКА
         async function apiCall(endpoint, payload = {}) {
             try {
                 let token = await getAuthToken();
@@ -401,7 +403,7 @@
                 if (!res.ok) {
                     console.error("Backend Error:", data);
                     showNotify("Error: " + (data.detail || "Server error"), true);
-                    return null; // ВАЖНО: Возвращает null, чтобы код дальше не шел
+                    return null; 
                 }
                 return data;
             } catch(e) { 
@@ -451,7 +453,7 @@
                     showNotify("Creating secure account...");
                     const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
                     await userCred.user.sendEmailVerification();
-                    const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: False };
+                    const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
                     const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
                     if (!res) return;
                     localStorage.setItem('user_profile', JSON.stringify(profile)); showNotify("Account created! Check your email to verify.", false); 
@@ -610,8 +612,8 @@
             if(selectedAscents.length === 0) entriesContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-2">Rest day. No ascents logged.</p>';
             else {
                 selectedAscents.forEach(a => {
-                    const badge = a.style === 'flash' ? '⚡' : '🔴';
-                    entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700"><div><p class="font-bold text-sm">${a.boulder_name || 'Unknown'}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div><span class="text-xl">${badge}</span></div>`;
+                    const badge = '<span class="text-green-500 font-bold text-xl">✓</span>';
+                    entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700"><div><p class="font-bold text-sm">${a.boulder_name || 'Unknown'}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div>${badge}</div>`;
                 });
             }
         }
@@ -706,13 +708,12 @@
 
         function toggleGymForm(show) { document.getElementById('gym-form').classList.toggle('hidden-view', !show); }
         
-        // 🔥 ОСТАНАВЛИВАЕТСЯ ПРИ ОШИБКЕ СЕРВЕРА
         async function saveGym() {
             const name = document.getElementById('gym-name').value; const city = document.getElementById('gym-city').value; if(!name) return;
             const gId = 'gym_' + Math.floor(Math.random()*100000);
             
             const res = await apiCall('/api/db/save', { path: `gyms/${gId}`, payload: { id: gId, name, city } });
-            if (!res) return; // Если сервер заблокировал, дальше не идем!
+            if (!res) return;
             
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             await apiCall('/api/db/save', { path: `gym_roles/${gId}/${profile.user_id}`, payload: 'admin' });
@@ -823,7 +824,6 @@
             const profile = JSON.parse(localStorage.getItem('user_profile'));
             const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
             const list = document.getElementById('tab-content-gallery'); list.innerHTML = '';
-            const completedIds = (profile.ascents_history || []).map(a => a.boulder_id);
             let found = false; const bKeys = Object.keys(boulders).reverse();
             for(let bId of bKeys) {
                 const b = boulders[bId]; if(!b || !b.id) continue;
@@ -833,7 +833,7 @@
                     if (currentGradeFilter !== 'all' && b.grade !== currentGradeFilter && b.consensus_grade !== currentGradeFilter) continue;
                     found = true; 
                     const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
-                    let badge = ''; if (ascent) { badge = ascent.style === 'flash' ? '<span class="text-yellow-500 font-bold text-2xl">⚡</span>' : '<span class="text-red-500 font-bold text-2xl">🔴</span>'; }
+                    let badge = ''; if (ascent) { badge = '<span class="text-green-500 font-bold text-2xl">✓</span>'; }
                     const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
                     const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
                     list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
@@ -855,35 +855,64 @@
             });
             const profile = JSON.parse(localStorage.getItem('user_profile')); const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
             const actionsDiv = document.getElementById('detail-actions'); actionsDiv.classList.remove('hidden-view');
+            
             if (ascent) {
-                const label = ascent.style === 'flash' ? '⚡ Flashed' : '🔴 Redpointed';
-                actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button><div class="bg-green-600 px-4 py-2 rounded font-bold text-sm flex items-center">✓ ${label}</div><button onclick="removeAscent()" class="bg-red-600 bg-opacity-50 hover:bg-opacity-100 px-4 py-2 rounded font-bold text-sm transition-colors">X</button>`;
+                actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button><div class="bg-green-600 px-4 py-2 rounded font-bold text-sm flex items-center">✓ Completed</div><button onclick="removeAscent()" class="bg-red-600 bg-opacity-50 hover:bg-opacity-100 px-4 py-2 rounded font-bold text-sm transition-colors">X</button>`;
             } else {
-                actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button><button onclick="startSuggestGrade('flash')" class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded font-bold text-sm transition-colors">⚡ Flash</button><button onclick="startSuggestGrade('redpoint')" class="bg-red-600 hover:bg-red-500 px-4 py-2 rounded font-bold text-sm transition-colors">🔴 Redpoint</button>`;
+                actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded font-bold text-sm transition-colors">Back</button><button onclick="startCompleteRoute()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-bold text-sm transition-colors">✓ Completed</button>`;
             }
+            
             const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
             document.getElementById('detail-admin-actions').classList.toggle('hidden-view', !canAdmin); showView('view-route-detail');
         }
 
-        function startSuggestGrade(style) {
-            tempAscentStyle = style; tempSuggestIdx = ALL_GRADES.indexOf(activeBoulder.consensus_grade || activeBoulder.grade); if(tempSuggestIdx === -1) tempSuggestIdx = 0;
-            document.getElementById('detail-actions').classList.add('hidden-view'); document.getElementById('grade-suggest-box').classList.remove('hidden-view'); document.getElementById('suggested-grade-display').innerText = ALL_GRADES[tempSuggestIdx];
+        function startCompleteRoute() {
+            if ((activeBoulder.route_type || 'custom') === 'official') {
+                // Официальные трассы не предлагают голосование за категорию, сохраняем напрямую
+                confirmCompleteRoute(true);
+            } else {
+                // Кастомные трассы открывают удобный скролл (Select) для голосования
+                document.getElementById('detail-actions').classList.add('hidden-view'); 
+                document.getElementById('grade-suggest-box').classList.remove('hidden-view');
+                
+                const sel = document.getElementById('suggest-grade-select');
+                sel.innerHTML = '';
+                ALL_GRADES.forEach(g => { sel.innerHTML += `<option value="${g}">${g}</option>`; });
+                sel.value = activeBoulder.consensus_grade || activeBoulder.grade || "1";
+            }
         }
-        function changeSuggestGrade(delta) { tempSuggestIdx += delta; if(tempSuggestIdx < 0) tempSuggestIdx = 0; if(tempSuggestIdx >= ALL_GRADES.length) tempSuggestIdx = ALL_GRADES.length - 1; document.getElementById('suggested-grade-display').innerText = ALL_GRADES[tempSuggestIdx]; }
-        function cancelSuggestGrade() { document.getElementById('grade-suggest-box').classList.add('hidden-view'); document.getElementById('detail-actions').classList.remove('hidden-view'); }
+
+        function cancelSuggestGrade() { 
+            document.getElementById('grade-suggest-box').classList.add('hidden-view'); 
+            document.getElementById('detail-actions').classList.remove('hidden-view'); 
+        }
 
         function recalcConsensus(boulder) {
             if(!boulder.grade_votes || Object.keys(boulder.grade_votes).length === 0) { boulder.consensus_grade = null; return; }
             let sum = 0; let count = 0; for(let uid in boulder.grade_votes) { sum += boulder.grade_votes[uid]; count++; } boulder.consensus_grade = ALL_GRADES[Math.round(sum/count)];
         }
 
-        async function confirmCompleteRoute() {
+        async function confirmCompleteRoute(isOfficial = false) {
             let profile = JSON.parse(localStorage.getItem('user_profile')); let history = profile.ascents_history || [];
-            history.push({ boulder_id: activeBoulder.id, boulder_name: activeBoulder.name, grade: ALL_GRADES[tempSuggestIdx], style: tempAscentStyle, timestamp: Date.now() });
+            
+            let gradeToLog = activeBoulder.grade;
+            
+            // Если кастомная трасса, считываем категорию из скролла и обновляем консенсус
+            if (!isOfficial && (activeBoulder.route_type || 'custom') !== 'official') {
+                gradeToLog = document.getElementById('suggest-grade-select').value;
+                const gradeIdx = ALL_GRADES.indexOf(gradeToLog);
+                activeBoulder.grade_votes = activeBoulder.grade_votes || {}; 
+                activeBoulder.grade_votes[profile.user_id] = gradeIdx; 
+                recalcConsensus(activeBoulder); 
+            }
+
+            history.push({ boulder_id: activeBoulder.id, boulder_name: activeBoulder.name, grade: gradeToLog, style: 'completed', timestamp: Date.now() });
             profile.ascents_history = history; localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
-            activeBoulder.grade_votes = activeBoulder.grade_votes || {}; activeBoulder.grade_votes[profile.user_id] = tempSuggestIdx; recalcConsensus(activeBoulder); activeBoulder.ascents = (activeBoulder.ascents || 0) + 1;
-            await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); showNotify("Ascent logged!"); openRouteDetail(activeBoulder);
+            
+            activeBoulder.ascents = (activeBoulder.ascents || 0) + 1;
+            await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
+            showNotify("Ascent logged!"); openRouteDetail(activeBoulder);
         }
 
         async function removeAscent() {
@@ -962,13 +991,12 @@
             wizardMarkers.forEach(m => { const dot = document.createElement('div'); dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2'; dot.style.left = m.x + 'px'; dot.style.top = m.y + 'px'; dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444'; container.appendChild(dot); });
         }
 
-        // 🔥 ОСТАНАВЛИВАЕТСЯ ПРИ ОШИБКЕ СЕРВЕРА
         async function saveNewRoute() {
             const profile = JSON.parse(localStorage.getItem('user_profile')); const bId = 'boulder_' + Math.random().toString(36).substring(2, 9);
             const bData = { id: bId, gym_id: currentGymId, route_type: currentTab, sector_id: document.getElementById('route-sector').value || null, name: document.getElementById('route-name').value || 'Unnamed', grade: document.getElementById('route-grade').value, description: document.getElementById('route-desc').value, author: profile.name, author_id: profile.user_id, image_url: document.getElementById('wizard-wall-img').src, markers: wizardMarkers, ascents: 0, grade_votes: {} };
             
             const res = await apiCall('/api/db/save', { path: `boulders/${bId}`, payload: bData });
-            if (!res) return; // Если сервер заблокировал, дальше не идем!
+            if (!res) return; 
             
             showNotify("Route created!"); document.getElementById('route-name').value = ''; document.getElementById('route-desc').value = ''; navigate('gym-routes');
         }
