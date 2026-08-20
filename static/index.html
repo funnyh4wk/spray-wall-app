@@ -363,7 +363,6 @@
         let currentClimbersData = [], profileBackTarget = 'home'; 
         let tempAscentStyle = '', tempSuggestIdx = 0, logbookSelectedDate = null;
 
-        // 🔥 ФИЛЬТР ОТ UNDEFINED: Превращает багованные объекты Firebase обратно в списки
         function normArr(d) {
             if (!d) return [];
             if (Array.isArray(d)) return d.filter(x => x !== null);
@@ -378,11 +377,35 @@
             box.style.opacity = '1'; setTimeout(() => box.style.opacity = '0', 4000);
         }
 
+        // 🔥 ЖДЕМ ТОКЕН ОТ ГУГЛА
+        async function getAuthToken() {
+            if (auth.currentUser) return await auth.currentUser.getIdToken();
+            return new Promise((resolve) => {
+                const unsubscribe = auth.onAuthStateChanged(user => {
+                    unsubscribe();
+                    if (user) user.getIdToken().then(resolve).catch(() => resolve(""));
+                    else resolve("");
+                });
+            });
+        }
+
+        // 🔥 УМНЫЙ ЗАПРОС К СЕРВЕРУ
         async function apiCall(endpoint, payload = {}) {
             try {
-                let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
-                const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
-                return await res.json();
+                let token = await getAuthToken();
+                const res = await fetch(endpoint, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
+                    body: JSON.stringify(payload) 
+                });
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    console.error("Backend Error:", data);
+                    if (res.status >= 500) showNotify("Server DB Error! Check Logs.", true);
+                    return null; // ВАЖНО: возвращаем null, а не ошибку!
+                }
+                return data;
             } catch(e) { return null; }
         }
 
@@ -437,8 +460,8 @@
                     const userCred = await auth.signInWithEmailAndPassword(rawEmail, pwd);
                     if (!userCred.user.emailVerified) return showNotify("Please verify your email first!", true);
                     let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
-                    if (!profile || !profile.name) {
-                        profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
+                    if (!profile || profile.detail || !profile.name) {
+                        profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
                         localStorage.setItem('user_profile', JSON.stringify(profile)); showView('view-onboarding'); return;
                     }
                     if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { profile.is_global_admin = true; await apiCall('/api/db/save', { path: `users/${userCred.user.uid}/is_global_admin`, payload: true }); }
@@ -453,18 +476,39 @@
                 showNotify("Connecting to Google...");
                 const userCred = await auth.signInWithPopup(googleProvider);
                 let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
-                if (!profile || !profile.name) {
-                    profile = { user_id: userCred.user.uid, email: userCred.user.email, name: userCred.user.displayName || "", first_name: (userCred.user.displayName || "").split(" ")[0], last_name: (userCred.user.displayName || "").split(" ").slice(1).join(" "), bio: "Bouldering Enthusiast", avatar_url: userCred.user.photoURL || "", is_global_admin: userCred.user.uid === MASTER_UID, can_create_gyms: false };
+                
+                // 🔥 ЗАЩИТА ОТ СЛОМАННОГО ПРОФИЛЯ
+                if (!profile || profile.detail || !profile.name) {
+                    profile = { 
+                        user_id: userCred.user.uid, 
+                        email: userCred.user.email, 
+                        name: userCred.user.displayName || "", 
+                        first_name: (userCred.user.displayName || "").split(" ")[0], 
+                        last_name: (userCred.user.displayName || "").split(" ").slice(1).join(" "), 
+                        bio: "Bouldering Enthusiast", 
+                        avatar_url: userCred.user.photoURL || "", 
+                        is_global_admin: userCred.user.uid === MASTER_UID, 
+                        can_create_gyms: false 
+                    };
                     await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
                     localStorage.setItem('user_profile', JSON.stringify(profile)); showView('view-onboarding'); return;
                 }
+                
                 if (userCred.user.uid === MASTER_UID && !profile.is_global_admin) { profile.is_global_admin = true; await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile }); }
                 profile.ascents_history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${userCred.user.uid}` }));
                 localStorage.setItem('user_profile', JSON.stringify(profile)); loadHomeView(); showView('view-home'); showNotify("Welcome back!");
             } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
         }
 
-        function logout() { auth.signOut(); localStorage.clear(); showView('view-auth'); }
+        // 🔥 ПОЛНАЯ ОЧИСТКА ПРИ ВЫХОДЕ
+        function logout() { 
+            auth.signOut(); 
+            localStorage.removeItem('user_profile'); 
+            document.getElementById('auth-email').value = ''; 
+            document.getElementById('auth-password').value = ''; 
+            document.getElementById('auth-password-confirm').value = '';
+            showView('view-auth'); 
+        }
 
         async function searchUserForDirector() {
             const q = document.getElementById('sa-search-input').value.toLowerCase().trim(); if (!q) return;
@@ -485,7 +529,7 @@
         async function uploadOnboardAvatar(input) {
             const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
             const formData = new FormData(); formData.append("file", file);
-            let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+            let token = await getAuthToken();
             const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
             if(res.status === "ok") {
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
@@ -582,7 +626,7 @@
         async function uploadAvatar(input) {
             const file = input.files[0]; if(!file) return; showNotify("Uploading avatar...");
             const formData = new FormData(); formData.append("file", file);
-            let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+            let token = await getAuthToken();
             const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
             if(res.status === "ok") {
                 let profile = JSON.parse(localStorage.getItem('user_profile'));
@@ -595,14 +639,24 @@
 
         async function loadFriendRequests() {
             const profile = JSON.parse(localStorage.getItem('user_profile'));
-            const reqs = await apiCall('/api/db/get', { path: `friend_requests/${profile.user_id}` }) || {};
+            const reqs = await apiCall('/api/db/get', { path: `friend_requests/${profile.user_id}` });
             const box = document.getElementById('friend-requests-box'); const list = document.getElementById('friend-requests-list'); list.innerHTML = '';
-            if(Object.keys(reqs).length === 0) { box.classList.add('hidden-view'); return; }
+            
+            let validReqs = {};
+            if (Array.isArray(reqs)) { reqs.forEach((val, idx) => { if (val) validReqs[idx] = val; }); } 
+            else if (typeof reqs === 'object' && reqs !== null) { for (let key in reqs) { if (reqs[key]) validReqs[key] = reqs[key]; } }
+
+            if(Object.keys(validReqs).length === 0) { box.classList.add('hidden-view'); return; }
             box.classList.remove('hidden-view'); const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-            for(let senderId in reqs) {
-                const u = allUsers[senderId]; if(!u) continue;
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name || 'User'}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">Decline</button></div></div>`;
+            for(let senderId in validReqs) {
+                const u = allUsers[senderId]; 
+                if(!u || !u.name) {
+                    await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" });
+                    continue; 
+                }
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">Decline</button></div></div>`;
             }
+            if(list.innerHTML === '') box.classList.add('hidden-view');
         }
 
         async function acceptFriend(senderId, accept) {
@@ -633,7 +687,7 @@
             const gyms = await apiCall('/api/db/get', { path: `gyms` }) || {};
             const list = document.getElementById('gyms-list'); list.innerHTML = '';
             for(let gId in gyms) {
-                const g = gyms[gId]; if(!g || !g.id) continue; // ЗАЩИТА ОТ ПУСТЫХ ДЫРОК
+                const g = gyms[gId]; if(!g || !g.id) continue;
                 list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold">Enter ></span></div>`;
             }
         }
@@ -747,7 +801,7 @@
             const completedIds = (profile.ascents_history || []).map(a => a.boulder_id);
             let found = false; const bKeys = Object.keys(boulders).reverse();
             for(let bId of bKeys) {
-                const b = boulders[bId]; if(!b || !b.id) continue; // ЗАЩИТА ОТ ПУСТЫХ ДЫРОК
+                const b = boulders[bId]; if(!b || !b.id) continue;
                 if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
                     if (currentSector !== 'all' && b.sector_id !== currentSector) continue;
                     const displayGrade = b.consensus_grade ? `${b.grade} (Community: <span class="text-purple-400 font-bold">${b.consensus_grade}</span>)` : b.grade;
@@ -864,7 +918,7 @@
 
         async function loadWallPhoto(input) {
             const file = input.files[0]; if(!file) return; showNotify("Uploading wall photo..."); const formData = new FormData(); formData.append("file", file);
-            let token = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+            let token = await getAuthToken();
             const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
             if(res.status === "ok") { document.getElementById('wizard-wall-img').src = res.url; document.getElementById('detail-wall-img').src = res.url; wizardStep(2); showNotify("Photo uploaded!"); } else showNotify("Upload failed", true);
         }
@@ -923,9 +977,22 @@
             const profile = JSON.parse(localStorage.getItem('user_profile')); await apiCall('/api/db/save', { path: `users/${profile.user_id}`, method: 'DELETE' }); await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, method: 'DELETE' }); if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); localStorage.clear(); logout(); showNotify("Account deleted");
         }
 
+        // 🔥 ФИЛЬТР-ПЫЛЕСОС ПРИ ЗАГРУЗКЕ САЙТА
         window.onload = () => {
             const profileStr = localStorage.getItem('user_profile');
-            if(profileStr) { const profile = JSON.parse(profileStr); if (!profile.name) showView('view-onboarding'); else { loadHomeView(); showView('view-home'); } } else showView('view-auth');
+            if(profileStr) { 
+                const profile = JSON.parse(profileStr); 
+                // Убиваем сломанный профиль, если он отравлен ошибкой!
+                if (profile.detail || !profile.user_id) {
+                    localStorage.removeItem('user_profile');
+                    showView('view-auth');
+                    return;
+                }
+                if (!profile.name) showView('view-onboarding'); 
+                else { loadHomeView(); showView('view-home'); } 
+            } else {
+                showView('view-auth');
+            }
         };
     </script>
 </body>
