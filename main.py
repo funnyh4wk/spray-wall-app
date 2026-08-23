@@ -1,6 +1,6 @@
 import os
 import json
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -56,6 +56,10 @@ class DBRequest(BaseModel):
 
 class ImageDeleteReq(BaseModel):
     url: str
+
+# НОВАЯ МОДЕЛЬ ДЛЯ КАРТИНКИ-ТЕКСТА
+class UploadReq(BaseModel):
+    image: str
 
 def check_permissions(decoded_token: dict, path: str, method: str, payload: Any) -> bool:
     try:
@@ -127,22 +131,17 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
                 
         return False
     except Exception as e:
-        print("Auth Check Error:", e)
         return False
 
 @app.post("/api/db/save")
 def db_save(req: DBRequest, decoded_token: dict = Depends(verify_token)):
     if not check_permissions(decoded_token, req.path, req.method, req.payload):
-        raise HTTPException(status_code=403, detail="Access Denied. You do not have permission.")
-
+        raise HTTPException(status_code=403, detail="Access Denied.")
     ref = db.reference(req.path)
     try:
-        if req.method == "DELETE":
-            ref.delete()
-        elif req.method == "PATCH":
-            ref.update(req.payload)
-        else:
-            ref.set(req.payload)
+        if req.method == "DELETE": ref.delete()
+        elif req.method == "PATCH": ref.update(req.payload)
+        else: ref.set(req.payload)
         return {"status": "ok"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -150,29 +149,25 @@ def db_save(req: DBRequest, decoded_token: dict = Depends(verify_token)):
 @app.post("/api/db/get")
 def db_get(req: DBRequest, decoded_token: dict = Depends(verify_token)):
     ref = db.reference(req.path)
-    try:
-        return ref.get()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    try: return ref.get()
+    except Exception as e: raise HTTPException(status_code=500, detail=str(e))
 
-# 🔥 ЗАГРУЗКА В CLOUDINARY 🔥
+# 🔥 ПУЛЕНЕПРОБИВАЕМАЯ ЗАГРУЗКА ИЗ ТЕКСТА (BASE64) 🔥
 @app.post("/api/upload")
-async def upload_image(file: UploadFile = File(...), decoded_token: dict = Depends(verify_token)):
+def upload_image(req: UploadReq, decoded_token: dict = Depends(verify_token)):
     try:
-        result = cloudinary.uploader.upload(file.file, folder="spraywall_routes")
+        result = cloudinary.uploader.upload(req.image, folder="spraywall_routes")
         return {"status": "ok", "url": result.get("secure_url")}
     except Exception as e:
+        print("Cloudinary Error:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
-# 🔥 УДАЛЕНИЕ ИЗ CLOUDINARY 🔥
 @app.post("/api/delete_image")
 def delete_image(req: ImageDeleteReq, decoded_token: dict = Depends(verify_token)):
     try:
         if "cloudinary.com" in req.url:
             parts = req.url.split("/")
-            filename_with_ext = parts[-1]
-            folder = parts[-2]
-            public_id = f"{folder}/{filename_with_ext.split('.')[0]}"
+            public_id = f"{parts[-2]}/{parts[-1].split('.')[0]}"
             cloudinary.uploader.destroy(public_id)
         return {"status": "ok"}
     except Exception as e:

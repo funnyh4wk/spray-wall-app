@@ -44,8 +44,8 @@ function normArr(d) {
     return [];
 }
 
-// 🔥 Идеальное сжатие фото (работает на всех айфонах) 🔥
-function compressImage(file, maxDimension = 1200) {
+// 🔥 ИДЕАЛЬНОЕ СЖАТИЕ В ТЕКСТ (БЕЗ ФАЙЛОВ) 🔥
+function compressImageToBase64(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -67,9 +67,8 @@ function compressImage(file, maxDimension = 1200) {
                 canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
-                canvas.toBlob((blob) => {
-                    resolve({ blob: blob, name: file.name || "image.jpg" });
-                }, 'image/jpeg', 0.85);
+                // Превращаем фотку в текстовую строку Base64
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
             img.onerror = e => reject(e);
         };
@@ -96,6 +95,7 @@ async function getAuthToken() {
     });
 }
 
+// Единая функция для всех запросов
 async function apiCall(endpoint, payload = {}) {
     try {
         let token = await getAuthToken();
@@ -277,27 +277,15 @@ async function makeGymDirector(uid) {
     if(res) { showNotify("Rights granted!"); searchUserForDirector(); } 
 }
 
-// 🔥 Надежная загрузка аватарки 🔥
+
+// 🔥 ЗАГРУЗКА АВАТАРА 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing avatar...");
-    
-    let uploadData = fileObj;
-    let uploadName = fileObj.name || "avatar.jpg";
-
     try { 
-        const compressed = await compressImage(fileObj, 600); 
-        uploadData = compressed.blob;
-        uploadName = compressed.name;
-    } catch(e) { console.error("Compression failed", e); }
-    
-    const formData = new FormData(); 
-    formData.append("file", uploadData, uploadName);
-    
-    try {
-        let token = await getAuthToken();
-        const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
-        if(res.status === "ok") {
+        const base64Str = await compressImageToBase64(fileObj, 600); 
+        const res = await apiCall('/api/upload', { image: base64Str });
+        if(res && res.status === "ok") {
             let profile = JSON.parse(localStorage.getItem('user_profile'));
             if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
             profile.avatar_url = res.url; 
@@ -306,40 +294,42 @@ async function uploadOnboardAvatar(input) {
             document.getElementById('onboard-avatar').src = res.url; 
             showNotify("Avatar uploaded!");
         } else { showNotify("Upload failed on server", true); }
-    } catch(err) { showNotify("Upload failed! Network error?", true); }
+    } catch(err) { showNotify("Upload failed! Image error.", true); }
 }
 
 async function uploadAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing avatar...");
-    
-    let uploadData = fileObj;
-    let uploadName = fileObj.name || "avatar.jpg";
-
     try { 
-        const compressed = await compressImage(fileObj, 600); 
-        uploadData = compressed.blob;
-        uploadName = compressed.name;
-    } catch(e) { console.error("Compression failed", e); }
-    
-    const formData = new FormData(); 
-    formData.append("file", uploadData, uploadName);
-    
-    try {
-        let token = await getAuthToken();
-        const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
-        if(res.status === "ok") {
+        const base64Str = await compressImageToBase64(fileObj, 600); 
+        const res = await apiCall('/api/upload', { image: base64Str });
+        if(res && res.status === "ok") {
             let profile = JSON.parse(localStorage.getItem('user_profile'));
             if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
             profile.avatar_url = res.url; 
             localStorage.setItem('user_profile', JSON.stringify(profile));
             await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: res.url });
-            
             const profileAvatar = document.getElementById('profile-avatar');
             if (profileAvatar) profileAvatar.src = res.url;
             showNotify("Avatar uploaded!");
         } else { showNotify("Upload failed on server", true); }
-    } catch(err) { showNotify("Upload failed! Network error?", true); }
+    } catch(err) { showNotify("Upload failed! Image error.", true); }
+}
+
+// 🔥 ЗАГРУЗКА СТЕНЫ 🔥
+async function loadWallPhoto(input) {
+    let fileObj = input.files[0]; if(!fileObj) return; 
+    showNotify("Optimizing wall photo..."); 
+    try { 
+        const base64Str = await compressImageToBase64(fileObj, 1080); 
+        const res = await apiCall('/api/upload', { image: base64Str });
+        if(res && res.status === "ok") { 
+            document.getElementById('wizard-wall-img').src = res.url; 
+            document.getElementById('detail-wall-img').src = res.url; 
+            wizardStep(2); 
+            showNotify("Photo uploaded!"); 
+        } else { showNotify("Upload failed on server", true); }
+    } catch(err) { showNotify("Upload failed! Image error.", true); }
 }
 
 async function completeOnboarding() {
@@ -984,37 +974,6 @@ function wizardStep(step) {
     document.getElementById('wizard-step-1').classList.toggle('hidden-view', step !== 1); 
     document.getElementById('wizard-step-2').classList.toggle('hidden-view', step !== 2); 
     document.getElementById('wizard-step-3').classList.toggle('hidden-view', step !== 3); 
-}
-
-// 🔥 Надежная загрузка фото стены 🔥
-async function loadWallPhoto(input) {
-    let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing wall photo..."); 
-    
-    let uploadData = fileObj;
-    let uploadName = fileObj.name || "wall.jpg";
-
-    try { 
-        const compressed = await compressImage(fileObj, 1080); 
-        uploadData = compressed.blob;
-        uploadName = compressed.name;
-    } catch(e) { console.error("Compression failed", e); }
-    
-    const formData = new FormData(); 
-    formData.append("file", uploadData, uploadName);
-    
-    try {
-        let token = await getAuthToken();
-        const res = await (await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })).json();
-        if(res.status === "ok") { 
-            document.getElementById('wizard-wall-img').src = res.url; 
-            document.getElementById('detail-wall-img').src = res.url; 
-            wizardStep(2); 
-            showNotify("Photo uploaded!"); 
-        } else {
-            showNotify("Upload failed on server", true);
-        }
-    } catch(err) { showNotify("Upload failed! Network error?", true); }
 }
 
 function setHoldColor(c) { wizardColor = c; }
