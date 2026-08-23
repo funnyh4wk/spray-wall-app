@@ -15,12 +15,9 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 const MASTER_EMAIL = "funnyh4wk@gmail.com"; 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M24 0H0v24h24z'/%3E%3Cpath fill='%239CA3AF' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
-// 🔥 УБИЙЦА КЭША АЙФОНА 🔥
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-            registration.unregister(); // Принудительно сносим старую память
-        }
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for(let registration of registrations) { registration.unregister(); }
     });
 }
 
@@ -47,7 +44,7 @@ function normArr(d) {
     return [];
 }
 
-// 🔥 СЖАТИЕ В ТЕКСТ (BASE64) 🔥
+// 🔥 ЖЕЛЕЗОБЕТОННОЕ СЖАТИЕ В BASE64 🔥
 function compressImageToBase64(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -73,20 +70,19 @@ function compressImageToBase64(file, maxDimension = 1200) {
     });
 }
 
-// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY 🔥
+// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY (ОБХОДИМ VERCEL) 🔥
 async function directCloudinaryUpload(base64String) {
     const formData = new FormData();
     formData.append("file", base64String);
-    formData.append("upload_preset", "spraywall_preset"); // Убедись, что создал этот Unsigned пресет в Cloudinary!
-    formData.append("folder", "spraywall_routes");
+    formData.append("upload_preset", "spraywall_preset");
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/spraywall/image/upload", {
+    const res = await fetch("https://api.cloudinary.com/v1_1/hz7ii1gc/image/upload", {
         method: "POST",
         body: formData
     });
     const data = await res.json();
     if (data.secure_url) return data.secure_url;
-    throw new Error(data.error?.message || "Unknown Cloudinary Error");
+    throw new Error(data.error?.message || "Cloudinary Error");
 }
 
 function showNotify(msg, isError = false) {
@@ -289,24 +285,21 @@ async function makeGymDirector(uid) {
     if(res) { showNotify("Rights granted!"); searchUserForDirector(); } 
 }
 
-
-// 🔥 ФУНКЦИИ ЗАГРУЗКИ С ПРОВЕРКОЙ ОШИБОК (ALERT) 🔥
+// 🔥 ЧИСТЫЕ ФУНКЦИИ ЗАГРУЗКИ (БЕЗ СТАРЫХ ОШИБОК) 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading...");
     try { 
         const base64Str = await compressImageToBase64(fileObj, 600); 
         const imageUrl = await directCloudinaryUpload(base64Str);
-        
         let profile = JSON.parse(localStorage.getItem('user_profile'));
-        if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); 
         profile.avatar_url = imageUrl; 
         localStorage.setItem('user_profile', JSON.stringify(profile));
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         document.getElementById('onboard-avatar').src = imageUrl; 
         showNotify("Avatar uploaded!");
     } catch(err) { 
-        alert("CLOUD ОШИБКА: " + err.message); // Железный детектор
+        alert("ОШИБКА ЗАГРУЗКИ: " + err.message);
         showNotify("Upload failed!", true); 
     }
 }
@@ -317,9 +310,7 @@ async function uploadAvatar(input) {
     try { 
         const base64Str = await compressImageToBase64(fileObj, 600); 
         const imageUrl = await directCloudinaryUpload(base64Str);
-        
         let profile = JSON.parse(localStorage.getItem('user_profile'));
-        if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
         profile.avatar_url = imageUrl; 
         localStorage.setItem('user_profile', JSON.stringify(profile));
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
@@ -327,7 +318,7 @@ async function uploadAvatar(input) {
         if (profileAvatar) profileAvatar.src = imageUrl;
         showNotify("Avatar uploaded!");
     } catch(err) { 
-        alert("CLOUD ОШИБКА: " + err.message);
+        alert("ОШИБКА ЗАГРУЗКИ: " + err.message);
         showNotify("Upload failed!", true); 
     }
 }
@@ -338,13 +329,12 @@ async function loadWallPhoto(input) {
     try { 
         const base64Str = await compressImageToBase64(fileObj, 1080); 
         const imageUrl = await directCloudinaryUpload(base64Str);
-        
         document.getElementById('wizard-wall-img').src = imageUrl; 
         document.getElementById('detail-wall-img').src = imageUrl; 
         wizardStep(2); 
         showNotify("Photo uploaded!"); 
     } catch(err) { 
-        alert("CLOUD ОШИБКА: " + err.message);
+        alert("ОШИБКА ЗАГРУЗКИ: " + err.message);
         showNotify("Upload failed!", true); 
     }
 }
