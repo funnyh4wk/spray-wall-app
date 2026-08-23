@@ -14,6 +14,9 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 // 🔥 ТВОЯ ПОЧТА ВШИТА СЮДА 🔥
 const MASTER_EMAIL = "funnyh4wk@gmail.com"; 
 
+// 🔥 СТАНДАРТНАЯ СЕРАЯ АВАТАРКА 🔥
+const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M24 0H0v24h24z'/%3E%3Cpath fill='%239CA3AF' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
+
 if ('serviceWorker' in navigator) window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 
 const ALL_GRADES = ["1", "2", "3", "4", "5", "5+", "6A", "6A+", "6B", "6B+", "6C", "6C+", "7A", "7A+", "7B", "7B+", "7C", "7C+", "8A", "8A+", "8B", "8B+", "8C"];
@@ -339,7 +342,10 @@ async function loadHomeView() {
     document.getElementById('profile-name').innerText = profile.name || "Unnamed";
     document.getElementById('profile-realname').innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
     document.getElementById('profile-bio').innerText = profile.bio || "";
-    if(profile.avatar_url) document.getElementById('profile-avatar').src = profile.avatar_url;
+    
+    // 🔥 Если нет своей аватарки, подставляем красивый серый силуэт
+    document.getElementById('profile-avatar').src = profile.avatar_url || DEFAULT_AVATAR;
+    
     document.getElementById('nav-super-admin').classList.toggle('hidden-view', !profile.is_global_admin);
 
     const history = profile.ascents_history; document.getElementById('stat-total').innerText = history.length;
@@ -680,7 +686,6 @@ async function removeAscent() {
     showNotify("Ascent cancelled", true); openRouteDetail(activeBoulder);
 }
 
-// 🔥 ЛИДЕРЫ (ТЕПЕРЬ С ВЕКТОРНЫМИ ЗНАЧКАМИ) 🔥
 async function loadGymClimbers() {
     const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {}; const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; const allAscents = await apiCall('/api/db/get', { path: `user_ascents` }) || {};
     currentClimbersData = [];
@@ -703,7 +708,6 @@ function renderClimbers() {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
             const rankData = getRank(c.points);
             
-            // Вшиваем значок иконки прямо в список лидеров
             container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
         } rank++;
     });
@@ -786,7 +790,10 @@ async function openOtherProfile(uid, source = 'home') {
     profileBackTarget = source; currentOtherUserId = uid;
     const profile = JSON.parse(localStorage.getItem('user_profile')); if(uid === profile.user_id) { navigate(source); return; }
     const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; const u = allUsers[uid] || {};
-    document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'User'}`; document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim(); document.getElementById('op-bio').innerText = u.bio || ""; document.getElementById('op-avatar').src = u.avatar_url || 'https://via.placeholder.com/150/444444/FFFFFF?text=No+Img';
+    document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'User'}`; document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim(); document.getElementById('op-bio').innerText = u.bio || ""; 
+    
+    // 🔥 Заглушка для чужого профиля
+    document.getElementById('op-avatar').src = u.avatar_url || DEFAULT_AVATAR;
     
     const history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${uid}` })); document.getElementById('op-stat-total').innerText = history.length;
     const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
@@ -796,7 +803,6 @@ async function openOtherProfile(uid, source = 'home') {
     const rankData = getRank(totalPoints);
     const rankEl = document.getElementById('op-rank');
     
-    // Вшиваем значок иконки в чужой профиль
     rankEl.innerHTML = `<div class="flex items-center justify-center">${rankData.svg} <span>${rankData.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
     rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${rankData.color}`;
 
