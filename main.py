@@ -1,6 +1,4 @@
 import os
-import time
-import shutil
 import json
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,11 +9,20 @@ from typing import Any, Optional
 
 import firebase_admin
 from firebase_admin import credentials, db, auth as firebase_auth
+import cloudinary
+import cloudinary.uploader
 
-# 🔥 ТВОЯ ПОЧТА ВШИТА СЮДА 🔥
+# 🔥 ТВОЯ ПОЧТА И КЛЮЧИ CLOUDINARY 🔥
 MASTER_EMAIL = "funnyh4wk@gmail.com"
 
-# Подключаем ключ
+cloudinary.config(
+    cloud_name = "spraywall",
+    api_key = "228359521481238",
+    api_secret = "MvS2MySwEvuQRN3n-qG6bKdK-Bg",
+    secure = True
+)
+
+# Подключаем базу Firebase
 firebase_cred_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
 
 if not firebase_admin._apps:
@@ -50,7 +57,6 @@ class DBRequest(BaseModel):
 class ImageDeleteReq(BaseModel):
     url: str
 
-# 🔥 УМНЫЙ ПРОВЕРЯЮЩИЙ ПРАВ
 def check_permissions(decoded_token: dict, path: str, method: str, payload: Any) -> bool:
     try:
         uid = decoded_token.get("uid")
@@ -87,13 +93,12 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
             if method == "DELETE" and len(parts) > 1:
                 return db.reference(f"gym_roles/{parts[1]}/{uid}").get() == "admin"
 
-        # 🔥 ИСПРАВЛЕНИЕ ОШИБКИ ДОСТУПА В ЗАЛ
         if root == "gym_roles":
             if len(parts) > 1:
                 gym_id = parts[1]
                 if method in ["PUT", "PATCH"] and len(parts) > 2 and parts[2] == uid:
                     if payload == "admin": return can_create_gyms
-                    if payload == "user": return True # РАЗРЕШАЕМ ЮЗЕРУ ЗАПИСАТЬ СЕБЯ В ПОСЕТИТЕЛИ
+                    if payload == "user": return True
                 return db.reference(f"gym_roles/{gym_id}/{uid}").get() == "admin"
 
         if root == "gym_sectors":
@@ -116,9 +121,7 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
                         return db.reference(f"gym_roles/{gym_id}/{uid}").get() in ["admin", "setter"]
                 return True
 
-        # 🔥 НОВОЕ: ПРАВИЛА ДЛЯ РЕСПЕКТОВ (ЛАЙКОВ)
         if root == "profile_likes":
-            # Разрешаем любому человеку ставить лайк от СВОЕГО имени кому угодно
             if len(parts) > 2 and parts[2] == uid:
                 return True
                 
@@ -152,30 +155,30 @@ def db_get(req: DBRequest, decoded_token: dict = Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# 🔥 ЗАГРУЗКА В CLOUDINARY 🔥
 @app.post("/api/upload")
 async def upload_image(file: UploadFile = File(...), decoded_token: dict = Depends(verify_token)):
-    ext = file.filename.split(".")[-1]
-    uid = decoded_token.get("uid", "user")
-    filename = f"{int(time.time())}_{uid[:10]}.{ext}"
-    filepath = os.path.join("uploads", filename)
-    with open(filepath, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    return {"status": "ok", "url": f"/uploads/{filename}"}
+    try:
+        result = cloudinary.uploader.upload(file.file, folder="spraywall_routes")
+        return {"status": "ok", "url": result.get("secure_url")}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+# 🔥 УДАЛЕНИЕ ИЗ CLOUDINARY 🔥
 @app.post("/api/delete_image")
 def delete_image(req: ImageDeleteReq, decoded_token: dict = Depends(verify_token)):
     try:
-        filename = req.url.split("/")[-1]
-        filepath = os.path.join("uploads", filename)
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        if "cloudinary.com" in req.url:
+            parts = req.url.split("/")
+            filename_with_ext = parts[-1]
+            folder = parts[-2]
+            public_id = f"{folder}/{filename_with_ext.split('.')[0]}"
+            cloudinary.uploader.destroy(public_id)
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
-os.makedirs("uploads", exist_ok=True)
 os.makedirs("static", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
