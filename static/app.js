@@ -89,14 +89,32 @@ function getPoints(history) {
     return total;
 }
 
-// 🔥 СИСТЕМА РАНГОВ ПО ОЧКАМ 🔥
+// 🔥 СИСТЕМА РАНГОВ С ВЕКТОРНЫМИ SVG ИКОНКАМИ 🔥
 function getRank(points) {
-    if (points < 300) return { title: "Rookie", color: "text-gray-400" };
-    if (points < 1500) return { title: "Plastic Puller", color: "text-green-400" };
-    if (points < 5000) return { title: "Crimper", color: "text-blue-400" };
-    if (points < 15000) return { title: "Steel Fingers", color: "text-purple-400" };
-    if (points < 40000) return { title: "Beast", color: "text-red-500" };
-    return { title: "Titan", color: "text-yellow-500" };
+    if (points < 300) return { 
+        title: "Rookie", color: "text-gray-400", 
+        svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` 
+    };
+    if (points < 1500) return { 
+        title: "Plastic Puller", color: "text-orange-400", 
+        svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` 
+    };
+    if (points < 5000) return { 
+        title: "Crimper", color: "text-gray-300", 
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l8-8 8 8"/></svg>` 
+    };
+    if (points < 15000) return { 
+        title: "Steel Fingers", color: "text-yellow-500", 
+        svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 18l8-8 8 8M4 10l8-8 8 8"/></svg>` 
+    };
+    if (points < 40000) return { 
+        title: "Beast", color: "text-cyan-400", 
+        svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5 drop-shadow-md"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4zm0 4.5l4 3-4 6-4-6 4-3z"/></svg>` 
+    };
+    return { 
+        title: "Titan", color: "text-yellow-400", 
+        svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"><path d="M2 19h20v2H2v-2zm1-2l3-11 4 5 2-8 2 8 4-5 3 11H3z"/></svg>` 
+    };
 }
 
 function toggleMenu() { document.getElementById('drawer').classList.toggle('-translate-x-full'); document.getElementById('drawer-overlay').classList.toggle('hidden-view'); }
@@ -329,17 +347,17 @@ async function loadHomeView() {
     const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
     document.getElementById('stat-max').innerText = maxGrade;
     
+    // 🔥 Очки и ранг с иконкой
     const totalPoints = getPoints(history);
     const rankData = getRank(totalPoints);
     const rankEl = document.getElementById('profile-rank');
-    rankEl.innerText = `${rankData.title} (${totalPoints} PTS)`;
+    rankEl.innerHTML = `<div class="flex items-center justify-center">${rankData.svg} <span>${rankData.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
     rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${rankData.color}`;
     
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${profile.user_id}` }) || {};
     const likeKeys = Object.keys(likes).filter(k => likes[k]);
     document.getElementById('my-likes-count').innerText = likeKeys.length;
     
-    // 🔥 ЧИТ-КОД ДЛЯ АДМИНА: Замок срывается, если ты is_global_admin 🔥
     const isUnlocked = profile.is_global_admin || history.length >= 20 || ALL_GRADES.indexOf(maxGrade) >= ALL_GRADES.indexOf("6B+");
     
     const lockBox = document.getElementById('my-likes-lock');
@@ -662,6 +680,7 @@ async function removeAscent() {
     showNotify("Ascent cancelled", true); openRouteDetail(activeBoulder);
 }
 
+// 🔥 ЛИДЕРЫ (ТЕПЕРЬ С ВЕКТОРНЫМИ ЗНАЧКАМИ) 🔥
 async function loadGymClimbers() {
     const roles = await apiCall('/api/db/get', { path: `gym_roles/${currentGymId}` }) || {}; const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; const allAscents = await apiCall('/api/db/get', { path: `user_ascents` }) || {};
     currentClimbersData = [];
@@ -683,7 +702,9 @@ function renderClimbers() {
         if (nameStr.includes(q) || realStr.includes(q) || emailStr.includes(q)) {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
             const rankData = getRank(c.points);
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><p class="text-[10px] uppercase font-bold tracking-wider ${rankData.color}">${rankData.title} (${c.points} PTS)</p><p class="text-xs text-gray-400 mt-0.5">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
+            
+            // Вшиваем значок иконки прямо в список лидеров
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
         } rank++;
     });
 }
@@ -774,7 +795,9 @@ async function openOtherProfile(uid, source = 'home') {
     const totalPoints = getPoints(history);
     const rankData = getRank(totalPoints);
     const rankEl = document.getElementById('op-rank');
-    rankEl.innerText = `${rankData.title} (${totalPoints} PTS)`;
+    
+    // Вшиваем значок иконки в чужой профиль
+    rankEl.innerHTML = `<div class="flex items-center justify-center">${rankData.svg} <span>${rankData.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
     rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${rankData.color}`;
 
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${uid}` }) || {};
