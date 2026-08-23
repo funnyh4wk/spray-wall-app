@@ -44,8 +44,8 @@ function normArr(d) {
     return [];
 }
 
-// 🔥 ИДЕАЛЬНОЕ СЖАТИЕ В ТЕКСТ (БЕЗ ФАЙЛОВ) 🔥
-function compressImageToBase64(file, maxDimension = 1200) {
+// 🔥 СЖАТИЕ ФОТО В БРАУЗЕРЕ 🔥
+function compressImage(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -56,24 +56,37 @@ function compressImageToBase64(file, maxDimension = 1200) {
                 let w = img.width;
                 let h = img.height;
                 if (w > maxDimension || h > maxDimension) {
-                    if (w > h) { 
-                        h = Math.round((h * maxDimension) / w); w = maxDimension; 
-                    } else { 
-                        w = Math.round((w * maxDimension) / h); h = maxDimension; 
-                    }
+                    if (w > h) { h = Math.round((h * maxDimension) / w); w = maxDimension; } 
+                    else { w = Math.round((w * maxDimension) / h); h = maxDimension; }
                 }
                 const canvas = document.createElement('canvas');
-                canvas.width = w; 
-                canvas.height = h;
+                canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
-                // Превращаем фотку в текстовую строку Base64
-                resolve(canvas.toDataURL('image/jpeg', 0.85));
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name || "image.jpg", { type: 'image/jpeg', lastModified: Date.now() }));
+                }, 'image/jpeg', 0.85);
             };
             img.onerror = e => reject(e);
         };
         reader.onerror = e => reject(e);
     });
+}
+
+// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY (МИНУЯ VERCEL) 🔥
+async function directCloudinaryUpload(fileObj) {
+    const formData = new FormData();
+    formData.append("file", fileObj);
+    formData.append("upload_preset", "spraywall_preset"); // Тот самый пресет!
+    formData.append("folder", "spraywall_routes");
+
+    const res = await fetch("https://api.cloudinary.com/v1_1/spraywall/image/upload", {
+        method: "POST",
+        body: formData
+    });
+    const data = await res.json();
+    if (data.secure_url) return data.secure_url;
+    throw new Error(data.error?.message || "Upload failed");
 }
 
 function showNotify(msg, isError = false) {
@@ -95,7 +108,6 @@ async function getAuthToken() {
     });
 }
 
-// Единая функция для всех запросов
 async function apiCall(endpoint, payload = {}) {
     try {
         let token = await getAuthToken();
@@ -278,58 +290,54 @@ async function makeGymDirector(uid) {
 }
 
 
-// 🔥 ЗАГРУЗКА АВАТАРА 🔥
+// 🔥 АБСОЛЮТНО НОВЫЕ БЕЗОТКАЗНЫЕ ФУНКЦИИ ЗАГРУЗКИ 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing avatar...");
+    showNotify("Optimizing & Uploading...");
     try { 
-        const base64Str = await compressImageToBase64(fileObj, 600); 
-        const res = await apiCall('/api/upload', { image: base64Str });
-        if(res && res.status === "ok") {
-            let profile = JSON.parse(localStorage.getItem('user_profile'));
-            if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
-            profile.avatar_url = res.url; 
-            localStorage.setItem('user_profile', JSON.stringify(profile));
-            await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: res.url });
-            document.getElementById('onboard-avatar').src = res.url; 
-            showNotify("Avatar uploaded!");
-        } else { showNotify("Upload failed on server", true); }
-    } catch(err) { showNotify("Upload failed! Image error.", true); }
+        const compressedFile = await compressImage(fileObj, 600); 
+        const imageUrl = await directCloudinaryUpload(compressedFile);
+        
+        let profile = JSON.parse(localStorage.getItem('user_profile'));
+        if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); // Удаляем старую через Vercel
+        profile.avatar_url = imageUrl; 
+        localStorage.setItem('user_profile', JSON.stringify(profile));
+        await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
+        document.getElementById('onboard-avatar').src = imageUrl; 
+        showNotify("Avatar uploaded!");
+    } catch(err) { console.error(err); showNotify("Upload failed! Try again.", true); }
 }
 
 async function uploadAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing avatar...");
+    showNotify("Optimizing & Uploading...");
     try { 
-        const base64Str = await compressImageToBase64(fileObj, 600); 
-        const res = await apiCall('/api/upload', { image: base64Str });
-        if(res && res.status === "ok") {
-            let profile = JSON.parse(localStorage.getItem('user_profile'));
-            if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
-            profile.avatar_url = res.url; 
-            localStorage.setItem('user_profile', JSON.stringify(profile));
-            await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: res.url });
-            const profileAvatar = document.getElementById('profile-avatar');
-            if (profileAvatar) profileAvatar.src = res.url;
-            showNotify("Avatar uploaded!");
-        } else { showNotify("Upload failed on server", true); }
-    } catch(err) { showNotify("Upload failed! Image error.", true); }
+        const compressedFile = await compressImage(fileObj, 600); 
+        const imageUrl = await directCloudinaryUpload(compressedFile);
+        
+        let profile = JSON.parse(localStorage.getItem('user_profile'));
+        if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
+        profile.avatar_url = imageUrl; 
+        localStorage.setItem('user_profile', JSON.stringify(profile));
+        await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
+        const profileAvatar = document.getElementById('profile-avatar');
+        if (profileAvatar) profileAvatar.src = imageUrl;
+        showNotify("Avatar uploaded!");
+    } catch(err) { console.error(err); showNotify("Upload failed! Try again.", true); }
 }
 
-// 🔥 ЗАГРУЗКА СТЕНЫ 🔥
 async function loadWallPhoto(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing wall photo..."); 
+    showNotify("Optimizing & Uploading..."); 
     try { 
-        const base64Str = await compressImageToBase64(fileObj, 1080); 
-        const res = await apiCall('/api/upload', { image: base64Str });
-        if(res && res.status === "ok") { 
-            document.getElementById('wizard-wall-img').src = res.url; 
-            document.getElementById('detail-wall-img').src = res.url; 
-            wizardStep(2); 
-            showNotify("Photo uploaded!"); 
-        } else { showNotify("Upload failed on server", true); }
-    } catch(err) { showNotify("Upload failed! Image error.", true); }
+        const compressedFile = await compressImage(fileObj, 1080); 
+        const imageUrl = await directCloudinaryUpload(compressedFile);
+        
+        document.getElementById('wizard-wall-img').src = imageUrl; 
+        document.getElementById('detail-wall-img').src = imageUrl; 
+        wizardStep(2); 
+        showNotify("Photo uploaded!"); 
+    } catch(err) { console.error(err); showNotify("Upload failed! Try again.", true); }
 }
 
 async function completeOnboarding() {
