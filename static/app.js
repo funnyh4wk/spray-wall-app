@@ -44,6 +44,7 @@ function normArr(d) {
     return [];
 }
 
+// 🔥 ЖЕЛЕЗОБЕТОННОЕ СЖАТИЕ В BASE64 🔥
 function compressImageToBase64(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -69,6 +70,7 @@ function compressImageToBase64(file, maxDimension = 1200) {
     });
 }
 
+// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY (ОБХОДИМ VERCEL) 🔥
 async function directCloudinaryUpload(base64String) {
     const formData = new FormData();
     formData.append("file", base64String);
@@ -283,6 +285,7 @@ async function makeGymDirector(uid) {
     if(res) { showNotify("Rights granted!"); searchUserForDirector(); } 
 }
 
+// 🔥 ЧИСТЫЕ ФУНКЦИИ ЗАГРУЗКИ (БЕЗ СТАРЫХ ОШИБОК) 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading...");
@@ -1053,7 +1056,7 @@ async function saveRouteEdit() {
     activeBoulder.description = document.getElementById('edit-rt-desc').value;
     
     const res = await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
-    if (!res) return; 
+    if (!res) return;
     
     showNotify("Route updated!"); 
     toggleEditRouteForm(); 
@@ -1063,7 +1066,7 @@ async function saveRouteEdit() {
 async function deleteRoute() {
     if(!confirm("Are you sure you want to delete this route permanently?")) return;
     const res = await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, method: 'DELETE' }); 
-    if (!res) return; 
+    if (!res) return;
     
     if(activeBoulder.image_url) apiCall('/api/delete_image', { url: activeBoulder.image_url }); 
     showNotify("Route deleted!"); 
