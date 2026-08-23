@@ -36,7 +36,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         decoded_token = firebase_auth.verify_id_token(token)
-        return decoded_token # Отдаем расшифрованный токен (в нем есть email)
+        return decoded_token 
     except Exception as e:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
@@ -47,7 +47,6 @@ class DBRequest(BaseModel):
     payload: Optional[Any] = None
     method: Optional[str] = "PUT"
 
-# 🔥 КЛАСС ДЛЯ УДАЛЕНИЯ КАРТИНОК 🔥
 class ImageDeleteReq(BaseModel):
     url: str
 
@@ -57,7 +56,6 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
         uid = decoded_token.get("uid")
         email = decoded_token.get("email", "")
 
-        # 1. Бог-админ по Почте! (Может вообще всё)
         if email.lower() == MASTER_EMAIL.lower(): return True
         
         user_data = db.reference(f"users/{uid}").get() or {}
@@ -69,7 +67,6 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
         if not parts: return False
         root = parts[0]
 
-        # 2. Профили
         if root == "users":
             if len(parts) > 1 and parts[1] != uid: return False
             if len(parts) > 2 and parts[2] in ["is_global_admin", "can_create_gyms"]: return False
@@ -78,35 +75,31 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
                 payload.pop("can_create_gyms", None)
             return True
 
-        # 3. Журнал пролазов
         if root == "user_ascents":
             if len(parts) > 1 and parts[1] != uid: return False
             return True
 
-        # 4. Друзья
         if root in ["friend_requests", "friends"]:
             return uid in parts
 
-        # 5. Скалодромы
         if root == "gyms":
             if method in ["PUT", "PATCH"]: return can_create_gyms
             if method == "DELETE" and len(parts) > 1:
                 return db.reference(f"gym_roles/{parts[1]}/{uid}").get() == "admin"
 
-        # 6. Роли
+        # 🔥 ИСПРАВЛЕНИЕ ОШИБКИ ДОСТУПА В ЗАЛ
         if root == "gym_roles":
             if len(parts) > 1:
                 gym_id = parts[1]
-                if method in ["PUT", "PATCH"] and len(parts) > 2 and parts[2] == uid and payload == "admin":
-                    return can_create_gyms
+                if method in ["PUT", "PATCH"] and len(parts) > 2 and parts[2] == uid:
+                    if payload == "admin": return can_create_gyms
+                    if payload == "user": return True # РАЗРЕШАЕМ ЮЗЕРУ ЗАПИСАТЬ СЕБЯ В ПОСЕТИТЕЛИ
                 return db.reference(f"gym_roles/{gym_id}/{uid}").get() == "admin"
 
-        # 7. Сектора
         if root == "gym_sectors":
             if len(parts) > 1:
                 return db.reference(f"gym_roles/{parts[1]}/{uid}").get() in ["admin", "setter"]
 
-        # 8. Трассы
         if root == "boulders":
             boulder_id = parts[1] if len(parts) > 1 else None
             if method == "DELETE":
@@ -121,6 +114,12 @@ def check_permissions(decoded_token: dict, path: str, method: str, payload: Any)
                     if r_type == "official":
                         gym_id = payload.get("gym_id") if isinstance(payload, dict) else None
                         return db.reference(f"gym_roles/{gym_id}/{uid}").get() in ["admin", "setter"]
+                return True
+
+        # 🔥 НОВОЕ: ПРАВИЛА ДЛЯ РЕСПЕКТОВ (ЛАЙКОВ)
+        if root == "profile_likes":
+            # Разрешаем любому человеку ставить лайк от СВОЕГО имени кому угодно
+            if len(parts) > 2 and parts[2] == uid:
                 return True
                 
         return False
@@ -163,11 +162,9 @@ async def upload_image(file: UploadFile = File(...), decoded_token: dict = Depen
         shutil.copyfileobj(file.file, buffer)
     return {"status": "ok", "url": f"/uploads/{filename}"}
 
-# 🔥 ФУНКЦИЯ УДАЛЕНИЯ КАРТИНОК, ИЗ-ЗА КОТОРОЙ ВЫЛЕТАЛА ОШИБКА 🔥
 @app.post("/api/delete_image")
 def delete_image(req: ImageDeleteReq, decoded_token: dict = Depends(verify_token)):
     try:
-        # Достаем имя файла из ссылки и удаляем его с жесткого диска сервера
         filename = req.url.split("/")[-1]
         filepath = os.path.join("uploads", filename)
         if os.path.exists(filepath):
