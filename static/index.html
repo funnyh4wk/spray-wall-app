@@ -18,17 +18,16 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        
         .hidden-view { display: none !important; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 🔥 ФИКС ДЛЯ АЙФОНОВ (чтобы инпуты нажимались на главном экране) 🔥 */
+        /* 🔥 ЖЕЛЕЗНЫЙ ФИКС ДЛЯ АЙФОНОВ 🔥 */
         input, textarea, select {
-            -webkit-user-select: text !important;
-            user-select: text !important;
-            -webkit-appearance: none;
-            appearance: none; /* <-- Вот она, строчка, которая уберет предупреждение! */
+            -webkit-user-select: auto !important;
+            user-select: auto !important;
+            pointer-events: auto !important;
+            appearance: none;
         }
         body {
             -webkit-touch-callout: none;
@@ -373,7 +372,7 @@
 
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script src="/app.js?v=10"></script>
+    <!-- 🔥 ХАК ДЛЯ ПРИНУДИТЕЛЬНОЙ ЗАГРУЗКИ НОВОЙ ВЕРСИИ 🔥 -->
+    <script src="/app.js?v=999"></script>
 </body>
 </html>

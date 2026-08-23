@@ -15,9 +15,12 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 const MASTER_EMAIL = "funnyh4wk@gmail.com"; 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M24 0H0v24h24z'/%3E%3Cpath fill='%239CA3AF' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
 
+// 🔥 УБИЙЦА КЭША АЙФОНА 🔥
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { 
-        navigator.serviceWorker.register('sw.js').catch(()=>{}); 
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+            registration.unregister(); // Принудительно сносим старую память
+        }
     });
 }
 
@@ -44,7 +47,7 @@ function normArr(d) {
     return [];
 }
 
-// 🔥 БРОНЕБОЙНОЕ СЖАТИЕ В ТЕКСТ (BASE64) 🔥
+// 🔥 СЖАТИЕ В ТЕКСТ (BASE64) 🔥
 function compressImageToBase64(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -62,7 +65,7 @@ function compressImageToBase64(file, maxDimension = 1200) {
                 canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', 0.85)); // Возвращаем чистый текст
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
             img.onerror = e => reject(e);
         };
@@ -70,11 +73,11 @@ function compressImageToBase64(file, maxDimension = 1200) {
     });
 }
 
-// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY ИЗ ТЕКСТА 🔥
+// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY 🔥
 async function directCloudinaryUpload(base64String) {
     const formData = new FormData();
-    formData.append("file", base64String); // Отправляем текстовую строку вместо глючного файла
-    formData.append("upload_preset", "spraywall_preset");
+    formData.append("file", base64String);
+    formData.append("upload_preset", "spraywall_preset"); // Убедись, что создал этот Unsigned пресет в Cloudinary!
     formData.append("folder", "spraywall_routes");
 
     const res = await fetch("https://api.cloudinary.com/v1_1/spraywall/image/upload", {
@@ -287,7 +290,7 @@ async function makeGymDirector(uid) {
 }
 
 
-// 🔥 БЕЗОТКАЗНЫЕ ФУНКЦИИ ЗАГРУЗКИ С ALERT ДЛЯ ОТЛАДКИ 🔥
+// 🔥 ФУНКЦИИ ЗАГРУЗКИ С ПРОВЕРКОЙ ОШИБОК (ALERT) 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading...");
@@ -296,15 +299,15 @@ async function uploadOnboardAvatar(input) {
         const imageUrl = await directCloudinaryUpload(base64Str);
         
         let profile = JSON.parse(localStorage.getItem('user_profile'));
-        if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); // Удаляем старую через Vercel
+        if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); 
         profile.avatar_url = imageUrl; 
         localStorage.setItem('user_profile', JSON.stringify(profile));
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         document.getElementById('onboard-avatar').src = imageUrl; 
         showNotify("Avatar uploaded!");
     } catch(err) { 
-        alert("ОШИБКА ЗАГРУЗКИ: " + err.message); // 🔥 Выведет точную ошибку прямо на экран!
-        showNotify("Upload failed! Try again.", true); 
+        alert("CLOUD ОШИБКА: " + err.message); // Железный детектор
+        showNotify("Upload failed!", true); 
     }
 }
 
@@ -324,8 +327,8 @@ async function uploadAvatar(input) {
         if (profileAvatar) profileAvatar.src = imageUrl;
         showNotify("Avatar uploaded!");
     } catch(err) { 
-        alert("ОШИБКА ЗАГРУЗКИ: " + err.message); // 🔥 Выведет точную ошибку прямо на экран!
-        showNotify("Upload failed! Try again.", true); 
+        alert("CLOUD ОШИБКА: " + err.message);
+        showNotify("Upload failed!", true); 
     }
 }
 
@@ -341,8 +344,8 @@ async function loadWallPhoto(input) {
         wizardStep(2); 
         showNotify("Photo uploaded!"); 
     } catch(err) { 
-        alert("ОШИБКА ЗАГРУЗКИ: " + err.message); // 🔥 Выведет точную ошибку прямо на экран!
-        showNotify("Upload failed! Try again.", true); 
+        alert("CLOUD ОШИБКА: " + err.message);
+        showNotify("Upload failed!", true); 
     }
 }
 
