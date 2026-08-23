@@ -44,8 +44,8 @@ function normArr(d) {
     return [];
 }
 
-// 🔥 СЖАТИЕ ФОТО В БРАУЗЕРЕ 🔥
-function compressImage(file, maxDimension = 1200) {
+// 🔥 БРОНЕБОЙНОЕ СЖАТИЕ В ТЕКСТ (BASE64) 🔥
+function compressImageToBase64(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -53,8 +53,7 @@ function compressImage(file, maxDimension = 1200) {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-                let w = img.width;
-                let h = img.height;
+                let w = img.width, h = img.height;
                 if (w > maxDimension || h > maxDimension) {
                     if (w > h) { h = Math.round((h * maxDimension) / w); w = maxDimension; } 
                     else { w = Math.round((w * maxDimension) / h); h = maxDimension; }
@@ -63,9 +62,7 @@ function compressImage(file, maxDimension = 1200) {
                 canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
-                canvas.toBlob((blob) => {
-                    resolve(new File([blob], file.name || "image.jpg", { type: 'image/jpeg', lastModified: Date.now() }));
-                }, 'image/jpeg', 0.85);
+                resolve(canvas.toDataURL('image/jpeg', 0.85)); // Возвращаем чистый текст
             };
             img.onerror = e => reject(e);
         };
@@ -73,11 +70,11 @@ function compressImage(file, maxDimension = 1200) {
     });
 }
 
-// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY (МИНУЯ VERCEL) 🔥
-async function directCloudinaryUpload(fileObj) {
+// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY ИЗ ТЕКСТА 🔥
+async function directCloudinaryUpload(base64String) {
     const formData = new FormData();
-    formData.append("file", fileObj);
-    formData.append("upload_preset", "spraywall_preset"); // Тот самый пресет!
+    formData.append("file", base64String); // Отправляем текстовую строку вместо глючного файла
+    formData.append("upload_preset", "spraywall_preset");
     formData.append("folder", "spraywall_routes");
 
     const res = await fetch("https://api.cloudinary.com/v1_1/spraywall/image/upload", {
@@ -86,7 +83,7 @@ async function directCloudinaryUpload(fileObj) {
     });
     const data = await res.json();
     if (data.secure_url) return data.secure_url;
-    throw new Error(data.error?.message || "Upload failed");
+    throw new Error(data.error?.message || "Unknown Cloudinary Error");
 }
 
 function showNotify(msg, isError = false) {
@@ -290,13 +287,13 @@ async function makeGymDirector(uid) {
 }
 
 
-// 🔥 АБСОЛЮТНО НОВЫЕ БЕЗОТКАЗНЫЕ ФУНКЦИИ ЗАГРУЗКИ 🔥
+// 🔥 БЕЗОТКАЗНЫЕ ФУНКЦИИ ЗАГРУЗКИ С ALERT ДЛЯ ОТЛАДКИ 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading...");
     try { 
-        const compressedFile = await compressImage(fileObj, 600); 
-        const imageUrl = await directCloudinaryUpload(compressedFile);
+        const base64Str = await compressImageToBase64(fileObj, 600); 
+        const imageUrl = await directCloudinaryUpload(base64Str);
         
         let profile = JSON.parse(localStorage.getItem('user_profile'));
         if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url }); // Удаляем старую через Vercel
@@ -305,15 +302,18 @@ async function uploadOnboardAvatar(input) {
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         document.getElementById('onboard-avatar').src = imageUrl; 
         showNotify("Avatar uploaded!");
-    } catch(err) { console.error(err); showNotify("Upload failed! Try again.", true); }
+    } catch(err) { 
+        alert("ОШИБКА ЗАГРУЗКИ: " + err.message); // 🔥 Выведет точную ошибку прямо на экран!
+        showNotify("Upload failed! Try again.", true); 
+    }
 }
 
 async function uploadAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading...");
     try { 
-        const compressedFile = await compressImage(fileObj, 600); 
-        const imageUrl = await directCloudinaryUpload(compressedFile);
+        const base64Str = await compressImageToBase64(fileObj, 600); 
+        const imageUrl = await directCloudinaryUpload(base64Str);
         
         let profile = JSON.parse(localStorage.getItem('user_profile'));
         if(profile.avatar_url) apiCall('/api/delete_image', { url: profile.avatar_url });
@@ -323,21 +323,27 @@ async function uploadAvatar(input) {
         const profileAvatar = document.getElementById('profile-avatar');
         if (profileAvatar) profileAvatar.src = imageUrl;
         showNotify("Avatar uploaded!");
-    } catch(err) { console.error(err); showNotify("Upload failed! Try again.", true); }
+    } catch(err) { 
+        alert("ОШИБКА ЗАГРУЗКИ: " + err.message); // 🔥 Выведет точную ошибку прямо на экран!
+        showNotify("Upload failed! Try again.", true); 
+    }
 }
 
 async function loadWallPhoto(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading..."); 
     try { 
-        const compressedFile = await compressImage(fileObj, 1080); 
-        const imageUrl = await directCloudinaryUpload(compressedFile);
+        const base64Str = await compressImageToBase64(fileObj, 1080); 
+        const imageUrl = await directCloudinaryUpload(base64Str);
         
         document.getElementById('wizard-wall-img').src = imageUrl; 
         document.getElementById('detail-wall-img').src = imageUrl; 
         wizardStep(2); 
         showNotify("Photo uploaded!"); 
-    } catch(err) { console.error(err); showNotify("Upload failed! Try again.", true); }
+    } catch(err) { 
+        alert("ОШИБКА ЗАГРУЗКИ: " + err.message); // 🔥 Выведет точную ошибку прямо на экран!
+        showNotify("Upload failed! Try again.", true); 
+    }
 }
 
 async function completeOnboarding() {
