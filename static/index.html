@@ -21,6 +21,17 @@
         .hidden-view { display: none !important; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* 🔥 ФИКС ДЛЯ АЙФОНОВ (чтобы инпуты нажимались на главном экране) 🔥 */
+        input, textarea, select {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            -webkit-appearance: none;
+        }
+        body {
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center">
