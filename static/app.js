@@ -313,7 +313,7 @@ async function uploadOnboardAvatar(input) {
         document.getElementById('onboard-avatar').src = imageUrl; 
         showNotify("Avatar uploaded!");
     } catch(err) { 
-        alert("ОШИБКА ЗАГРУЗКИ: " + err.message);
+        alert("UPLOAD ERROR: " + err.message);
         showNotify("Upload failed!", true); 
     }
 }
@@ -332,7 +332,7 @@ async function uploadAvatar(input) {
         if (profileAvatar) profileAvatar.src = imageUrl;
         showNotify("Avatar uploaded!");
     } catch(err) { 
-        alert("ОШИБКА ЗАГРУЗКИ: " + err.message);
+        alert("UPLOAD ERROR: " + err.message);
         showNotify("Upload failed!", true); 
     }
 }
@@ -348,7 +348,7 @@ async function loadWallPhoto(input) {
         wizardStep(2); 
         showNotify("Photo uploaded!"); 
     } catch(err) { 
-        alert("ОШИБКА ЗАГРУЗКИ: " + err.message);
+        alert("UPLOAD ERROR: " + err.message);
         showNotify("Upload failed!", true); 
     }
 }
@@ -452,7 +452,7 @@ function renderLogbook() {
         entriesContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-2">Rest day. No ascents logged.</p>';
     } else { 
         selectedAscents.forEach(a => { 
-            const badge = '<span class="text-green-500 font-bold text-xl">✓</span>'; 
+            const badge = '<span class="text-green-500 font-bold text-sm uppercase">Done</span>'; 
             entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700"><div><p class="font-bold text-sm">${a.boulder_name || 'Unknown'}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div>${badge}</div>`; 
         }); 
     }
@@ -485,6 +485,7 @@ async function loadHomeView() {
     const rankEl = document.getElementById('profile-rank');
     rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
     rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
+    rankEl.onclick = () => navigate('league'); 
     
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${profile.user_id}` }) || {}; 
     const likeKeys = Object.keys(likes).filter(k => likes[k]);
@@ -499,7 +500,7 @@ async function loadHomeView() {
         if (likeKeys.length > 0) { 
             listObj.classList.remove('hidden-view'); 
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; 
-            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300">❤️ @${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
+            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300">@${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
         } else { 
             listObj.classList.add('hidden-view'); 
         } 
@@ -536,7 +537,7 @@ async function loadFriendRequests() {
             await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" }); 
             continue; 
         }
-        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors">Decline</button></div></div>`;
+        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors uppercase">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors uppercase">Decline</button></div></div>`;
     }
     if(list.innerHTML === '') box.classList.add('hidden-view');
 }
@@ -579,14 +580,14 @@ function loadLeagueView() {
     // Блок Прогресса / Босса
     if (league.next) {
         html += `<div class="mb-8">`;
-        html += `<h4 class="text-sm font-bold text-gray-400 mb-2 uppercase">Progress to ${league.next.title}</h4>`;
+        html += `<h4 class="text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Progress to ${league.next.title}</h4>`;
         
         if (league.isBossLocked) {
             html += `
             <div class="bg-red-900/30 border border-red-500 p-4 rounded-xl mb-3 shadow-lg">
-                <p class="text-red-400 font-bold text-center text-sm mb-1">⚠️ POINTS REACHED!</p>
+                <p class="text-red-400 font-bold text-center text-sm mb-1 uppercase tracking-wider">Points Reached!</p>
                 <p class="text-gray-300 text-center text-xs">To enter the <span class="${league.next.color} font-bold">${league.next.title}</span> league, you must defeat the boss:</p>
-                <div class="mt-3 bg-red-600 text-white text-center py-3 rounded font-black text-lg shadow-lg">
+                <div class="mt-3 bg-red-600 text-white text-center py-3 rounded font-black text-lg shadow-lg uppercase tracking-wider">
                     CLIMB A ${league.next.minGrade} OR HARDER
                 </div>
             </div>`;
@@ -599,16 +600,16 @@ function loadLeagueView() {
             <div class="w-full bg-gray-800 rounded-full h-4 mb-2 shadow-inner overflow-hidden border border-gray-700">
                 <div class="bg-blue-500 h-4 rounded-full transition-all duration-1000 shadow-md" style="width: ${league.percent}%"></div>
             </div>
-            <p class="text-center text-xs text-gray-500 font-bold mb-4">Boss Requirement: Climb a ${league.next.minGrade}</p>
+            <p class="text-center text-xs text-gray-500 font-bold mb-4 uppercase tracking-wider">Boss Requirement: Climb a ${league.next.minGrade}</p>
             `;
         }
         html += `</div>`;
     } else {
-        html += `<div class="text-center text-yellow-400 font-black text-xl mb-8">🏆 YOU REACHED MAX LEAGUE! 🏆</div>`;
+        html += `<div class="text-center text-yellow-400 font-black text-xl mb-8 uppercase tracking-widest">You reached max league!</div>`;
     }
     
     // Список всех лиг
-    html += `<h4 class="text-sm font-bold text-gray-400 mb-4 uppercase">All Leagues</h4><div class="space-y-3">`;
+    html += `<h4 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">All Leagues</h4><div class="space-y-3">`;
     RANKS.forEach((r) => {
         const isCurrent = r.id === league.current.id;
         const isLocked = r.id > league.current.id;
@@ -621,12 +622,12 @@ function loadLeagueView() {
             <div class="flex items-center">
                 <div class="${isLocked ? 'text-gray-600' : r.color} mr-3">${r.svg}</div>
                 <div>
-                    <p class="font-bold ${isLocked ? 'text-gray-500' : r.color}">${r.title}</p>
-                    <p class="text-[10px] text-gray-500 uppercase mt-0.5">${r.minPts} PTS • Boss: ${r.minGrade}</p>
+                    <p class="font-bold uppercase tracking-wider text-sm ${isLocked ? 'text-gray-500' : r.color}">${r.title}</p>
+                    <p class="text-[10px] text-gray-500 uppercase mt-0.5 tracking-wider">${r.minPts} PTS • Boss: ${r.minGrade}</p>
                 </div>
             </div>
-            ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase">Current</span>' : ''}
-            ${isLocked ? '<span class="text-gray-600 text-sm">🔒</span>' : (!isCurrent ? '<span class="text-green-500 text-sm font-bold">✓</span>' : '')}
+            ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">Current</span>' : ''}
+            ${isLocked ? '<span class="text-gray-600 text-[10px] font-bold uppercase tracking-wider">Locked</span>' : (!isCurrent ? '<span class="text-green-500 text-xs font-bold uppercase">Done</span>' : '')}
         </div>`;
     });
     html += `</div>`;
@@ -642,13 +643,13 @@ async function loadFriendsView() {
     list.innerHTML = '';
     
     if(Object.keys(friends).length === 0) { 
-        list.innerHTML = '<p class="text-gray-500 text-center mt-4">No friends yet</p>'; return; 
+        list.innerHTML = '<p class="text-gray-500 text-center mt-4 uppercase text-sm tracking-wider">No friends yet</p>'; return; 
     }
     
     for(let fId in friends) { 
         const u = allUsers[fId]; 
         if(!u) continue; 
-        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`; 
+        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-xs uppercase tracking-wider font-bold">Profile &gt;</span></div>`; 
     }
 }
 
@@ -662,7 +663,7 @@ async function loadGymsView() {
     for(let gId in gyms) { 
         const g = gyms[gId]; 
         if(!g || !g.id) continue; 
-        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold">Enter ></span></div>`; 
+        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow"><div><h3 class="font-bold text-lg uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-xs tracking-wider">Enter &gt;</span></div>`; 
     }
 }
 
@@ -713,15 +714,15 @@ async function loadSectors() {
 
 function renderSectors() {
     const container = document.getElementById('sector-filters');
-    container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All Sectors</button>`;
+    container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All Sectors</button>`;
     
     for(let sId in gymSectors) { 
         if(!gymSectors[sId]) continue; 
-        container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`; 
+        container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`; 
     }
     
     if(currentGymRole === 'admin') {
-        container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold bg-gray-700 hover:bg-gray-600 transition-colors">+ Add Sector</button>`;
+        container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
     }
     
     const actionsBlock = document.getElementById('sector-actions');
@@ -740,9 +741,9 @@ function selectSector(sId) {
 
 function renderGradeFilters() {
     const container = document.getElementById('grade-filters');
-    container.innerHTML = `<button onclick="selectGradeFilter('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentGradeFilter === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All Grades</button>`;
+    container.innerHTML = `<button onclick="selectGradeFilter('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${currentGradeFilter === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All</button>`;
     ALL_GRADES.forEach(g => { 
-        container.innerHTML += `<button onclick="selectGradeFilter('${g}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${currentGradeFilter === g ? 'bg-blue-600' : 'bg-gray-800'}">${g}</button>`; 
+        container.innerHTML += `<button onclick="selectGradeFilter('${g}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${currentGradeFilter === g ? 'bg-blue-600' : 'bg-gray-800'}">${g}</button>`; 
     });
 }
 
@@ -861,14 +862,14 @@ async function loadGallery() {
             found = true; 
             const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
             let badge = ''; 
-            if (ascent) { badge = '<span class="text-green-500 font-bold text-2xl">✓</span>'; }
+            if (ascent) { badge = '<span class="text-green-500 font-bold uppercase text-xs">Done</span>'; }
             
             const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
             const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
-            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2 shadow"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
+            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2 shadow"><div><h4 class="font-bold text-lg tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs mt-1">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-xs mt-1 font-bold uppercase">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
         }
     }
-    if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No routes found.</p>`;
+    if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6 uppercase text-sm tracking-wider">No routes found</p>`;
 }
 
 function openRouteDetail(b) {
@@ -898,9 +899,9 @@ function openRouteDetail(b) {
     actionsDiv.classList.remove('hidden-view');
     
     if (ascent) {
-        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded font-bold text-sm transition-colors flex-1 shadow-md">Back</button><button onclick="removeAscent()" class="bg-green-600 hover:bg-red-500 px-4 py-3 rounded font-bold text-sm transition-colors flex-[2] shadow-md">✓ Completed</button>`;
+        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="removeAscent()" class="bg-green-600 hover:bg-red-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md">Completed</button>`;
     } else {
-        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded font-bold text-sm transition-colors flex-1 shadow-md">Back</button><button onclick="startCompleteRoute()" class="bg-gray-600 hover:bg-gray-500 px-4 py-3 rounded font-bold text-sm transition-colors text-gray-300 flex-[2] shadow-md">Complete Route</button>`;
+        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="startCompleteRoute()" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md">Complete Route</button>`;
     }
     
     const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
@@ -1016,7 +1017,7 @@ function renderClimbers() {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
             const league = getLeagueInfo(c.points, c.maxGrade);
             const rankData = league.current;
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5">Max: <span class="text-red-400">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5 uppercase tracking-wider">Max: <span class="text-red-400">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-xs font-bold uppercase tracking-wider">View &gt;</span></div>`;
         } 
         rank++;
     });
@@ -1030,7 +1031,7 @@ async function loadAdminPanel() {
     
     for(let uid in roles) { 
         if(roles[uid] === 'setter' && allUsers[uid]) {
-            list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2"><span>@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors">Demote</button></div>`; 
+            list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 border border-gray-700"><span>@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Demote</button></div>`; 
         }
     }
 }
@@ -1045,7 +1046,7 @@ function searchUsersForAdmin() {
         for(let uid in allUsers) { 
             const u = allUsers[uid]; 
             if(u && ((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) {
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors">Make Setter</button></div>`; 
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Make Setter</button></div>`; 
             }
         }
     });
@@ -1197,7 +1198,7 @@ async function openOtherProfile(uid, source = 'home') {
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${uid}` }) || {}; 
     isOpLiked = likes[profile.user_id] === true;
     const likeBtn = document.getElementById('op-like-btn'); 
-    likeBtn.innerText = `${isOpLiked ? '❤️ Liked' : '🤍 Like'} (${Object.keys(likes).filter(k=>likes[k]).length})`;
+    likeBtn.innerText = `${isOpLiked ? 'Liked' : 'Like'} (${Object.keys(likes).filter(k=>likes[k]).length})`;
     if(isOpLiked) { 
         likeBtn.classList.add('bg-pink-500', 'text-white'); 
         likeBtn.classList.remove('text-pink-500'); 
@@ -1213,13 +1214,13 @@ async function openOtherProfile(uid, source = 'home') {
     const btn = document.getElementById('op-action-btn'); 
     if(isFriend) { 
         btn.innerText = "Remove Friend"; 
-        btn.className = "mt-4 px-6 py-2 rounded font-bold bg-red-600 hover:bg-red-500 transition-colors"; 
+        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-red-600 hover:bg-red-500 transition-colors uppercase tracking-wider text-xs shadow"; 
     } else if(sentReq) { 
         btn.innerText = "Request Sent"; 
-        btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; 
+        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-gray-600 uppercase tracking-wider text-xs shadow"; 
     } else { 
         btn.innerText = "Add Friend"; 
-        btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors"; 
+        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 transition-colors uppercase tracking-wider text-xs shadow"; 
     } 
     showView('view-other-profile');
 }
@@ -1231,7 +1232,7 @@ async function toggleLike() {
         showNotify("Like removed"); 
     } else { 
         await apiCall('/api/db/save', { path: `profile_likes/${currentOtherUserId}/${profile.user_id}`, payload: true }); 
-        showNotify("Like sent! ❤️"); 
+        showNotify("Like sent!"); 
     }
     openOtherProfile(currentOtherUserId, profileBackTarget); 
 }
@@ -1239,19 +1240,19 @@ async function toggleLike() {
 async function handleOpAction() {
     const profile = JSON.parse(localStorage.getItem('user_profile')); 
     const btn = document.getElementById('op-action-btn');
-    if(btn.innerText === "Add Friend") { 
+    if(btn.innerText === "Add Friend" || btn.innerText === "ADD FRIEND") { 
         const res = await apiCall('/api/db/save', { path: `friend_requests/${currentOtherUserId}/${profile.user_id}`, payload: true }); 
         if(!res) return; 
         showNotify("Friend request sent!"); 
         btn.innerText = "Request Sent"; 
-        btn.className = "mt-4 px-6 py-2 rounded font-bold bg-gray-600"; 
+        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-gray-600 uppercase tracking-wider text-xs shadow"; 
     }
-    else if(btn.innerText === "Remove Friend") { 
+    else if(btn.innerText === "Remove Friend" || btn.innerText === "REMOVE FRIEND") { 
         await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' }); 
         await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' }); 
         showNotify("Removed from friends"); 
         btn.innerText = "Add Friend"; 
-        btn.className = "mt-4 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors"; 
+        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 transition-colors uppercase tracking-wider text-xs shadow"; 
     }
 }
 
