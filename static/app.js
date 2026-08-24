@@ -37,14 +37,13 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
-// 🔥 СИСТЕМА ЛИГ И БОССОВ (АНТИ-ФАРМИНГ) 🔥
 const RANKS = [
-    { id: 0, title: "Rookie", minPts: 0, minGrade: "1", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` },
-    { id: 1, title: "Plastic Puller", minPts: 300, minGrade: "4", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` },
-    { id: 2, title: "Crimper", minPts: 1500, minGrade: "5+", color: "text-gray-300", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l8-8 8 8"/></svg>` },
-    { id: 3, title: "Steel Fingers", minPts: 5000, minGrade: "6B+", color: "text-yellow-500", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 18l8-8 8 8M4 10l8-8 8 8"/></svg>` },
-    { id: 4, title: "Beast", minPts: 15000, minGrade: "7A", color: "text-cyan-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 drop-shadow-md"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4zm0 4.5l4 3-4 6-4-6 4-3z"/></svg>` },
-    { id: 5, title: "Titan", minPts: 40000, minGrade: "7C", color: "text-yellow-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"><path d="M2 19h20v2H2v-2zm1-2l3-11 4 5 2-8 2 8 4-5 3 11H3z"/></svg>` }
+    { id: 0, title: "Rookie", minPts: 0, minGrade: "1", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` },
+    { id: 1, title: "Plastic Puller", minPts: 300, minGrade: "4", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` },
+    { id: 2, title: "Crimper", minPts: 1500, minGrade: "5+", color: "text-gray-300", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l8-8 8 8"/></svg>` },
+    { id: 3, title: "Steel Fingers", minPts: 5000, minGrade: "6B+", color: "text-yellow-500", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 18l8-8 8 8M4 10l8-8 8 8"/></svg>` },
+    { id: 4, title: "Beast", minPts: 15000, minGrade: "7A", color: "text-cyan-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4zm0 4.5l4 3-4 6-4-6 4-3z"/></svg>` },
+    { id: 5, title: "Titan", minPts: 40000, minGrade: "7C", color: "text-yellow-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M2 19h20v2H2v-2zm1-2l3-11 4 5 2-8 2 8 4-5 3 11H3z"/></svg>` }
 ];
 
 function getLeagueInfo(points, maxGrade) {
@@ -130,7 +129,7 @@ async function directCloudinaryUpload(base64String) {
 function showNotify(msg, isError = false) {
     const box = document.getElementById('notify-box');
     box.innerText = msg;
-    box.className = `fixed top-5 px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 z-50 uppercase tracking-wider text-sm ${isError ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`;
+    box.className = `fixed top-5 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-50 uppercase tracking-widest text-[10px] border ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
     box.style.opacity = '1'; 
     setTimeout(() => box.style.opacity = '0', 4000);
 }
@@ -232,14 +231,14 @@ async function processAuth() {
         const pwdConfirm = document.getElementById('auth-password-confirm').value.trim();
         if (pwd !== pwdConfirm) return showNotify("Passwords do not match!", true);
         try {
-            showNotify("Creating secure account...");
+            showNotify("Creating account...");
             const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
             await userCred.user.sendEmailVerification();
             const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: false, can_create_gyms: false };
             const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
             if (!res) return;
             localStorage.setItem('user_profile', JSON.stringify(profile)); 
-            showNotify("Account created! Check your email to verify.", false); 
+            showNotify("Account created. Verify email.", false); 
             showView('view-onboarding'); 
         } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
     } else {
@@ -262,7 +261,6 @@ async function processAuth() {
             localStorage.setItem('user_profile', JSON.stringify(profile)); 
             loadHomeView(); 
             showView('view-home'); 
-            showNotify("Welcome back!");
         } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
     }
 }
@@ -287,7 +285,6 @@ async function googleSignIn() {
         localStorage.setItem('user_profile', JSON.stringify(profile)); 
         loadHomeView(); 
         showView('view-home'); 
-        showNotify("Welcome!");
     } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
 }
 
@@ -302,7 +299,7 @@ function logout() {
 
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing & Uploading...");
+    showNotify("Uploading...");
     try { 
         const base64Str = await compressImageToBase64(fileObj, 600); 
         const imageUrl = await directCloudinaryUpload(base64Str);
@@ -311,16 +308,15 @@ async function uploadOnboardAvatar(input) {
         localStorage.setItem('user_profile', JSON.stringify(profile));
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         document.getElementById('onboard-avatar').src = imageUrl; 
-        showNotify("Avatar uploaded!");
+        showNotify("Uploaded!");
     } catch(err) { 
-        alert("UPLOAD ERROR: " + err.message);
-        showNotify("Upload failed!", true); 
+        showNotify("Upload failed", true); 
     }
 }
 
 async function uploadAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing & Uploading...");
+    showNotify("Uploading...");
     try { 
         const base64Str = await compressImageToBase64(fileObj, 600); 
         const imageUrl = await directCloudinaryUpload(base64Str);
@@ -330,32 +326,29 @@ async function uploadAvatar(input) {
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         const profileAvatar = document.getElementById('profile-avatar');
         if (profileAvatar) profileAvatar.src = imageUrl;
-        showNotify("Avatar uploaded!");
+        showNotify("Uploaded!");
     } catch(err) { 
-        alert("UPLOAD ERROR: " + err.message);
-        showNotify("Upload failed!", true); 
+        showNotify("Upload failed", true); 
     }
 }
 
 async function loadWallPhoto(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
-    showNotify("Optimizing & Uploading..."); 
+    showNotify("Uploading..."); 
     try { 
         const base64Str = await compressImageToBase64(fileObj, 1080); 
         const imageUrl = await directCloudinaryUpload(base64Str);
         document.getElementById('wizard-wall-img').src = imageUrl; 
         document.getElementById('detail-wall-img').src = imageUrl; 
         wizardStep(2); 
-        showNotify("Photo uploaded!"); 
     } catch(err) { 
-        alert("UPLOAD ERROR: " + err.message);
-        showNotify("Upload failed!", true); 
+        showNotify("Upload failed", true); 
     }
 }
 
 async function completeOnboarding() {
     const nickname = document.getElementById('onb-nickname').value.trim(); 
-    if (!nickname) return showNotify("Nickname is required!", true);
+    if (!nickname) return showNotify("Nickname required", true);
     
     const parts = document.getElementById('onb-realname').value.trim().split(' ');
     let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
@@ -370,7 +363,6 @@ async function completeOnboarding() {
     localStorage.setItem('user_profile', JSON.stringify(profile)); 
     loadHomeView(); 
     showView('view-home'); 
-    showNotify("Setup Complete!");
 }
 
 function toggleEditProfile(show) {
@@ -386,7 +378,7 @@ function toggleEditProfile(show) {
 
 async function saveProfile() {
     const name = document.getElementById('edit-name').value.trim(); 
-    if(!name) return showNotify("Nickname is required!", true);
+    if(!name) return showNotify("Nickname required", true);
     
     const parts = document.getElementById('edit-realname').value.trim().split(' ');
     let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
@@ -400,7 +392,7 @@ async function saveProfile() {
     localStorage.setItem('user_profile', JSON.stringify(profile)); 
     loadHomeView(); 
     toggleEditProfile(false); 
-    showNotify("Profile updated!");
+    showNotify("Saved!");
 }
 
 function renderGradeChart(containerId, gradesArray) {
@@ -409,13 +401,13 @@ function renderGradeChart(containerId, gradesArray) {
     const counts = {}; 
     gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
     if (Object.keys(counts).length === 0) { 
-        chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-xs uppercase tracking-wider">No ascents yet</p>'; 
+        chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-[10px] uppercase tracking-wider">No ascents</p>'; 
         return; 
     }
     const maxCount = Math.max(...Object.values(counts));
     Object.keys(counts).sort((a,b) => ALL_GRADES.indexOf(a) - ALL_GRADES.indexOf(b)).forEach(grade => {
         const heightPercent = Math.max((counts[grade] / maxCount) * 100, 5); 
-        chartContainer.innerHTML += `<div class="flex flex-col justify-end items-center flex-1 min-w-[32px] h-full mx-1"><span class="text-[10px] text-gray-400 mb-1">${counts[grade]}</span><div class="w-full bg-blue-500 rounded-t-sm transition-all duration-500 shadow-md" style="height: ${heightPercent}%"></div><span class="text-[10px] font-bold mt-1 text-gray-300">${grade}</span></div>`;
+        chartContainer.innerHTML += `<div class="flex flex-col justify-end items-center flex-1 min-w-[24px] h-full mx-0.5"><span class="text-[8px] text-gray-400 mb-1">${counts[grade]}</span><div class="w-full bg-blue-500 rounded-t-sm transition-all duration-500 shadow-sm" style="height: ${heightPercent}%"></div><span class="text-[8px] font-bold mt-1 text-gray-300">${grade}</span></div>`;
     });
 }
 
@@ -438,8 +430,8 @@ function renderLogbook() {
             return ad.getTime() === d.getTime(); 
         });
         const dot = dayAscents.length > 0 ? '<div class="w-1.5 h-1.5 bg-green-500 rounded-full mt-1"></div>' : '<div class="w-1.5 h-1.5 mt-1"></div>';
-        const bgClass = (logbookSelectedDate === d.getTime()) ? 'bg-blue-600' : 'bg-gray-700';
-        daysContainer.innerHTML += `<button onclick="selectLogbookDate(${d.getTime()})" class="flex flex-col items-center justify-center min-w-[48px] p-2 rounded-lg ${bgClass} hover:bg-blue-500 transition-colors"><span class="text-[10px] text-gray-300 uppercase">${d.toLocaleDateString('en-US', {weekday: 'short'})}</span><span class="font-bold text-lg leading-tight">${d.getDate()}</span>${dot}</button>`;
+        const bgClass = (logbookSelectedDate === d.getTime()) ? 'bg-blue-600' : 'bg-gray-800 border border-gray-700';
+        daysContainer.innerHTML += `<button onclick="selectLogbookDate(${d.getTime()})" class="flex flex-col items-center justify-center min-w-[40px] p-2 rounded ${bgClass} hover:bg-gray-700 transition-colors"><span class="text-[8px] text-gray-300 uppercase tracking-widest">${d.toLocaleDateString('en-US', {weekday: 'short'})}</span><span class="font-bold text-sm leading-tight mt-0.5">${d.getDate()}</span>${dot}</button>`;
     }
     entriesContainer.innerHTML = '';
     const selectedAscents = history.filter(a => { 
@@ -449,11 +441,11 @@ function renderLogbook() {
     });
     
     if(selectedAscents.length === 0) {
-        entriesContainer.innerHTML = '<p class="text-gray-500 text-xs uppercase tracking-wider text-center py-2">Rest day. No ascents logged.</p>';
+        entriesContainer.innerHTML = '<p class="text-gray-500 text-[10px] uppercase tracking-wider text-center py-2">No ascents</p>';
     } else { 
         selectedAscents.forEach(a => { 
-            const badge = '<span class="text-green-500 font-bold text-xs uppercase tracking-wider">Done</span>'; 
-            entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700"><div><p class="font-bold text-sm uppercase tracking-wider">${a.boulder_name || 'Unnamed'}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div>${badge}</div>`; 
+            const badge = '<span class="text-green-500 font-bold text-[10px] uppercase tracking-wider border border-green-500 px-1.5 py-0.5 rounded">Done</span>'; 
+            entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><div><p class="font-bold text-xs uppercase tracking-wider">${a.boulder_name || 'Unnamed'}</p><p class="text-[10px] text-gray-400 mt-0.5">Grade: ${a.grade}</p></div>${badge}</div>`; 
         }); 
     }
 }
@@ -483,8 +475,8 @@ async function loadHomeView() {
     const totalPoints = getPoints(history); 
     const league = getLeagueInfo(totalPoints, maxGrade); 
     const rankEl = document.getElementById('profile-rank');
-    rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
-    rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
+    rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-[10px] ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
+    rankEl.className = `text-xs font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
     rankEl.onclick = () => navigate('league'); 
     
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${profile.user_id}` }) || {}; 
@@ -500,7 +492,7 @@ async function loadHomeView() {
         if (likeKeys.length > 0) { 
             listObj.classList.remove('hidden-view'); 
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; 
-            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300 font-bold tracking-wider text-xs uppercase">• @${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
+            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300 font-bold tracking-wider text-[10px] uppercase mb-1">• @${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
         } else { 
             listObj.classList.add('hidden-view'); 
         } 
@@ -537,7 +529,7 @@ async function loadFriendRequests() {
             await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" }); 
             continue; 
         }
-        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded border border-gray-800"><span class="font-bold tracking-wider text-sm">@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors uppercase tracking-wider">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Decline</button></div></div>`;
+        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><span class="font-bold tracking-wider text-xs">@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1.5 rounded text-[10px] mr-2 font-bold transition-colors uppercase tracking-wider">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-gray-700 px-3 py-1.5 rounded text-[10px] font-bold transition-colors uppercase tracking-wider border border-gray-600">Decline</button></div></div>`;
     }
     if(list.innerHTML === '') box.classList.add('hidden-view');
 }
@@ -550,12 +542,11 @@ async function acceptFriend(senderId, accept) {
     if(accept) { 
         await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${senderId}`, payload: true }); 
         await apiCall('/api/db/save', { path: `friends/${senderId}/${profile.user_id}`, payload: true }); 
-        showNotify("Friend added!"); 
+        showNotify("Friend added"); 
     }
     loadFriendRequests();
 }
 
-// 🔥 ГЕНЕРАТОР ЭКРАНА ЛИГИ 🔥
 function loadLeagueView() {
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     const history = normArr(profile.ascents_history || []);
@@ -566,68 +557,65 @@ function loadLeagueView() {
     const league = getLeagueInfo(points, maxGrade);
     const container = document.getElementById('league-content');
     
-    let html = `<h2 class="text-2xl font-black mb-6 text-center uppercase tracking-widest text-white">Your League</h2>`;
+    let html = `<h2 class="text-xl font-black mb-5 tracking-widest text-center uppercase border-b border-gray-800 pb-3">League Progress</h2>`;
     
-    // Текущая лига (Карточка)
     html += `
-    <div class="bg-gray-800 p-6 rounded-2xl flex flex-col items-center shadow-lg relative overflow-hidden mb-8 border border-gray-700">
-        <div class="${league.current.color} scale-150 mb-4">${league.current.svg}</div>
-        <h3 class="text-3xl font-black uppercase tracking-wider ${league.current.color}">${league.current.title}</h3>
-        <p class="text-gray-400 mt-2 font-bold">${points} PTS</p>
-        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider">Max Grade: <span class="text-white font-bold">${maxGrade !== "1" ? maxGrade : "None"}</span></p>
+    <div class="bg-gray-800 p-4 rounded flex flex-col items-center shadow relative overflow-hidden mb-6 border border-gray-700">
+        <div class="${league.current.color} transform scale-125 mb-3 mt-2">${league.current.svg}</div>
+        <h3 class="text-xl font-black uppercase tracking-widest ${league.current.color}">${league.current.title}</h3>
+        <p class="text-gray-400 mt-1.5 font-bold text-sm">${points} PTS</p>
+        <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Max Grade: <span class="text-white font-bold">${maxGrade !== "1" ? maxGrade : "None"}</span></p>
     </div>`;
     
-    // Блок Прогресса / Босса
     if (league.next) {
-        html += `<div class="mb-8">`;
-        html += `<h4 class="text-sm font-bold text-gray-400 mb-2 uppercase tracking-wider">Progress to ${league.next.title}</h4>`;
+        html += `<div class="mb-6">`;
+        html += `<h4 class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest text-center">Progress to ${league.next.title}</h4>`;
         
         if (league.isBossLocked) {
             html += `
-            <div class="bg-red-900/30 border border-red-500 p-4 rounded-xl mb-3 shadow-lg">
-                <p class="text-red-400 font-bold text-center text-sm mb-1 uppercase tracking-wider">Requirement Pending</p>
-                <p class="text-gray-300 text-center text-xs">To enter the <span class="${league.next.color} font-bold">${league.next.title}</span> league, you must complete the challenge:</p>
-                <div class="mt-3 bg-red-600 text-white text-center py-3 rounded font-black text-lg shadow-lg uppercase tracking-wider">
+            <div class="bg-gray-900 border border-red-900 p-3 rounded mb-3 shadow">
+                <p class="text-red-500 font-bold text-center text-xs mb-1 uppercase tracking-widest">Requirement Pending</p>
+                <p class="text-gray-400 text-center text-[10px] uppercase tracking-wider mb-3">To enter ${league.next.title}, complete the challenge:</p>
+                <div class="bg-red-900 border border-red-700 text-red-100 text-center py-2 rounded font-black text-xs shadow uppercase tracking-widest">
                     CLIMB A ${league.next.minGrade} OR HARDER
                 </div>
             </div>`;
         } else {
             html += `
-            <div class="flex justify-between text-xs font-bold mb-1">
+            <div class="flex justify-between text-[10px] font-bold mb-1 px-1">
                 <span class="text-gray-400">${points} PTS</span>
                 <span class="text-gray-400">${league.next.minPts} PTS</span>
             </div>
-            <div class="w-full bg-gray-800 rounded-full h-4 mb-2 shadow-inner overflow-hidden border border-gray-700">
-                <div class="bg-blue-500 h-4 rounded-full transition-all duration-1000 shadow-md" style="width: ${league.percent}%"></div>
+            <div class="w-full bg-gray-900 rounded-full h-2 mb-2 shadow-inner overflow-hidden border border-gray-800">
+                <div class="bg-blue-500 h-2 rounded-full transition-all duration-1000 shadow-md" style="width: ${league.percent}%"></div>
             </div>
-            <p class="text-center text-xs text-gray-500 font-bold mb-4 uppercase tracking-wider">Boss Requirement: Climb a ${league.next.minGrade}</p>
+            <p class="text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-2">Boss Requirement: Climb a ${league.next.minGrade}</p>
             `;
         }
         html += `</div>`;
     } else {
-        html += `<div class="text-center text-yellow-400 font-black text-xl mb-8 uppercase tracking-widest">Max League Reached</div>`;
+        html += `<div class="text-center text-yellow-400 font-black text-sm mb-6 uppercase tracking-widest border border-yellow-800 bg-yellow-900 py-3 rounded text-yellow-100">Max League Reached</div>`;
     }
     
-    // Список всех лиг
-    html += `<h4 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">All Leagues</h4><div class="space-y-3">`;
+    html += `<h4 class="text-[10px] font-bold text-gray-400 mb-3 uppercase tracking-widest text-center border-t border-gray-800 pt-4">All Leagues</h4><div class="space-y-2">`;
     RANKS.forEach((r) => {
         const isCurrent = r.id === league.current.id;
         const isLocked = r.id > league.current.id;
         
-        let bgClass = isCurrent ? 'bg-gray-700 border border-blue-500 shadow-lg scale-105' : 'bg-gray-900 border border-gray-800 opacity-70';
+        let bgClass = isCurrent ? 'bg-gray-700 border border-blue-500 shadow' : 'bg-gray-900 border border-gray-800';
         if (!isLocked && !isCurrent) bgClass = 'bg-gray-800 border border-gray-700'; 
         
         html += `
-        <div class="${bgClass} p-4 rounded-xl flex items-center justify-between transition-all">
+        <div class="${bgClass} p-3 rounded flex items-center justify-between transition-all">
             <div class="flex items-center">
                 <div class="${isLocked ? 'text-gray-600' : r.color} mr-3">${r.svg}</div>
                 <div>
-                    <p class="font-bold uppercase tracking-wider text-sm ${isLocked ? 'text-gray-500' : r.color}">${r.title}</p>
-                    <p class="text-[10px] text-gray-500 uppercase mt-0.5 tracking-wider">${r.minPts} PTS • Boss: ${r.minGrade}</p>
+                    <p class="font-bold uppercase tracking-wider text-xs ${isLocked ? 'text-gray-500' : r.color}">${r.title}</p>
+                    <p class="text-[8px] text-gray-500 uppercase mt-0.5 tracking-widest">${r.minPts} PTS • Boss: ${r.minGrade}</p>
                 </div>
             </div>
-            ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">Current</span>' : ''}
-            ${isLocked ? '<span class="text-gray-600 text-[10px] font-bold uppercase tracking-wider">Locked</span>' : (!isCurrent ? '<span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">Done</span>' : '')}
+            ${isCurrent ? '<span class="bg-blue-600 text-white text-[8px] px-2 py-0.5 rounded font-bold uppercase tracking-widest">Current</span>' : ''}
+            ${isLocked ? '<span class="text-gray-600 text-[8px] font-bold uppercase tracking-widest">Locked</span>' : (!isCurrent ? '<span class="text-green-500 text-[8px] font-bold uppercase tracking-widest border border-green-800 px-1.5 py-0.5 rounded">Done</span>' : '')}
         </div>`;
     });
     html += `</div>`;
@@ -643,13 +631,13 @@ async function loadFriendsView() {
     list.innerHTML = '';
     
     if(Object.keys(friends).length === 0) { 
-        list.innerHTML = '<p class="text-gray-500 text-center mt-4 uppercase text-sm tracking-wider">No friends yet</p>'; return; 
+        list.innerHTML = '<p class="text-gray-500 text-center mt-4 uppercase text-[10px] tracking-wider">No friends yet</p>'; return; 
     }
     
     for(let fId in friends) { 
         const u = allUsers[fId]; 
         if(!u) continue; 
-        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><span class="font-bold tracking-wider">@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-xs uppercase tracking-wider font-bold">Profile &gt;</span></div>`; 
+        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><span class="font-bold tracking-wider text-sm uppercase">@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-[10px] uppercase tracking-widest font-bold">Profile</span></div>`; 
     }
 }
 
@@ -663,7 +651,7 @@ async function loadGymsView() {
     for(let gId in gyms) { 
         const g = gyms[gId]; 
         if(!g || !g.id) continue; 
-        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow"><div><h3 class="font-bold text-lg uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-xs uppercase tracking-wider mt-1">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-xs tracking-wider">Enter &gt;</span></div>`; 
+        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div><h3 class="font-bold text-sm uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-[10px] uppercase tracking-widest mt-0.5">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-[10px] tracking-widest">Enter</span></div>`; 
     }
 }
 
@@ -685,7 +673,7 @@ async function saveGym() {
     
     toggleGymForm(false); 
     loadGymsView(); 
-    showNotify("Gym created!");
+    showNotify("Gym created");
 }
 
 async function openGym(gymId, gymName) {
@@ -714,15 +702,15 @@ async function loadSectors() {
 
 function renderSectors() {
     const container = document.getElementById('sector-filters');
-    container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All Sectors</button>`;
+    container.innerHTML = `<button onclick="selectSector('all')" class="whitespace-nowrap px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${currentSector === 'all' ? 'bg-blue-600' : 'bg-gray-800 border border-gray-700'}">All Sectors</button>`;
     
     for(let sId in gymSectors) { 
         if(!gymSectors[sId]) continue; 
-        container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800'}">${gymSectors[sId]}</button>`; 
+        container.innerHTML += `<button onclick="selectSector('${sId}')" class="whitespace-nowrap px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${currentSector === sId ? 'bg-blue-600' : 'bg-gray-800 border border-gray-700'}">${gymSectors[sId]}</button>`; 
     }
     
     if(currentGymRole === 'admin') {
-        container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
+        container.innerHTML += `<button onclick="toggleSectorForm(true)" class="whitespace-nowrap px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest bg-gray-700 hover:bg-gray-600 transition-colors">+ Add</button>`;
     }
     
     const actionsBlock = document.getElementById('sector-actions');
@@ -741,9 +729,9 @@ function selectSector(sId) {
 
 function renderGradeFilters() {
     const container = document.getElementById('grade-filters');
-    container.innerHTML = `<button onclick="selectGradeFilter('all')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${currentGradeFilter === 'all' ? 'bg-blue-600' : 'bg-gray-800'}">All</button>`;
+    container.innerHTML = `<button onclick="selectGradeFilter('all')" class="whitespace-nowrap px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest transition-colors ${currentGradeFilter === 'all' ? 'bg-blue-600' : 'bg-gray-800 border border-gray-700'}">All</button>`;
     ALL_GRADES.forEach(g => { 
-        container.innerHTML += `<button onclick="selectGradeFilter('${g}')" class="whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${currentGradeFilter === g ? 'bg-blue-600' : 'bg-gray-800'}">${g}</button>`; 
+        container.innerHTML += `<button onclick="selectGradeFilter('${g}')" class="whitespace-nowrap px-3 py-1 rounded text-[10px] font-bold transition-colors ${currentGradeFilter === g ? 'bg-blue-600' : 'bg-gray-800 border border-gray-700'}">${g}</button>`; 
     });
 }
 
@@ -769,11 +757,11 @@ async function saveSector() {
     if (!res) return;
     toggleSectorForm(false); 
     await loadSectors(); 
-    showNotify("Sector added!");
+    showNotify("Sector added");
 }
 
 async function clearSector() {
-    if(!confirm("Are you sure you want to remove ALL boulders from this sector?")) return;
+    if(!confirm("Remove ALL boulders from this sector?")) return;
     const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
     for(let bId in boulders) { 
         if(boulders[bId] && boulders[bId].gym_id === currentGymId && boulders[bId].sector_id === currentSector) { 
@@ -781,12 +769,12 @@ async function clearSector() {
             if(boulders[bId].image_url) apiCall('/api/delete_image', { url: boulders[bId].image_url }); 
         } 
     }
-    showNotify("Sector cleared!"); 
+    showNotify("Sector cleared"); 
     loadGallery();
 }
 
 async function deleteSector() {
-    if(!confirm("Are you sure you want to delete this sector AND all its boulders?")) return;
+    if(!confirm("Delete this sector AND all its boulders?")) return;
     const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
     for(let bId in boulders) { 
         if(boulders[bId] && boulders[bId].gym_id === currentGymId && boulders[bId].sector_id === currentSector) { 
@@ -796,14 +784,14 @@ async function deleteSector() {
     }
     const res = await apiCall('/api/db/save', { path: `gym_sectors/${currentGymId}/${currentSector}`, method: 'DELETE' }); 
     if (!res) return;
-    showNotify("Sector deleted!"); 
+    showNotify("Sector deleted"); 
     currentSector = 'all'; 
     await loadSectors(); 
     loadGallery();
 }
 
 async function deleteCurrentGym() {
-    if(!confirm("Are you SURE you want to delete this ENTIRE GYM?")) return;
+    if(!confirm("Delete this ENTIRE GYM permanently?")) return;
     const boulders = await apiCall('/api/db/get', { path: `boulders` }) || {};
     for(let bId in boulders) { 
         if(boulders[bId] && boulders[bId].gym_id === currentGymId) { 
@@ -815,7 +803,7 @@ async function deleteCurrentGym() {
     await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}`, method: 'DELETE' });
     const res = await apiCall('/api/db/save', { path: `gyms/${currentGymId}`, method: 'DELETE' }); 
     if (!res) return;
-    showNotify("Gym deleted successfully!"); 
+    showNotify("Gym deleted"); 
     navigate('gyms');
 }
 
@@ -824,8 +812,8 @@ function switchTab(tabName) {
     ['official', 'custom', 'climbers', 'admin'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if(btn) { 
-            if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800'); } 
-            else { btn.classList.add('bg-gray-800'); btn.classList.remove('bg-blue-600'); } 
+            if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800'); btn.classList.remove('border-gray-700'); } 
+            else { btn.classList.add('bg-gray-800'); btn.classList.add('border'); btn.classList.add('border-gray-700'); btn.classList.remove('bg-blue-600'); } 
         }
     });
     document.getElementById('tab-content-gallery').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin');
@@ -856,20 +844,20 @@ async function loadGallery() {
         if(!b || !b.id) continue;
         if(b.gym_id === currentGymId && (b.route_type || 'custom') === currentTab) {
             if (currentSector !== 'all' && b.sector_id !== currentSector) continue;
-            const displayGrade = b.consensus_grade ? `${b.grade} (Community: <span class="text-purple-400 font-bold">${b.consensus_grade}</span>)` : b.grade;
+            const displayGrade = b.consensus_grade ? `${b.grade} (Com: <span class="text-purple-400 font-bold">${b.consensus_grade}</span>)` : b.grade;
             if (currentGradeFilter !== 'all' && b.grade !== currentGradeFilter && b.consensus_grade !== currentGradeFilter) continue;
             
             found = true; 
             const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
             let badge = ''; 
-            if (ascent) { badge = '<span class="text-green-500 font-bold uppercase text-[10px] tracking-wider border border-green-500 px-2 py-0.5 rounded">Done</span>'; }
+            if (ascent) { badge = '<span class="text-green-500 font-bold uppercase text-[8px] tracking-widest border border-green-800 bg-green-900 bg-opacity-30 px-1.5 py-0.5 rounded">Done</span>'; }
             
             const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
-            const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
-            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2 shadow"><div><h4 class="font-bold text-lg tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs mt-1 uppercase tracking-wider">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-[10px] mt-1.5 font-bold uppercase tracking-wider">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
+            const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sec: ${gymSectors[b.sector_id]}` : '';
+            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-3 rounded cursor-pointer flex justify-between items-center transition-colors mb-2 shadow border border-gray-700"><div><h4 class="font-bold text-sm tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-[10px] mt-1 uppercase tracking-widest">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-[10px] mt-1 font-bold uppercase tracking-widest">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
         }
     }
-    if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6 uppercase text-sm tracking-wider">No routes found</p>`;
+    if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6 uppercase text-[10px] tracking-widest">No routes found</p>`;
 }
 
 function openRouteDetail(b) {
@@ -877,7 +865,7 @@ function openRouteDetail(b) {
     document.getElementById('edit-route-form').classList.add('hidden-view'); 
     document.getElementById('grade-suggest-box').classList.add('hidden-view');
     
-    const displayGrade = b.consensus_grade ? `${b.grade} (Community: ${b.consensus_grade})` : b.grade;
+    const displayGrade = b.consensus_grade ? `${b.grade} (Com: ${b.consensus_grade})` : b.grade;
     document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} - ${displayGrade}`;
     document.getElementById('detail-author').innerText = `AUTHOR: ${b.author || 'Unknown'} | ASCENTS: ${b.ascents || 0}\n${b.description || ''}`;
     document.getElementById('detail-wall-img').src = b.image_url;
@@ -886,7 +874,7 @@ function openRouteDetail(b) {
     container.querySelectorAll('.marker').forEach(el => el.remove());
     (b.markers || []).forEach(m => {
         const dot = document.createElement('div'); 
-        dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2'; 
+        dot.className = 'marker absolute w-6 h-6 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2'; 
         dot.style.left = m.x + 'px'; 
         dot.style.top = m.y + 'px'; 
         dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444'; 
@@ -899,9 +887,9 @@ function openRouteDetail(b) {
     actionsDiv.classList.remove('hidden-view');
     
     if (ascent) {
-        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="removeAscent()" class="bg-green-600 hover:bg-red-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md border border-green-400">Completed</button>`;
+        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 py-2.5 rounded font-bold text-[10px] uppercase tracking-widest transition-colors flex-1 shadow">Back</button><button onclick="removeAscent()" class="bg-green-600 hover:bg-red-600 py-2.5 rounded font-bold text-[10px] uppercase tracking-widest transition-colors flex-[2] shadow border border-green-500">Completed</button>`;
     } else {
-        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="startCompleteRoute()" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md">Complete Route</button>`;
+        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 py-2.5 rounded font-bold text-[10px] uppercase tracking-widest transition-colors flex-1 shadow">Back</button><button onclick="startCompleteRoute()" class="bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold text-[10px] uppercase tracking-widest transition-colors flex-[2] shadow border border-blue-500">Log Ascent</button>`;
     }
     
     const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter' || (currentTab === 'custom' && b.author_id === profile.user_id) || profile.is_global_admin;
@@ -954,12 +942,12 @@ async function confirmCompleteRoute(isOfficial = false) {
     
     activeBoulder.ascents = (activeBoulder.ascents || 0) + 1;
     await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
-    showNotify("Ascent logged!"); 
+    showNotify("Ascent logged"); 
     openRouteDetail(activeBoulder);
 }
 
 async function removeAscent() {
-    if(!confirm("Cancel this ascent? This will remove it from your logbook.")) return;
+    if(!confirm("Cancel this ascent?")) return;
     let profile = JSON.parse(localStorage.getItem('user_profile')); 
     let history = profile.ascents_history || [];
     const idx = history.findIndex(a => a.boulder_id === activeBoulder.id); 
@@ -975,7 +963,7 @@ async function removeAscent() {
     localStorage.setItem('user_profile', JSON.stringify(profile));
     await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history }); 
     await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
-    showNotify("Ascent cancelled", true); 
+    showNotify("Ascent cancelled"); 
     openRouteDetail(activeBoulder);
 }
 
@@ -1017,7 +1005,7 @@ function renderClimbers() {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
             const league = getLeagueInfo(c.points, c.maxGrade);
             const rankData = league.current;
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-sm">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Max: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-xs font-bold uppercase tracking-wider border border-blue-800 px-2 py-1 rounded">View</span></div>`;
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex items-center space-x-3"><span class="w-5 text-center text-sm ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-xs">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[8px] uppercase font-bold tracking-widest mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points})</span></div><p class="text-[8px] text-gray-400 mt-1 uppercase tracking-widest">Max: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-900 bg-gray-900 px-2 py-1 rounded">View</span></div>`;
         } 
         rank++;
     });
@@ -1031,7 +1019,7 @@ async function loadAdminPanel() {
     
     for(let uid in roles) { 
         if(roles[uid] === 'setter' && allUsers[uid]) {
-            list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 border border-gray-700"><span class="font-bold text-sm tracking-wider uppercase">@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Demote</button></div>`; 
+            list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><span class="font-bold text-xs tracking-wider uppercase">@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-[10px] font-bold transition-colors uppercase tracking-widest">Demote</button></div>`; 
         }
     }
 }
@@ -1046,7 +1034,7 @@ function searchUsersForAdmin() {
         for(let uid in allUsers) { 
             const u = allUsers[uid]; 
             if(u && ((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) {
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span class="font-bold text-sm tracking-wider uppercase">@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Make Setter</button></div>`; 
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-800 p-2.5 rounded"><span class="font-bold text-xs tracking-wider uppercase">@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-blue-900 border border-blue-700 hover:bg-blue-800 px-2 py-1 rounded text-[10px] font-bold transition-colors uppercase tracking-widest">Make Setter</button></div>`; 
             }
         }
     });
@@ -1054,7 +1042,7 @@ function searchUsersForAdmin() {
 
 async function setGymRole(uid, role) { 
     const res = await apiCall('/api/db/save', { path: `gym_roles/${currentGymId}/${uid}`, payload: role }); 
-    if(res) { showNotify("Role updated!"); loadAdminPanel(); } 
+    if(res) { showNotify("Role updated"); loadAdminPanel(); } 
 }
 
 function startCreateRoute() {
@@ -1100,7 +1088,7 @@ function renderCanvasMarkers() {
     container.querySelectorAll('.marker').forEach(el => el.remove());
     wizardMarkers.forEach(m => { 
         const dot = document.createElement('div'); 
-        dot.className = 'marker absolute w-7 h-7 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2'; 
+        dot.className = 'marker absolute w-5 h-5 rounded-full border-[3px] pointer-events-none transform -translate-x-1/2 -translate-y-1/2 shadow'; 
         dot.style.left = m.x + 'px'; 
         dot.style.top = m.y + 'px'; 
         dot.style.borderColor = m.color === 'green' ? '#22c55e' : m.color === 'blue' ? '#3b82f6' : '#ef4444'; 
@@ -1155,18 +1143,18 @@ async function saveRouteEdit() {
     const res = await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
     if (!res) return; 
     
-    showNotify("Route updated!"); 
+    showNotify("Route updated"); 
     toggleEditRouteForm(); 
     openRouteDetail(activeBoulder);
 }
 
 async function deleteRoute() {
-    if(!confirm("Are you sure you want to delete this route permanently?")) return;
+    if(!confirm("Delete this route permanently?")) return;
     const res = await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, method: 'DELETE' }); 
     if (!res) return; 
     
     if(activeBoulder.image_url) apiCall('/api/delete_image', { url: activeBoulder.image_url }); 
-    showNotify("Route deleted!"); 
+    showNotify("Route deleted"); 
     navigate('gym-routes');
 }
 
@@ -1192,19 +1180,19 @@ async function openOtherProfile(uid, source = 'home') {
     const totalPoints = getPoints(history); 
     const league = getLeagueInfo(totalPoints, maxGrade); 
     const rankEl = document.getElementById('op-rank');
-    rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`; 
-    rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${league.current.color}`;
+    rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-[10px] ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`; 
+    rankEl.className = `text-xs font-bold mt-1 uppercase tracking-widest ${league.current.color}`;
     
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${uid}` }) || {}; 
     isOpLiked = likes[profile.user_id] === true;
     const likeBtn = document.getElementById('op-like-btn'); 
-    likeBtn.innerText = `${isOpLiked ? 'Liked' : 'Like'} (${Object.keys(likes).filter(k=>likes[k]).length})`;
+    likeBtn.innerText = `Like (${Object.keys(likes).filter(k=>likes[k]).length})`;
     if(isOpLiked) { 
-        likeBtn.classList.add('bg-pink-500', 'text-white'); 
-        likeBtn.classList.remove('text-pink-500'); 
+        likeBtn.classList.add('bg-pink-500', 'text-white', 'border-pink-500'); 
+        likeBtn.classList.remove('text-pink-500', 'bg-gray-800'); 
     } else { 
         likeBtn.classList.remove('bg-pink-500', 'text-white'); 
-        likeBtn.classList.add('text-pink-500'); 
+        likeBtn.classList.add('text-pink-500', 'bg-gray-800'); 
     }
     
     renderGradeChart('op-stat-chart', grades);
@@ -1214,13 +1202,13 @@ async function openOtherProfile(uid, source = 'home') {
     const btn = document.getElementById('op-action-btn'); 
     if(isFriend) { 
         btn.innerText = "Remove Friend"; 
-        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-red-600 hover:bg-red-500 transition-colors uppercase tracking-wider text-xs shadow"; 
+        btn.className = "flex-1 py-2.5 rounded font-bold border border-red-700 text-red-500 bg-gray-800 transition-colors uppercase tracking-widest text-[10px] shadow"; 
     } else if(sentReq) { 
         btn.innerText = "Request Sent"; 
-        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-gray-600 uppercase tracking-wider text-xs shadow"; 
+        btn.className = "flex-1 py-2.5 rounded font-bold border border-gray-600 text-gray-400 bg-gray-800 uppercase tracking-widest text-[10px] shadow"; 
     } else { 
         btn.innerText = "Add Friend"; 
-        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 transition-colors uppercase tracking-wider text-xs shadow"; 
+        btn.className = "flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold transition-colors uppercase tracking-widest text-[10px] shadow"; 
     } 
     showView('view-other-profile');
 }
@@ -1232,7 +1220,7 @@ async function toggleLike() {
         showNotify("Like removed"); 
     } else { 
         await apiCall('/api/db/save', { path: `profile_likes/${currentOtherUserId}/${profile.user_id}`, payload: true }); 
-        showNotify("Like sent!"); 
+        showNotify("Like sent"); 
     }
     openOtherProfile(currentOtherUserId, profileBackTarget); 
 }
@@ -1240,19 +1228,19 @@ async function toggleLike() {
 async function handleOpAction() {
     const profile = JSON.parse(localStorage.getItem('user_profile')); 
     const btn = document.getElementById('op-action-btn');
-    if(btn.innerText === "Add Friend" || btn.innerText === "ADD FRIEND") { 
+    if(btn.innerText === "ADD FRIEND") { 
         const res = await apiCall('/api/db/save', { path: `friend_requests/${currentOtherUserId}/${profile.user_id}`, payload: true }); 
         if(!res) return; 
-        showNotify("Friend request sent!"); 
-        btn.innerText = "Request Sent"; 
-        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-gray-600 uppercase tracking-wider text-xs shadow"; 
+        showNotify("Request sent"); 
+        btn.innerText = "REQUEST SENT"; 
+        btn.className = "flex-1 py-2.5 rounded font-bold border border-gray-600 text-gray-400 bg-gray-800 uppercase tracking-widest text-[10px] shadow"; 
     }
-    else if(btn.innerText === "Remove Friend" || btn.innerText === "REMOVE FRIEND") { 
+    else if(btn.innerText === "REMOVE FRIEND") { 
         await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' }); 
         await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' }); 
-        showNotify("Removed from friends"); 
-        btn.innerText = "Add Friend"; 
-        btn.className = "mt-4 px-6 py-2 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 transition-colors uppercase tracking-wider text-xs shadow"; 
+        showNotify("Removed friend"); 
+        btn.innerText = "ADD FRIEND"; 
+        btn.className = "flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold transition-colors uppercase tracking-widest text-[10px] shadow"; 
     }
 }
 
