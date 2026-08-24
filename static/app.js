@@ -130,7 +130,7 @@ async function directCloudinaryUpload(base64String) {
 function showNotify(msg, isError = false) {
     const box = document.getElementById('notify-box');
     box.innerText = msg;
-    box.className = `fixed top-5 px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 z-50 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+    box.className = `fixed top-5 px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 z-50 uppercase tracking-wider text-sm ${isError ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`;
     box.style.opacity = '1'; 
     setTimeout(() => box.style.opacity = '0', 4000);
 }
@@ -409,7 +409,7 @@ function renderGradeChart(containerId, gradesArray) {
     const counts = {}; 
     gradesArray.forEach(g => { counts[g] = (counts[g] || 0) + 1; });
     if (Object.keys(counts).length === 0) { 
-        chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-sm">No ascents yet</p>'; 
+        chartContainer.innerHTML = '<p class="text-gray-500 text-center w-full self-center text-xs uppercase tracking-wider">No ascents yet</p>'; 
         return; 
     }
     const maxCount = Math.max(...Object.values(counts));
@@ -449,11 +449,11 @@ function renderLogbook() {
     });
     
     if(selectedAscents.length === 0) {
-        entriesContainer.innerHTML = '<p class="text-gray-500 text-sm text-center py-2">Rest day. No ascents logged.</p>';
+        entriesContainer.innerHTML = '<p class="text-gray-500 text-xs uppercase tracking-wider text-center py-2">Rest day. No ascents logged.</p>';
     } else { 
         selectedAscents.forEach(a => { 
-            const badge = '<span class="text-green-500 font-bold text-sm uppercase">Done</span>'; 
-            entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700"><div><p class="font-bold text-sm">${a.boulder_name || 'Unknown'}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div>${badge}</div>`; 
+            const badge = '<span class="text-green-500 font-bold text-xs uppercase tracking-wider">Done</span>'; 
+            entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-3 rounded-lg border border-gray-700"><div><p class="font-bold text-sm uppercase tracking-wider">${a.boulder_name || 'Unnamed'}</p><p class="text-xs text-gray-400">Grade: ${a.grade}</p></div>${badge}</div>`; 
         }); 
     }
 }
@@ -500,7 +500,7 @@ async function loadHomeView() {
         if (likeKeys.length > 0) { 
             listObj.classList.remove('hidden-view'); 
             const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; 
-            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300">@${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
+            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300 font-bold tracking-wider text-xs uppercase">• @${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
         } else { 
             listObj.classList.add('hidden-view'); 
         } 
@@ -537,7 +537,7 @@ async function loadFriendRequests() {
             await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" }); 
             continue; 
         }
-        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded"><span>@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors uppercase">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors uppercase">Decline</button></div></div>`;
+        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2 rounded border border-gray-800"><span class="font-bold tracking-wider text-sm">@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1 rounded text-xs mr-2 font-bold transition-colors uppercase tracking-wider">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-red-600 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Decline</button></div></div>`;
     }
     if(list.innerHTML === '') box.classList.add('hidden-view');
 }
@@ -574,7 +574,7 @@ function loadLeagueView() {
         <div class="${league.current.color} scale-150 mb-4">${league.current.svg}</div>
         <h3 class="text-3xl font-black uppercase tracking-wider ${league.current.color}">${league.current.title}</h3>
         <p class="text-gray-400 mt-2 font-bold">${points} PTS</p>
-        <p class="text-xs text-gray-500 mt-1">Max Grade: <span class="text-white">${maxGrade !== "1" ? maxGrade : "None"}</span></p>
+        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wider">Max Grade: <span class="text-white font-bold">${maxGrade !== "1" ? maxGrade : "None"}</span></p>
     </div>`;
     
     // Блок Прогресса / Босса
@@ -585,8 +585,8 @@ function loadLeagueView() {
         if (league.isBossLocked) {
             html += `
             <div class="bg-red-900/30 border border-red-500 p-4 rounded-xl mb-3 shadow-lg">
-                <p class="text-red-400 font-bold text-center text-sm mb-1 uppercase tracking-wider">Points Reached!</p>
-                <p class="text-gray-300 text-center text-xs">To enter the <span class="${league.next.color} font-bold">${league.next.title}</span> league, you must defeat the boss:</p>
+                <p class="text-red-400 font-bold text-center text-sm mb-1 uppercase tracking-wider">Requirement Pending</p>
+                <p class="text-gray-300 text-center text-xs">To enter the <span class="${league.next.color} font-bold">${league.next.title}</span> league, you must complete the challenge:</p>
                 <div class="mt-3 bg-red-600 text-white text-center py-3 rounded font-black text-lg shadow-lg uppercase tracking-wider">
                     CLIMB A ${league.next.minGrade} OR HARDER
                 </div>
@@ -605,7 +605,7 @@ function loadLeagueView() {
         }
         html += `</div>`;
     } else {
-        html += `<div class="text-center text-yellow-400 font-black text-xl mb-8 uppercase tracking-widest">You reached max league!</div>`;
+        html += `<div class="text-center text-yellow-400 font-black text-xl mb-8 uppercase tracking-widest">Max League Reached</div>`;
     }
     
     // Список всех лиг
@@ -627,7 +627,7 @@ function loadLeagueView() {
                 </div>
             </div>
             ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">Current</span>' : ''}
-            ${isLocked ? '<span class="text-gray-600 text-[10px] font-bold uppercase tracking-wider">Locked</span>' : (!isCurrent ? '<span class="text-green-500 text-xs font-bold uppercase">Done</span>' : '')}
+            ${isLocked ? '<span class="text-gray-600 text-[10px] font-bold uppercase tracking-wider">Locked</span>' : (!isCurrent ? '<span class="text-green-500 text-[10px] font-bold uppercase tracking-wider">Done</span>' : '')}
         </div>`;
     });
     html += `</div>`;
@@ -649,7 +649,7 @@ async function loadFriendsView() {
     for(let fId in friends) { 
         const u = allUsers[fId]; 
         if(!u) continue; 
-        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-xs uppercase tracking-wider font-bold">Profile &gt;</span></div>`; 
+        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><span class="font-bold tracking-wider">@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-xs uppercase tracking-wider font-bold">Profile &gt;</span></div>`; 
     }
 }
 
@@ -663,7 +663,7 @@ async function loadGymsView() {
     for(let gId in gyms) { 
         const g = gyms[gId]; 
         if(!g || !g.id) continue; 
-        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow"><div><h3 class="font-bold text-lg uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-xs tracking-wider">Enter &gt;</span></div>`; 
+        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow"><div><h3 class="font-bold text-lg uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-xs uppercase tracking-wider mt-1">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-xs tracking-wider">Enter &gt;</span></div>`; 
     }
 }
 
@@ -862,11 +862,11 @@ async function loadGallery() {
             found = true; 
             const ascent = (profile.ascents_history || []).find(a => a.boulder_id === b.id);
             let badge = ''; 
-            if (ascent) { badge = '<span class="text-green-500 font-bold uppercase text-xs">Done</span>'; }
+            if (ascent) { badge = '<span class="text-green-500 font-bold uppercase text-[10px] tracking-wider border border-green-500 px-2 py-0.5 rounded">Done</span>'; }
             
             const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
             const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
-            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2 shadow"><div><h4 class="font-bold text-lg tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs mt-1">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-xs mt-1 font-bold uppercase">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
+            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2 shadow"><div><h4 class="font-bold text-lg tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs mt-1 uppercase tracking-wider">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-[10px] mt-1.5 font-bold uppercase tracking-wider">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
         }
     }
     if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6 uppercase text-sm tracking-wider">No routes found</p>`;
@@ -879,7 +879,7 @@ function openRouteDetail(b) {
     
     const displayGrade = b.consensus_grade ? `${b.grade} (Community: ${b.consensus_grade})` : b.grade;
     document.getElementById('detail-title').innerText = `${b.name || 'Unnamed'} - ${displayGrade}`;
-    document.getElementById('detail-author').innerText = `Author: ${b.author || 'Unknown'} | Ascents: ${b.ascents || 0}\n${b.description || ''}`;
+    document.getElementById('detail-author').innerText = `AUTHOR: ${b.author || 'Unknown'} | ASCENTS: ${b.ascents || 0}\n${b.description || ''}`;
     document.getElementById('detail-wall-img').src = b.image_url;
     
     const container = document.getElementById('detail-canvas'); 
@@ -899,7 +899,7 @@ function openRouteDetail(b) {
     actionsDiv.classList.remove('hidden-view');
     
     if (ascent) {
-        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="removeAscent()" class="bg-green-600 hover:bg-red-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md">Completed</button>`;
+        actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="removeAscent()" class="bg-green-600 hover:bg-red-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md border border-green-400">Completed</button>`;
     } else {
         actionsDiv.innerHTML = `<button onclick="navigate('gym-routes')" class="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-1 shadow-md">Back</button><button onclick="startCompleteRoute()" class="bg-blue-600 hover:bg-blue-500 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-colors flex-[2] shadow-md">Complete Route</button>`;
     }
@@ -1017,7 +1017,7 @@ function renderClimbers() {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
             const league = getLeagueInfo(c.points, c.maxGrade);
             const rankData = league.current;
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5 uppercase tracking-wider">Max: <span class="text-red-400">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-xs font-bold uppercase tracking-wider">View &gt;</span></div>`;
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-sm">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Max: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-xs font-bold uppercase tracking-wider border border-blue-800 px-2 py-1 rounded">View</span></div>`;
         } 
         rank++;
     });
@@ -1031,7 +1031,7 @@ async function loadAdminPanel() {
     
     for(let uid in roles) { 
         if(roles[uid] === 'setter' && allUsers[uid]) {
-            list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 border border-gray-700"><span>@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Demote</button></div>`; 
+            list.innerHTML += `<div class="flex justify-between items-center bg-gray-800 p-3 rounded mb-2 border border-gray-700"><span class="font-bold text-sm tracking-wider uppercase">@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Demote</button></div>`; 
         }
     }
 }
@@ -1046,7 +1046,7 @@ function searchUsersForAdmin() {
         for(let uid in allUsers) { 
             const u = allUsers[uid]; 
             if(u && ((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) {
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Make Setter</button></div>`; 
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span class="font-bold text-sm tracking-wider uppercase">@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors uppercase tracking-wider">Make Setter</button></div>`; 
             }
         }
     });
