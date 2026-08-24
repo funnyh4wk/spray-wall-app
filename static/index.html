@@ -2,377 +2,396 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spray Wall App</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#111827">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="SprayWall">
-    <link rel="icon" href="icon.jpg" type="image/jpeg">
-    <link rel="apple-touch-icon" href="icon.jpg">
-    
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <style>
         .hidden-view { display: none !important; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* 🔥 ЖЕЛЕЗНЫЙ ФИКС ДЛЯ АЙФОНОВ 🔥 */
-        input, textarea, select {
-            -webkit-user-select: auto !important;
-            user-select: auto !important;
-            pointer-events: auto !important;
-            appearance: none;
-        }
-        body {
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        body { background-color: #111827; color: white; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen flex flex-col items-center">
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Notify Box -->
+    <div id="notify-box" class="opacity-0 pointer-events-none fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 z-[100]"></div>
 
-    <div id="notify-box" class="fixed top-5 bg-green-500 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50"></div>
-
-    <div id="app-bar" class="w-full max-w-md bg-black p-4 flex items-center justify-between hidden-view shadow-md sticky top-0 z-40">
-        <button onclick="toggleMenu()" class="text-xl font-bold w-1/4 text-left">Menu</button>
-        <h1 id="app-title" class="text-lg font-bold w-1/2 text-center">Spray Wall</h1>
-        <div class="w-1/4"></div> 
+    <!-- App Bar -->
+    <div id="app-bar" class="bg-black p-4 flex items-center justify-between sticky top-0 z-40 hidden-view">
+        <button onclick="toggleMenu()" class="font-bold text-lg">☰ Menu</button>
+        <h1 class="font-black text-xl tracking-wider">SPRAY WALL</h1>
+        <div class="w-8"></div>
     </div>
 
-    <div id="drawer" class="fixed inset-y-0 left-0 w-64 bg-black z-50 transform -translate-x-full transition-transform duration-300 flex flex-col p-4 shadow-2xl">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold">Navigation</h2>
-            <button onclick="toggleMenu()" class="text-gray-400 text-xl font-bold">X</button>
-        </div>
-        <div class="flex flex-col space-y-4">
-            <button onclick="navigate('home')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Profile</button>
-            <button onclick="navigate('friends')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Friends</button>
-            <button onclick="navigate('gyms')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Gyms</button>
-            <button onclick="navigate('settings')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors">Settings</button>
-            <button id="nav-super-admin" onclick="navigate('super-admin')" class="text-left py-2 px-3 rounded hover:bg-gray-800 font-bold transition-colors text-purple-400 hidden-view">App Management</button>
-        </div>
-    </div>
+    <!-- Drawer -->
     <div id="drawer-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden-view"></div>
+    <div id="drawer" class="fixed top-0 left-0 h-full w-64 bg-gray-900 z-50 transform -translate-x-full transition-transform duration-300 border-r border-gray-800 flex flex-col">
+        <div class="p-6 bg-black border-b border-gray-800">
+            <h2 class="font-black text-2xl tracking-widest text-white">MENU</h2>
+        </div>
+        <button onclick="navigate('home')" class="w-full text-left p-4 hover:bg-gray-800 border-b border-gray-800 font-bold transition-colors">🏠 Profile & Home</button>
+        <button onclick="navigate('league')" class="w-full text-left p-4 hover:bg-gray-800 border-b border-gray-800 font-bold transition-colors flex items-center"><span class="mr-3 text-xl">🏆</span> League & Progress</button>
+        <button onclick="navigate('gyms')" class="w-full text-left p-4 hover:bg-gray-800 border-b border-gray-800 font-bold transition-colors">🧗‍♂️ Gyms</button>
+        <button onclick="navigate('friends')" class="w-full text-left p-4 hover:bg-gray-800 border-b border-gray-800 font-bold transition-colors">👥 Friends</button>
+        
+        <div class="mt-auto">
+            <button id="nav-super-admin" onclick="navigate('super-admin')" class="w-full text-left p-4 hover:bg-gray-800 border-t border-gray-800 font-bold text-purple-400 hidden-view">⚙️ Super Admin</button>
+            <button onclick="logout()" class="w-full text-left p-4 hover:bg-red-900 border-t border-gray-800 font-bold text-red-500 transition-colors">🚪 Logout</button>
+        </div>
+    </div>
 
-    <div class="w-full max-w-md p-4 flex-1 flex flex-col pb-20">
-
-        <!-- 1. AUTH VIEW -->
-        <div id="view-auth" class="flex flex-col items-center mt-12 hidden-view">
-            <h2 id="auth-title" class="text-3xl font-bold mb-6">Login</h2>
-            <input id="auth-email" type="email" placeholder="Email" class="w-full p-3 mb-4 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500">
-            <div class="relative w-full mb-4">
-                <input id="auth-password" type="password" placeholder="Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
-                <button onclick="togglePassword('auth-password', 'eye-open', 'eye-closed')" type="button" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
-                    <svg id="eye-open" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                    <svg id="eye-closed" class="w-6 h-6 hidden-view" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+    <!-- Main Content Container -->
+    <div class="w-full max-w-md mx-auto relative flex flex-col items-center">
+        
+        <!-- AUTH VIEW -->
+        <div id="view-auth" class="w-full p-6 flex flex-col items-center justify-center min-h-screen">
+            <h1 class="text-4xl font-black mb-8 tracking-widest">SPRAY WALL</h1>
+            <h2 id="auth-title" class="text-2xl font-bold mb-6">Login</h2>
+            <input type="email" id="auth-email" placeholder="Email" class="w-full bg-gray-800 p-4 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <div class="w-full relative mb-4">
+                <input type="password" id="auth-password" placeholder="Password" class="w-full bg-gray-800 p-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="togglePassword('auth-password', 'eye-op-1', 'eye-cl-1')" class="absolute right-4 top-4 text-gray-400">
+                    <span id="eye-op-1">👁️</span><span id="eye-cl-1" class="hidden-view">🙈</span>
                 </button>
             </div>
-            <div id="confirm-pwd-container" class="relative w-full mb-6 hidden-view">
-                <input id="auth-password-confirm" type="password" placeholder="Confirm Password" class="w-full p-3 bg-gray-800 rounded outline-none border border-gray-700 focus:border-blue-500 pr-12">
+            
+            <div id="confirm-pwd-container" class="w-full relative mb-6 hidden-view">
+                <input type="password" id="auth-password-confirm" placeholder="Confirm Password" class="w-full bg-gray-800 p-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button onclick="togglePassword('auth-password-confirm', 'eye-op-2', 'eye-cl-2')" class="absolute right-4 top-4 text-gray-400">
+                    <span id="eye-op-2">👁️</span><span id="eye-cl-2" class="hidden-view">🙈</span>
+                </button>
             </div>
-            <button onclick="processAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 font-bold py-3 rounded-lg mb-4 transition-colors">Login</button>
-            <button onclick="switchAuthMode()" id="auth-switch" class="text-blue-400 text-sm mb-4">Don't have an account? Sign Up</button>
-            <div class="flex items-center my-4 w-full">
-                <hr class="flex-grow border-gray-700"><span class="px-3 text-gray-500 text-sm">OR</span><hr class="flex-grow border-gray-700">
-            </div>
-            <button onclick="googleSignIn()" class="w-full bg-white text-black hover:bg-gray-200 font-bold py-3 rounded-lg mt-2 transition-colors flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571c.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+
+            <button id="auth-btn" onclick="processAuth()" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded font-bold text-lg transition-colors mb-4 shadow-lg">Login</button>
+            <button onclick="googleSignIn()" class="w-full bg-white text-black hover:bg-gray-200 p-4 rounded font-bold text-lg transition-colors mb-6 shadow-lg flex items-center justify-center">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 mr-2"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                 Continue with Google
             </button>
+            <button id="auth-switch" onclick="switchAuthMode()" class="text-gray-400 hover:text-white transition-colors text-sm">Don't have an account? Sign Up</button>
         </div>
 
-        <!-- 1.5. ONBOARDING -->
-        <div id="view-onboarding" class="flex flex-col items-center mt-10 hidden-view w-full">
-            <h2 class="text-3xl font-bold mb-2">Welcome!</h2>
-            <p class="text-gray-400 mb-6 text-center text-sm">Let's set up your profile before we start.</p>
-            <label class="relative cursor-pointer mb-6 inline-block">
-                <img id="onboard-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M24 0H0v24h24z'/%3E%3Cpath fill='%239CA3AF' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-28 h-28 rounded-full object-cover border-4 border-gray-700 shadow-lg">
+        <!-- ONBOARDING VIEW -->
+        <div id="view-onboarding" class="w-full p-6 flex flex-col items-center justify-center min-h-screen hidden-view">
+            <h2 class="text-2xl font-black mb-6">Setup Profile</h2>
+            <label class="cursor-pointer mb-6 relative group">
+                <img id="onboard-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M24 0H0v24h24z'/%3E%3Cpath fill='%239CA3AF' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-32 h-32 rounded-full object-cover border-4 border-gray-700 group-hover:border-blue-500 transition-colors">
+                <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-white font-bold text-sm">Upload</span>
+                </div>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadOnboardAvatar(this)">
             </label>
-            <input id="onb-nickname" type="text" placeholder="Nickname *" class="w-full p-3 mb-3 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center">
-            <input id="onb-realname" type="text" placeholder="First & Last Name" class="w-full p-3 mb-3 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center">
-            <textarea id="onb-bio" placeholder="About Me" rows="2" class="w-full p-3 mb-6 bg-gray-800 rounded border border-gray-700 focus:border-blue-500 outline-none text-center"></textarea>
-            <button onclick="completeOnboarding()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-3 rounded-lg transition-colors text-lg">Let's Climb!</button>
+            <input type="text" id="onb-nickname" placeholder="Nickname (e.g. funnyh4wk)" class="w-full bg-gray-800 p-4 rounded mb-4">
+            <input type="text" id="onb-realname" placeholder="Real Name (e.g. Valentyn Fedorov)" class="w-full bg-gray-800 p-4 rounded mb-4">
+            <textarea id="onb-bio" placeholder="Bio (e.g. Bouldering Enthusiast)" class="w-full bg-gray-800 p-4 rounded mb-6 h-24"></textarea>
+            <button onclick="completeOnboarding()" class="w-full bg-green-600 hover:bg-green-500 p-4 rounded font-bold text-lg shadow-lg">Save & Continue</button>
         </div>
 
-        <!-- 2. HOME / PROFILE -->
-        <div id="view-home" class="flex flex-col items-center hidden-view w-full">
-            <label class="relative cursor-pointer mt-4 inline-block">
-                <img id="profile-avatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23374151' d='M24 0H0v24h24z'/%3E%3Cpath fill='%239CA3AF' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg">
-                <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
-            </label>
-            <div id="profile-display" class="flex flex-col items-center w-full mt-3">
-                <h2 id="profile-name" class="text-2xl font-bold">Name</h2>
-                <p id="profile-rank" class="text-sm font-bold mt-1 uppercase tracking-widest"></p>
-                <p id="profile-realname" class="text-gray-400 text-xs mt-1"></p>
-                <p id="profile-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
-                <button onclick="toggleEditProfile(true)" class="mt-3 bg-gray-800 hover:bg-gray-700 px-5 py-1.5 rounded-lg text-sm font-bold transition-colors">Edit Profile</button>
+        <!-- HOME VIEW -->
+        <div id="view-home" class="w-full p-4 hidden-view pb-20">
+            <!-- Display Profile -->
+            <div id="profile-display" class="flex flex-col items-center mb-6">
+                <label class="cursor-pointer relative group mb-4">
+                    <img id="profile-avatar" src="" class="w-28 h-28 rounded-full object-cover border-4 border-gray-700 group-hover:border-blue-500 transition-colors shadow-lg">
+                    <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
+                </label>
+                <div id="profile-rank" class="mb-2 hover:scale-105 transition-transform" onclick="navigate('league')"></div>
+                <h2 id="profile-name" class="text-2xl font-black"></h2>
+                <p id="profile-realname" class="text-gray-400 text-sm mb-1"></p>
+                <p id="profile-bio" class="text-gray-300 text-center mb-4"></p>
+                <button onclick="toggleEditProfile(true)" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-full font-bold text-sm transition-colors shadow">Edit Profile</button>
             </div>
             
-            <div id="profile-edit" class="flex flex-col items-center w-full mt-3 hidden-view space-y-3">
-                <input id="edit-name" placeholder="Nickname" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center">
-                <input id="edit-realname" placeholder="First & Last Name" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center">
-                <textarea id="edit-bio" placeholder="Bio" rows="2" class="w-full p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500 text-center"></textarea>
-                <div class="flex space-x-2 w-full">
-                    <button onclick="toggleEditProfile(false)" class="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold transition-colors">Cancel</button>
-                    <button onclick="saveProfile()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors">Save</button>
+            <!-- Edit Profile Form -->
+            <div id="profile-edit" class="flex flex-col w-full mb-6 hidden-view bg-gray-800 p-4 rounded-xl">
+                <h3 class="font-bold mb-4 text-center">Edit Profile</h3>
+                <input type="text" id="edit-name" class="w-full bg-gray-900 p-3 rounded mb-3 text-sm" placeholder="Nickname">
+                <input type="text" id="edit-realname" class="w-full bg-gray-900 p-3 rounded mb-3 text-sm" placeholder="Real Name">
+                <textarea id="edit-bio" class="w-full bg-gray-900 p-3 rounded mb-4 text-sm h-20" placeholder="Bio"></textarea>
+                <div class="flex space-x-3">
+                    <button onclick="toggleEditProfile(false)" class="flex-1 bg-red-600 hover:bg-red-500 p-3 rounded font-bold transition-colors">Cancel</button>
+                    <button onclick="saveProfile()" class="flex-1 bg-green-600 hover:bg-green-500 p-3 rounded font-bold transition-colors">Save</button>
                 </div>
             </div>
 
-            <!-- 🔥 БЛОК: ЛАЙКИ (СЕРДЕЧКИ) 🔥 -->
-            <div class="w-full bg-gray-800 p-4 rounded-lg mt-5 flex flex-col items-center shadow-lg border border-gray-700">
-                <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider mb-1">Likes ❤️</h3>
-                <p id="my-likes-count" class="text-3xl font-extrabold text-pink-500">0</p>
-                <div id="my-likes-list" class="w-full mt-3 space-y-2 text-center text-sm hidden-view"></div>
-                <div id="my-likes-lock" class="flex flex-col items-center mt-3 bg-gray-900 p-3 rounded-lg w-full border border-gray-700">
-                    <span class="text-xl mb-1">🔒</span>
-                    <p class="text-xs text-gray-400 text-center font-bold">Climb 20 boulders or reach 6B+ to see who liked you!</p>
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center shadow-lg border border-gray-700">
+                    <span class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Max Grade</span>
+                    <span id="stat-max" class="text-3xl font-black text-red-400">-</span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center shadow-lg border border-gray-700">
+                    <span class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Total Ascents</span>
+                    <span id="stat-total" class="text-3xl font-black text-green-400">0</span>
                 </div>
             </div>
 
-            <div id="friend-requests-box" class="w-full bg-gray-800 rounded-lg p-3 mt-4 hidden-view">
-                <p class="text-orange-400 font-bold text-sm mb-2">Friend Requests:</p>
+            <!-- Likes -->
+            <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-lg border border-gray-700">
+                <div class="text-center mb-3">
+                    <span class="font-black tracking-widest text-sm">LIKES ❤️</span>
+                    <span id="my-likes-count" class="block text-3xl font-black text-pink-500 mt-1">0</span>
+                </div>
+                <div id="my-likes-lock" class="text-center text-xs text-gray-500 bg-gray-900 p-3 rounded">
+                    🔒 Unlock likes by reaching 6B+ or 20 total ascents
+                </div>
+                <div id="my-likes-list" class="space-y-2 mt-2 hidden-view bg-gray-900 p-3 rounded max-h-32 overflow-y-auto text-sm"></div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-lg border border-gray-700">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Grade Pyramid</h3>
+                <div id="stat-chart" class="flex items-end justify-center h-40 w-full overflow-x-auto pb-2"></div>
+            </div>
+
+            <!-- Logbook -->
+            <div class="bg-gray-800 p-4 rounded-xl mb-6 shadow-lg border border-gray-700">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Training Logbook (Last 7 Days)</h3>
+                <div id="logbook-days" class="flex justify-between space-x-2 mb-4 overflow-x-auto pb-2"></div>
+                <div id="logbook-entries" class="space-y-2"></div>
+            </div>
+
+            <!-- Friend Requests -->
+            <div id="friend-requests-box" class="bg-gray-800 p-4 rounded-xl mb-6 shadow-lg border border-blue-900 hidden-view">
+                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-3">Friend Requests</h3>
                 <div id="friend-requests-list" class="space-y-2"></div>
             </div>
-            <div class="w-full grid grid-cols-2 gap-3 mt-4">
-                <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="stat-max" class="text-xl font-bold text-red-500">-</p></div>
-                <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="stat-total" class="text-xl font-bold text-green-500">0</p></div>
-            </div>
-            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
-                <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider mb-3">Training Logbook (Last 7 Days)</h3>
-                <div id="logbook-days" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide w-full"></div>
-                <div id="logbook-entries" class="mt-3 space-y-2"></div>
+            
+            <button onclick="deleteAccount()" class="w-full py-4 text-gray-600 font-bold text-xs hover:text-red-500 transition-colors mt-8">Delete Account</button>
+        </div>
+
+        <!-- LEAGUE VIEW -->
+        <div id="view-league" class="hidden-view p-4 pb-24 w-full">
+            <div id="league-content" class="w-full mx-auto"></div>
+        </div>
+
+        <!-- FRIENDS VIEW -->
+        <div id="view-friends" class="hidden-view p-4 w-full">
+            <h2 class="text-2xl font-black mb-6 tracking-widest text-center">FRIENDS</h2>
+            <div id="friends-list" class="space-y-3"></div>
+        </div>
+
+        <!-- GYMS VIEW -->
+        <div id="view-gyms" class="hidden-view p-4 w-full">
+            <h2 class="text-2xl font-black mb-6 tracking-widest text-center">GYMS</h2>
+            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-green-600 hover:bg-green-500 p-4 rounded-xl font-bold mb-6 hidden-view shadow-lg">+ Add New Gym</button>
+            
+            <div id="gym-form" class="hidden-view bg-gray-800 p-4 rounded-xl mb-6 border border-gray-700">
+                <input type="text" id="gym-name" placeholder="Gym Name" class="w-full bg-gray-900 p-3 rounded mb-3">
+                <input type="text" id="gym-city" placeholder="City" class="w-full bg-gray-900 p-3 rounded mb-4">
+                <div class="flex space-x-3">
+                    <button onclick="toggleGymForm(false)" class="flex-1 bg-red-600 p-3 rounded font-bold">Cancel</button>
+                    <button onclick="saveGym()" class="flex-1 bg-green-600 p-3 rounded font-bold">Save Gym</button>
+                </div>
             </div>
             
-            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
-                </div>
-                <div id="stat-chart" class="flex items-end h-40 overflow-x-auto pb-2 scrollbar-hide w-full pt-4"></div>
-            </div>
+            <div id="gyms-list" class="space-y-3"></div>
         </div>
 
-        <!-- 3. FRIENDS -->
-        <div id="view-friends" class="flex flex-col items-center hidden-view">
-            <h2 class="text-2xl font-bold mb-4">My Friends</h2>
-            <div id="friends-list" class="w-full space-y-3"></div>
-        </div>
+        <!-- GYM ROUTES VIEW -->
+        <div id="view-gym-routes" class="hidden-view w-full">
+            <div class="bg-black p-4 pb-0 sticky top-[60px] z-30">
+                <h2 id="gym-title" class="text-xl font-black text-center mb-4 uppercase tracking-widest text-white truncate"></h2>
+                <div class="flex space-x-2 overflow-x-auto pb-3 hide-scrollbar">
+                    <button id="tab-official" onclick="switchTab('official')" class="px-4 py-2 rounded-full font-bold text-sm bg-blue-600 whitespace-nowrap">Official</button>
+                    <button id="tab-custom" onclick="switchTab('custom')" class="px-4 py-2 rounded-full font-bold text-sm bg-gray-800 whitespace-nowrap">Community</button>
+                    <button id="tab-climbers" onclick="switchTab('climbers')" class="px-4 py-2 rounded-full font-bold text-sm bg-gray-800 whitespace-nowrap">Climbers</button>
+                    <button id="tab-admin" onclick="switchTab('admin')" class="px-4 py-2 rounded-full font-bold text-sm bg-purple-700 hidden-view whitespace-nowrap">Admin</button>
+                </div>
+            </div>
 
-        <!-- 4. GYMS -->
-        <div id="view-gyms" class="flex flex-col items-center hidden-view w-full">
-            <h2 class="text-2xl font-bold mb-4">Climbing Gyms</h2>
-            <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-orange-600 hover:bg-orange-500 font-bold py-2 rounded-lg mb-4 hidden-view transition-colors">Create Gym</button>
-            <div id="gym-form" class="w-full bg-gray-800 p-4 rounded-lg mb-4 hidden-view space-y-3">
-                <h3 class="font-bold">New Gym</h3>
-                <input id="gym-name" placeholder="Gym Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
-                <input id="gym-city" placeholder="City" class="w-full p-2 bg-gray-900 rounded border border-gray-700 focus:border-blue-500 outline-none">
-                <div class="flex space-x-2">
-                    <button onclick="toggleGymForm(false)" class="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded font-bold transition-colors">Cancel</button>
-                    <button onclick="saveGym()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors">Create</button>
+            <div class="p-4">
+                <!-- Filters & Add Route -->
+                <div id="sector-bar-container" class="mb-6">
+                    <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar mb-3"></div>
+                    <div id="sector-actions" class="hidden-view bg-gray-800 p-3 rounded-xl mb-4 border border-gray-700 flex justify-between">
+                        <button onclick="clearSector()" class="text-orange-400 font-bold text-sm px-3 py-1 bg-gray-900 rounded">Clear Sector</button>
+                        <button onclick="deleteSector()" class="text-red-500 font-bold text-sm px-3 py-1 bg-gray-900 rounded">Delete Sector</button>
+                    </div>
+                    <div id="add-sector-form" class="hidden-view bg-gray-800 p-3 rounded-xl mb-4 flex space-x-2">
+                        <input type="text" id="new-sector-name" class="flex-1 bg-gray-900 p-2 rounded text-sm" placeholder="Sector Name">
+                        <button onclick="saveSector()" class="bg-green-600 px-4 rounded font-bold text-sm">Save</button>
+                        <button onclick="toggleSectorForm(false)" class="bg-red-600 px-3 rounded font-bold text-sm">X</button>
+                    </div>
+                    <div id="grade-filters" class="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar mb-4"></div>
+                    <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-lg shadow-lg mb-2">+ ADD ROUTE</button>
                 </div>
-            </div>
-            <div id="gyms-list" class="w-full space-y-3"></div>
-        </div>
 
-        <!-- 5. GYM ROUTES -->
-        <div id="view-gym-routes" class="flex flex-col items-center hidden-view w-full">
-            <h2 id="gym-title" class="text-2xl font-bold mb-2">Gym Name</h2>
-            <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-green-600 hover:bg-green-500 font-bold py-2 rounded-lg mb-3 hidden-view transition-colors">Add Route</button>
-            <div class="flex space-x-1 w-full bg-black p-1 rounded-lg mb-4 overflow-x-auto scrollbar-hide">
-                <button onclick="switchTab('official')" id="tab-official" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-blue-600 transition-colors">Official</button>
-                <button onclick="switchTab('custom')" id="tab-custom" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors">Custom</button>
-                <button onclick="switchTab('climbers')" id="tab-climbers" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors">Climbers</button>
-                <button onclick="switchTab('admin')" id="tab-admin" class="flex-1 py-2 px-2 rounded text-xs font-bold bg-gray-800 transition-colors hidden-view">Admin</button>
-            </div>
-            <div id="sector-bar-container" class="w-full hidden-view mb-4">
-                <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 mb-2 scrollbar-hide"></div>
-                <div id="grade-filters" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide"></div>
-                <div id="add-sector-form" class="mt-2 flex space-x-2 hidden-view bg-gray-800 p-2 rounded-lg">
-                    <input id="new-sector-name" placeholder="Sector Name" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
-                    <button onclick="saveSector()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded font-bold text-sm">Save</button>
-                    <button onclick="toggleSectorForm(false)" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded font-bold text-sm">Cancel</button>
+                <!-- Gallery Lists -->
+                <div id="tab-content-gallery" class="space-y-3"></div>
+                
+                <!-- Climbers List -->
+                <div id="tab-content-climbers" class="hidden-view space-y-3">
+                    <input type="text" id="climbers-search" onkeyup="renderClimbers()" placeholder="Search climber..." class="w-full bg-gray-800 p-4 rounded-xl mb-4 focus:outline-none">
+                    <div id="climbers-list-container"></div>
                 </div>
-                <div id="sector-actions" class="mt-2 flex space-x-2 hidden-view bg-red-900 bg-opacity-20 border border-red-800 p-2 rounded-lg">
-                    <button onclick="clearSector()" class="flex-1 bg-orange-600 hover:bg-orange-500 py-1.5 rounded font-bold text-sm transition-colors">Clear Sector</button>
-                    <button onclick="deleteSector()" class="flex-1 bg-red-600 hover:bg-red-500 py-1.5 rounded font-bold text-sm transition-colors">Delete Sector</button>
-                </div>
-            </div>
-            <div id="tab-content-gallery" class="w-full space-y-3"></div>
-            <div id="tab-content-climbers" class="w-full hidden-view">
-                <div class="relative w-full mb-4">
-                    <input id="climbers-search" oninput="renderClimbers()" placeholder="Search climbers by name, email..." class="w-full p-3 bg-gray-800 rounded-lg border border-gray-700 outline-none focus:border-blue-500 text-sm">
-                </div>
-                <div id="climbers-list-container" class="space-y-2"></div>
-            </div>
-            <div id="tab-content-admin" class="w-full space-y-3 hidden-view">
-                <h3 class="font-bold text-orange-400">Gym Setters:</h3>
-                <div id="admin-setters-list" class="space-y-2"></div>
-                <hr class="border-gray-700 my-4">
-                <h3 class="font-bold">Assign Setter:</h3>
-                <div class="flex space-x-2">
-                    <input id="admin-search-input" placeholder="Search by Name/Email" class="flex-1 p-2 bg-gray-800 rounded border border-gray-700 outline-none focus:border-blue-500">
-                    <button onclick="searchUsersForAdmin()" class="bg-blue-600 hover:bg-blue-500 px-4 rounded font-bold transition-colors">Search</button>
-                </div>
-                <div id="admin-search-results" class="space-y-2 mt-2"></div>
-                <hr class="border-gray-700 my-4">
-                <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-4 rounded-lg mt-4">
-                    <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
-                    <p class="text-gray-400 text-xs mb-3">Permanently delete this gym, including all routes, sectors, and roles.</p>
-                    <button onclick="deleteCurrentGym()" class="w-full bg-red-600 hover:bg-red-500 font-bold py-2 rounded transition-colors text-sm">Delete Gym</button>
+                
+                <!-- Admin Panel -->
+                <div id="tab-content-admin" class="hidden-view space-y-6">
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h3 class="font-bold mb-4 text-purple-400">Current Setters</h3>
+                        <div id="admin-setters-list" class="space-y-2"></div>
+                    </div>
+                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                        <h3 class="font-bold mb-3">Add Setter</h3>
+                        <div class="flex space-x-2 mb-4">
+                            <input type="text" id="admin-search-input" placeholder="Email or Nickname" class="flex-1 bg-gray-900 p-3 rounded text-sm">
+                            <button onclick="searchUsersForAdmin()" class="bg-blue-600 px-4 rounded font-bold">Search</button>
+                        </div>
+                        <div id="admin-search-results" class="space-y-2"></div>
+                    </div>
+                    <button onclick="deleteCurrentGym()" class="w-full bg-red-900 hover:bg-red-800 text-red-100 p-4 rounded-xl font-bold mt-8 transition-colors">Delete Entire Gym</button>
                 </div>
             </div>
         </div>
 
-        <!-- 6. WIZARD -->
-        <div id="view-create-route" class="flex flex-col items-center hidden-view w-full">
-            <h2 class="text-xl font-bold mb-3">Create Route</h2>
-            <div id="wizard-step-1" class="w-full flex flex-col items-center">
-                <label class="w-full h-80 bg-gray-800 hover:bg-gray-700 transition-colors border-2 border-dashed border-gray-600 rounded-lg flex flex-col items-center justify-center cursor-pointer">
-                    <span class="font-bold text-gray-300">Upload wall photo</span>
+        <!-- CREATE ROUTE WIZARD -->
+        <div id="view-create-route" class="hidden-view w-full min-h-screen bg-gray-900 absolute top-0 z-50">
+            <div class="p-4 bg-black flex justify-between items-center border-b border-gray-800">
+                <button onclick="navigate('gym-routes')" class="text-gray-400 font-bold">Cancel</button>
+                <h2 class="font-black tracking-widest">NEW ROUTE</h2>
+                <div class="w-10"></div>
+            </div>
+            
+            <div id="wizard-step-1" class="p-6 flex flex-col items-center justify-center min-h-[70vh]">
+                <h3 class="text-xl font-bold mb-6 text-center">Step 1: Wall Photo</h3>
+                <label class="w-full bg-gray-800 border-2 border-dashed border-gray-600 rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors">
+                    <span class="text-4xl mb-4">📸</span>
+                    <span class="font-bold text-gray-300">Take Photo / Upload</span>
                     <input type="file" accept="image/*" class="hidden" onchange="loadWallPhoto(this)">
                 </label>
-                <button onclick="navigate('gym-routes')" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded-lg mt-4 transition-colors">Cancel</button>
             </div>
-            <div id="wizard-step-2" class="w-full flex flex-col items-center hidden-view">
-                <div class="flex space-x-2 mb-3">
-                    <button onclick="setHoldColor('green')" class="bg-green-600 hover:bg-green-500 px-3 py-2 rounded font-bold text-xs transition-colors">Start</button>
-                    <button onclick="setHoldColor('blue')" class="bg-blue-600 hover:bg-blue-500 px-3 py-2 rounded font-bold text-xs transition-colors">Route</button>
-                    <button onclick="setHoldColor('red')" class="bg-red-600 hover:bg-red-500 px-3 py-2 rounded font-bold text-xs transition-colors">Top</button>
-                    <button onclick="setHoldColor('erase')" class="bg-orange-600 hover:bg-orange-500 px-3 py-2 rounded font-bold text-xs transition-colors">Erase</button>
+            
+            <div id="wizard-step-2" class="hidden-view flex flex-col min-h-[90vh]">
+                <div class="bg-gray-800 p-2 flex justify-center space-x-4 border-b border-gray-700">
+                    <button onclick="setHoldColor('green')" class="w-10 h-10 rounded-full bg-green-500 border-4 border-gray-900 focus:border-white shadow-lg"></button>
+                    <button onclick="setHoldColor('blue')" class="w-10 h-10 rounded-full bg-blue-500 border-4 border-gray-900 focus:border-white shadow-lg"></button>
+                    <button onclick="setHoldColor('red')" class="w-10 h-10 rounded-full bg-red-500 border-4 border-gray-900 focus:border-white shadow-lg"></button>
+                    <button onclick="setHoldColor('erase')" class="w-10 h-10 rounded bg-gray-700 text-white font-bold flex items-center justify-center shadow-lg text-xs">DEL</button>
                 </div>
-                <div id="canvas-container" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 cursor-crosshair" onclick="handleCanvasClick(event)">
-                    <img id="wizard-wall-img" class="w-full h-full object-contain pointer-events-none">
+                <div class="relative w-full flex-1 overflow-hidden bg-black flex items-center justify-center">
+                    <div id="canvas-container" class="relative inline-block cursor-crosshair">
+                        <img id="wizard-wall-img" src="" class="max-w-full max-h-[70vh] object-contain" onclick="handleCanvasClick(event)">
+                    </div>
                 </div>
-                <div class="flex space-x-2 w-full mt-4">
-                    <button onclick="wizardStep(1)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
-                    <button onclick="wizardStep(3)" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded font-bold transition-colors">Next</button>
+                <div class="p-4 bg-black border-t border-gray-800">
+                    <button onclick="wizardStep(3)" class="w-full bg-blue-600 py-4 rounded-xl font-bold shadow-lg text-lg">Next Step</button>
                 </div>
             </div>
-            <div id="wizard-step-3" class="w-full space-y-3 hidden-view">
-                <select id="route-sector" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500 hidden-view"></select>
-                <input id="route-name" placeholder="Name (optional)" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
-                <select id="route-grade" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500">
-                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
-                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
-                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
-                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option><option value="8B+">8B+</option><option value="8C">8C</option>
+            
+            <div id="wizard-step-3" class="hidden-view p-4 pt-8">
+                <h3 class="text-2xl font-black mb-6 text-center">Step 3: Details</h3>
+                <input type="text" id="route-name" placeholder="Route Name" class="w-full bg-gray-800 p-4 rounded-xl mb-4">
+                <select id="route-grade" class="w-full bg-gray-800 p-4 rounded-xl mb-4 appearance-none font-bold text-center">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="5+">5+</option><option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option><option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option><option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option><option value="8B+">8B+</option><option value="8C">8C</option>
                 </select>
-                <textarea id="route-desc" placeholder="Description" rows="3" class="w-full p-3 bg-gray-800 rounded border border-gray-700 outline-none focus:border-purple-500"></textarea>
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="wizardStep(2)" class="flex-1 bg-gray-700 hover:bg-gray-600 py-3 rounded font-bold transition-colors">Back</button>
-                    <button onclick="saveNewRoute()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-3 rounded font-bold transition-colors">Save</button>
+                <select id="route-sector" class="w-full bg-gray-800 p-4 rounded-xl mb-4 appearance-none font-bold text-center hidden-view"></select>
+                <textarea id="route-desc" placeholder="Description / Rules (Optional)" class="w-full bg-gray-800 p-4 rounded-xl mb-8 h-24"></textarea>
+                <button onclick="saveNewRoute()" class="w-full bg-green-600 py-4 rounded-xl font-bold shadow-lg text-lg">Create Route</button>
+            </div>
+        </div>
+
+        <!-- ROUTE DETAIL VIEW -->
+        <div id="view-route-detail" class="hidden-view w-full bg-gray-900 absolute top-0 z-50 min-h-screen flex flex-col">
+            <div class="p-4 bg-black border-b border-gray-800 flex flex-col justify-center min-h-[80px]">
+                <h2 id="detail-title" class="text-xl font-black text-center uppercase"></h2>
+                <p id="detail-author" class="text-xs text-gray-400 text-center mt-1"></p>
+            </div>
+            
+            <div class="relative w-full flex-1 bg-black flex items-center justify-center overflow-hidden">
+                <div id="detail-canvas" class="relative inline-block">
+                    <img id="detail-wall-img" src="" class="max-w-full max-h-[65vh] object-contain">
+                </div>
+            </div>
+            
+            <div class="p-4 bg-black border-t border-gray-800">
+                <div id="detail-actions" class="flex space-x-3 mb-4"></div>
+                
+                <div id="grade-suggest-box" class="hidden-view bg-gray-800 p-4 rounded-xl mb-4 border border-gray-700">
+                    <p class="font-bold text-center mb-3">Suggest Grade for Ascent</p>
+                    <select id="suggest-grade-select" class="w-full bg-gray-900 p-3 rounded mb-4 font-bold text-center appearance-none"></select>
+                    <div class="flex space-x-2">
+                        <button onclick="cancelSuggestGrade()" class="flex-1 bg-red-600 py-3 rounded font-bold">Cancel</button>
+                        <button onclick="confirmCompleteRoute()" class="flex-[2] bg-green-600 py-3 rounded font-bold">Log Ascent</button>
+                    </div>
+                </div>
+                
+                <div id="detail-admin-actions" class="hidden-view mt-4 flex space-x-2">
+                    <button onclick="toggleEditRouteForm()" class="flex-1 bg-gray-800 hover:bg-gray-700 py-3 rounded font-bold text-sm">Edit Route</button>
+                    <button onclick="deleteRoute()" class="flex-1 bg-red-900 hover:bg-red-800 text-red-100 py-3 rounded font-bold text-sm">Delete</button>
+                </div>
+                
+                <div id="edit-route-form" class="hidden-view bg-gray-800 p-4 rounded-xl mt-4 border border-gray-700">
+                    <input type="text" id="edit-rt-name" class="w-full bg-gray-900 p-3 rounded mb-3" placeholder="Name">
+                    <select id="edit-rt-grade" class="w-full bg-gray-900 p-3 rounded mb-3 appearance-none font-bold text-center"></select>
+                    <textarea id="edit-rt-desc" class="w-full bg-gray-900 p-3 rounded mb-3 h-20" placeholder="Description"></textarea>
+                    <div class="flex space-x-2">
+                        <button onclick="toggleEditRouteForm()" class="flex-1 bg-red-600 py-2 rounded font-bold">Cancel</button>
+                        <button onclick="saveRouteEdit()" class="flex-1 bg-green-600 py-2 rounded font-bold">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 7. ROUTE DETAIL -->
-        <div id="view-route-detail" class="flex flex-col items-center hidden-view w-full">
-            <h2 id="detail-title" class="text-xl font-bold mb-1">Route Name</h2>
-            <p id="detail-author" class="text-gray-400 text-xs mb-3 text-center"></p>
-            <div id="detail-canvas" class="relative w-full max-w-[350px] h-[450px] bg-black overflow-hidden rounded-lg border border-gray-700 mb-4">
-                <img id="detail-wall-img" class="w-full h-full object-contain pointer-events-none">
-            </div>
-            
-            <div id="grade-suggest-box" class="w-full max-w-[350px] bg-gray-800 p-4 rounded-lg hidden-view mb-4 border border-purple-500 border-opacity-50">
-                <p class="text-center font-bold text-sm mb-3 text-gray-300">Suggest Consensus Grade:</p>
-                <div class="mb-4">
-                    <select id="suggest-grade-select" class="w-full p-3 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500 text-center text-lg font-bold text-purple-400">
-                    </select>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="cancelSuggestGrade()" class="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-bold transition-colors text-sm">Cancel</button>
-                    <button onclick="confirmCompleteRoute()" class="flex-1 bg-green-600 hover:bg-green-500 py-2 rounded font-bold transition-colors text-sm">Save Ascent</button>
+        <!-- OTHER PROFILE VIEW -->
+        <div id="view-other-profile" class="hidden-view w-full p-4 pb-20">
+            <button onclick="navigate(profileBackTarget)" class="text-gray-400 font-bold mb-4">&lt; Back</button>
+            <div class="flex flex-col items-center mb-6">
+                <img id="op-avatar" src="" class="w-28 h-28 rounded-full object-cover border-4 border-gray-700 mb-4 shadow-lg">
+                <div id="op-rank" class="mb-2"></div>
+                <h2 id="op-name" class="text-2xl font-black"></h2>
+                <p id="op-realname" class="text-gray-400 text-sm mb-1"></p>
+                <p id="op-bio" class="text-gray-300 text-center mb-4"></p>
+                
+                <div class="flex space-x-3 w-full">
+                    <button id="op-like-btn" onclick="toggleLike()" class="flex-1 py-3 rounded-xl font-bold border border-pink-500 text-pink-500 transition-colors shadow">🤍 Like (0)</button>
+                    <button id="op-action-btn" onclick="handleOpAction()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold transition-colors shadow">Add Friend</button>
                 </div>
             </div>
             
-            <div id="detail-actions" class="flex space-x-2 w-full justify-center mb-4"></div>
-            
-            <div id="detail-admin-actions" class="flex flex-wrap gap-2 w-full justify-center hidden-view">
-                <button onclick="toggleEditRouteForm()" class="bg-blue-600 hover:bg-blue-500 px-5 py-2 rounded font-bold text-sm transition-colors">Edit Route</button>
-                <button onclick="deleteRoute()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded font-bold text-sm transition-colors">Delete Route</button>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center shadow border border-gray-700">
+                    <span class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Max Grade</span>
+                    <span id="op-stat-max" class="text-3xl font-black text-red-400">-</span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center shadow border border-gray-700">
+                    <span class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Total Ascents</span>
+                    <span id="op-stat-total" class="text-3xl font-black text-green-400">0</span>
+                </div>
             </div>
             
-            <div id="edit-route-form" class="hidden-view w-full max-w-[350px] space-y-2 mt-4 bg-gray-800 p-4 rounded-lg">
-                <h3 class="font-bold text-sm text-gray-300 mb-2">Edit Details</h3>
-                <input id="edit-rt-name" placeholder="Name" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
-                <select id="edit-rt-grade" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm">
-                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="5+">5+</option>
-                    <option value="6A">6A</option><option value="6A+">6A+</option><option value="6B">6B</option><option value="6B+">6B+</option><option value="6C">6C</option><option value="6C+">6C+</option>
-                    <option value="7A">7A</option><option value="7A+">7A+</option><option value="7B">7B</option><option value="7B+">7B+</option><option value="7C">7C</option><option value="7C+">7C+</option>
-                    <option value="8A">8A</option><option value="8A+">8A+</option><option value="8B">8B</option><option value="8B+">8B+</option><option value="8C">8C</option>
-                </select>
-                <textarea id="edit-rt-desc" placeholder="Description" rows="2" class="w-full p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-blue-500 text-sm"></textarea>
-                <div class="flex space-x-2">
-                    <button onclick="toggleEditRouteForm()" class="flex-1 bg-gray-600 hover:bg-gray-500 py-1.5 rounded font-bold text-sm transition-colors">Cancel</button>
-                    <button onclick="saveRouteEdit()" class="flex-1 bg-green-600 hover:bg-green-500 py-1.5 rounded font-bold text-sm transition-colors">Save</button>
-                </div>
+            <div class="bg-gray-800 p-4 rounded-xl shadow border border-gray-700">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Grade Pyramid</h3>
+                <div id="op-stat-chart" class="flex items-end justify-center h-40 w-full overflow-x-auto pb-2"></div>
             </div>
         </div>
 
-        <!-- 8. OTHER USER -->
-        <div id="view-other-profile" class="flex flex-col items-center hidden-view w-full">
-            <img id="op-avatar" class="w-24 h-24 rounded-full object-cover border-4 border-gray-700 shadow-lg mt-4">
-            <h2 id="op-name" class="text-2xl font-bold mt-3">Name</h2>
-            <p id="op-rank" class="text-sm font-bold mt-1 uppercase tracking-widest"></p>
-            <p id="op-realname" class="text-gray-400 text-xs mt-1"></p>
-            <p id="op-bio" class="text-gray-400 text-sm mt-1 text-center"></p>
-            
-            <button id="op-like-btn" onclick="toggleLike()" class="mt-4 px-6 py-2 rounded-full font-bold border-2 border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition-colors w-full max-w-[200px] shadow-lg">🤍 Like</button>
-
-            <button id="op-action-btn" onclick="handleOpAction()" class="mt-3 px-6 py-2 rounded font-bold bg-blue-600 hover:bg-blue-500 transition-colors">Add Friend</button>
-            <div id="op-stats-box" class="w-full mt-6 space-y-3">
-                <div class="w-full grid grid-cols-2 gap-3">
-                    <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Max Grade</p><p id="op-stat-max" class="text-xl font-bold text-red-500">-</p></div>
-                    <div class="bg-gray-800 p-4 rounded-lg text-center"><p class="text-gray-400 text-xs uppercase">Total Ascents</p><p id="op-stat-total" class="text-xl font-bold text-green-500">0</p></div>
+        <!-- SUPER ADMIN VIEW -->
+        <div id="view-super-admin" class="hidden-view w-full p-4">
+            <h2 class="text-2xl font-black mb-6 tracking-widest text-purple-400 text-center">SUPER ADMIN</h2>
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+                <h3 class="font-bold mb-3">Grant Gym Creation Rights</h3>
+                <div class="flex space-x-2 mb-4">
+                    <input type="text" id="sa-search-input" placeholder="User Email" class="flex-1 bg-gray-900 p-3 rounded text-sm focus:outline-none">
+                    <button onclick="searchUserForDirector()" class="bg-purple-600 hover:bg-purple-500 px-4 rounded font-bold transition-colors">Find</button>
                 </div>
-            </div>
-            <div class="w-full bg-gray-800 p-4 rounded-lg mt-3">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-sm text-gray-300 uppercase tracking-wider">Grade Distribution</h3>
-                </div>
-                <div id="op-stat-chart" class="flex items-end h-40 overflow-x-auto pb-2 scrollbar-hide w-full pt-4"></div>
-            </div>
-            <button onclick="navigate(profileBackTarget)" class="mt-8 bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded font-bold text-sm transition-colors">Back</button>
-        </div>
-
-        <!-- 9. SETTINGS -->
-        <div id="view-settings" class="flex flex-col items-center hidden-view w-full">
-            <h2 class="text-2xl font-bold mb-6">Settings</h2>
-            <div class="w-full bg-gray-800 p-5 rounded-lg mb-6">
-                <h3 class="font-bold mb-2">Account Actions</h3>
-                <p class="text-gray-400 text-xs mb-4">Sign out of your current session on this device.</p>
-                <button onclick="logout()" class="w-full bg-gray-700 hover:bg-gray-600 font-bold py-3 rounded transition-colors">Logout</button>
-            </div>
-            <div class="w-full bg-red-900 bg-opacity-20 border border-red-800 p-5 rounded-lg">
-                <h3 class="font-bold text-red-500 mb-2">Danger Zone</h3>
-                <p class="text-gray-400 text-xs mb-4">Delete account and all associated data permanently.</p>
-                <button onclick="deleteAccount()" class="w-full bg-red-600 hover:bg-red-500 font-bold py-3 rounded transition-colors">Delete Account</button>
-            </div>
-        </div>
-
-        <!-- 10. SECRET SUPER ADMIN -->
-        <div id="view-super-admin" class="flex flex-col items-center hidden-view w-full">
-            <h2 class="text-2xl font-bold mb-4 text-purple-400">App Management</h2>
-            <div class="w-full bg-gray-800 p-4 rounded-lg mb-4">
-                <h3 class="font-bold mb-2">Grant Gym Director Rights</h3>
-                <p class="text-xs text-gray-400 mb-3">Search user by email to give them access to create new climbing gyms.</p>
-                <div class="flex space-x-2">
-                    <input id="sa-search-input" placeholder="User Email" class="flex-1 p-2 bg-gray-900 rounded border border-gray-700 outline-none focus:border-purple-500">
-                    <button onclick="searchUserForDirector()" class="bg-purple-600 hover:bg-purple-500 px-4 rounded font-bold transition-colors">Search</button>
-                </div>
-                <div id="sa-search-results" class="space-y-2 mt-4"></div>
+                <div id="sa-search-results" class="space-y-2"></div>
             </div>
         </div>
 
     </div>
 
-    <!-- 🔥 ХАК ДЛЯ ПРИНУДИТЕЛЬНОЙ ЗАГРУЗКИ НОВОЙ ВЕРСИИ 🔥 -->
-    <script src="/app.js?v=999"></script>
+    <script src="app.js"></script>
+    <script>
+        // Этот маленький скрипт сам загрузит категории в меню редактирования маршрута
+        setTimeout(() => {
+            const gradeSel = document.getElementById('edit-rt-grade');
+            if (gradeSel && typeof ALL_GRADES !== 'undefined') {
+                gradeSel.innerHTML = ALL_GRADES.map(g => `<option value="${g}">${g}</option>`).join('');
+            }
+        }, 1000);
+    </script>
 </body>
 </html>

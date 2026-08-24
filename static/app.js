@@ -37,6 +37,50 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
+// 🔥 СИСТЕМА ЛИГ И БОССОВ (АНТИ-ФАРМИНГ) 🔥
+const RANKS = [
+    { id: 0, title: "Rookie", minPts: 0, minGrade: "1", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` },
+    { id: 1, title: "Plastic Puller", minPts: 300, minGrade: "4", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` },
+    { id: 2, title: "Crimper", minPts: 1500, minGrade: "5+", color: "text-gray-300", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l8-8 8 8"/></svg>` },
+    { id: 3, title: "Steel Fingers", minPts: 5000, minGrade: "6B+", color: "text-yellow-500", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 18l8-8 8 8M4 10l8-8 8 8"/></svg>` },
+    { id: 4, title: "Beast", minPts: 15000, minGrade: "7A", color: "text-cyan-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 drop-shadow-md"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4zm0 4.5l4 3-4 6-4-6 4-3z"/></svg>` },
+    { id: 5, title: "Titan", minPts: 40000, minGrade: "7C", color: "text-yellow-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mr-1.5 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"><path d="M2 19h20v2H2v-2zm1-2l3-11 4 5 2-8 2 8 4-5 3 11H3z"/></svg>` }
+];
+
+function getLeagueInfo(points, maxGrade) {
+    let maxGradeIdx = ALL_GRADES.indexOf(maxGrade);
+    if (maxGradeIdx === -1) maxGradeIdx = 0;
+    
+    let currentRankId = 0;
+    for(let i = 1; i < RANKS.length; i++) {
+        let reqGradeIdx = ALL_GRADES.indexOf(RANKS[i].minGrade);
+        if (points >= RANKS[i].minPts && maxGradeIdx >= reqGradeIdx) {
+            currentRankId = i;
+        } else {
+            break;
+        }
+    }
+    
+    let current = RANKS[currentRankId];
+    let next = currentRankId < RANKS.length - 1 ? RANKS[currentRankId + 1] : null;
+    
+    let percent = 100;
+    let isBossLocked = false;
+    
+    if (next) {
+        let reqGradeIdx = ALL_GRADES.indexOf(next.minGrade);
+        if (points >= next.minPts && maxGradeIdx < reqGradeIdx) {
+            isBossLocked = true;
+            percent = 100;
+        } else {
+            let pointsEarned = points - current.minPts;
+            let pointsNeeded = next.minPts - current.minPts;
+            percent = Math.min(100, Math.max(0, (pointsEarned / pointsNeeded) * 100));
+        }
+    }
+    return { current, next, percent, isBossLocked };
+}
+
 function normArr(d) {
     if (!d) return [];
     if (Array.isArray(d)) return d.filter(x => x !== null);
@@ -44,7 +88,6 @@ function normArr(d) {
     return [];
 }
 
-// 🔥 ЖЕЛЕЗОБЕТОННОЕ СЖАТИЕ В BASE64 🔥
 function compressImageToBase64(file, maxDimension = 1200) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -70,7 +113,6 @@ function compressImageToBase64(file, maxDimension = 1200) {
     });
 }
 
-// 🔥 ПРЯМАЯ ЗАГРУЗКА В CLOUDINARY (ОБХОДИМ VERCEL) 🔥
 async function directCloudinaryUpload(base64String) {
     const formData = new FormData();
     formData.append("file", base64String);
@@ -139,15 +181,6 @@ function getPoints(history) {
     return total;
 }
 
-function getRank(points) {
-    if (points < 300) return { title: "Rookie", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` };
-    if (points < 1500) return { title: "Plastic Puller", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` };
-    if (points < 5000) return { title: "Crimper", color: "text-gray-300", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16l8-8 8 8"/></svg>` };
-    if (points < 15000) return { title: "Steel Fingers", color: "text-yellow-500", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4 mr-1.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 18l8-8 8 8M4 10l8-8 8 8"/></svg>` };
-    if (points < 40000) return { title: "Beast", color: "text-cyan-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5 drop-shadow-md"><path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4zm0 4.5l4 3-4 6-4-6 4-3z"/></svg>` };
-    return { title: "Titan", color: "text-yellow-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]"><path d="M2 19h20v2H2v-2zm1-2l3-11 4 5 2-8 2 8 4-5 3 11H3z"/></svg>` };
-}
-
 function toggleMenu() { 
     document.getElementById('drawer').classList.toggle('-translate-x-full'); 
     document.getElementById('drawer-overlay').classList.toggle('hidden-view'); 
@@ -169,6 +202,7 @@ function navigate(viewName) {
     else if(viewName === 'gym-routes') { showView('view-gym-routes'); switchTab(currentTab); }
     else if(viewName === 'settings') { showView('view-settings'); }
     else if(viewName === 'super-admin') { showView('view-super-admin'); }
+    else if(viewName === 'league') { loadLeagueView(); showView('view-league'); }
 }
 
 let isLoginMode = true;
@@ -266,26 +300,6 @@ function logout() {
     showView('view-auth'); 
 }
 
-async function searchUserForDirector() {
-    const q = document.getElementById('sa-search-input').value.toLowerCase().trim(); if (!q) return;
-    const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-    const list = document.getElementById('sa-search-results'); list.innerHTML = ''; let found = false;
-    for(let uid in allUsers) {
-        const u = allUsers[uid]; if(!u) continue;
-        if((u.email || '').toLowerCase() === q) {
-            found = true; const isDir = u.can_create_gyms ? '<span class="text-green-500 text-xs font-bold ml-2">[DIRECTOR]</span>' : '';
-            list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><div><span>@${u.nickname || u.name}</span> <br> <span class="text-xs text-gray-500">${u.email}</span> ${isDir}</div><button onclick="makeGymDirector('${uid}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded text-xs font-bold transition-colors">Grant Rights</button></div>`;
-        }
-    }
-    if(!found) list.innerHTML = '<p class="text-gray-500 text-sm">User not found</p>';
-}
-
-async function makeGymDirector(uid) { 
-    const res = await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true }); 
-    if(res) { showNotify("Rights granted!"); searchUserForDirector(); } 
-}
-
-// 🔥 ЧИСТЫЕ ФУНКЦИИ ЗАГРУЗКИ (БЕЗ СТАРЫХ ОШИБОК) 🔥
 async function uploadOnboardAvatar(input) {
     let fileObj = input.files[0]; if(!fileObj) return; 
     showNotify("Optimizing & Uploading...");
@@ -463,14 +477,14 @@ async function loadHomeView() {
     const history = profile.ascents_history; 
     document.getElementById('stat-total').innerText = history.length;
     const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
-    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-";
-    document.getElementById('stat-max').innerText = maxGrade;
+    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "1";
+    document.getElementById('stat-max').innerText = grades.length ? maxGrade : "-";
     
     const totalPoints = getPoints(history); 
-    const rankData = getRank(totalPoints); 
+    const league = getLeagueInfo(totalPoints, maxGrade); 
     const rankEl = document.getElementById('profile-rank');
-    rankEl.innerHTML = `<div class="flex items-center justify-center">${rankData.svg} <span>${rankData.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
-    rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${rankData.color}`;
+    rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
+    rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
     
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${profile.user_id}` }) || {}; 
     const likeKeys = Object.keys(likes).filter(k => likes[k]);
@@ -540,6 +554,86 @@ async function acceptFriend(senderId, accept) {
     loadFriendRequests();
 }
 
+// 🔥 ГЕНЕРАТОР ЭКРАНА ЛИГИ 🔥
+function loadLeagueView() {
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    const history = normArr(profile.ascents_history || []);
+    const points = getPoints(history);
+    const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "1";
+    
+    const league = getLeagueInfo(points, maxGrade);
+    const container = document.getElementById('league-content');
+    
+    let html = `<h2 class="text-2xl font-black mb-6 text-center uppercase tracking-widest text-white">Your League</h2>`;
+    
+    // Текущая лига (Карточка)
+    html += `
+    <div class="bg-gray-800 p-6 rounded-2xl flex flex-col items-center shadow-lg relative overflow-hidden mb-8 border border-gray-700">
+        <div class="${league.current.color} scale-150 mb-4">${league.current.svg}</div>
+        <h3 class="text-3xl font-black uppercase tracking-wider ${league.current.color}">${league.current.title}</h3>
+        <p class="text-gray-400 mt-2 font-bold">${points} PTS</p>
+        <p class="text-xs text-gray-500 mt-1">Max Grade: <span class="text-white">${maxGrade !== "1" ? maxGrade : "None"}</span></p>
+    </div>`;
+    
+    // Блок Прогресса / Босса
+    if (league.next) {
+        html += `<div class="mb-8">`;
+        html += `<h4 class="text-sm font-bold text-gray-400 mb-2 uppercase">Progress to ${league.next.title}</h4>`;
+        
+        if (league.isBossLocked) {
+            html += `
+            <div class="bg-red-900/30 border border-red-500 p-4 rounded-xl mb-3 shadow-lg">
+                <p class="text-red-400 font-bold text-center text-sm mb-1">⚠️ POINTS REACHED!</p>
+                <p class="text-gray-300 text-center text-xs">To enter the <span class="${league.next.color} font-bold">${league.next.title}</span> league, you must defeat the boss:</p>
+                <div class="mt-3 bg-red-600 text-white text-center py-3 rounded font-black text-lg shadow-lg">
+                    CLIMB A ${league.next.minGrade} OR HARDER
+                </div>
+            </div>`;
+        } else {
+            html += `
+            <div class="flex justify-between text-xs font-bold mb-1">
+                <span class="text-gray-400">${points} PTS</span>
+                <span class="text-gray-400">${league.next.minPts} PTS</span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-4 mb-2 shadow-inner overflow-hidden border border-gray-700">
+                <div class="bg-blue-500 h-4 rounded-full transition-all duration-1000 shadow-md" style="width: ${league.percent}%"></div>
+            </div>
+            <p class="text-center text-xs text-gray-500 font-bold mb-4">Boss Requirement: Climb a ${league.next.minGrade}</p>
+            `;
+        }
+        html += `</div>`;
+    } else {
+        html += `<div class="text-center text-yellow-400 font-black text-xl mb-8">🏆 YOU REACHED MAX LEAGUE! 🏆</div>`;
+    }
+    
+    // Список всех лиг
+    html += `<h4 class="text-sm font-bold text-gray-400 mb-4 uppercase">All Leagues</h4><div class="space-y-3">`;
+    RANKS.forEach((r) => {
+        const isCurrent = r.id === league.current.id;
+        const isLocked = r.id > league.current.id;
+        
+        let bgClass = isCurrent ? 'bg-gray-700 border border-blue-500 shadow-lg scale-105' : 'bg-gray-900 border border-gray-800 opacity-70';
+        if (!isLocked && !isCurrent) bgClass = 'bg-gray-800 border border-gray-700'; 
+        
+        html += `
+        <div class="${bgClass} p-4 rounded-xl flex items-center justify-between transition-all">
+            <div class="flex items-center">
+                <div class="${isLocked ? 'text-gray-600' : r.color} mr-3">${r.svg}</div>
+                <div>
+                    <p class="font-bold ${isLocked ? 'text-gray-500' : r.color}">${r.title}</p>
+                    <p class="text-[10px] text-gray-500 uppercase mt-0.5">${r.minPts} PTS • Boss: ${r.minGrade}</p>
+                </div>
+            </div>
+            ${isCurrent ? '<span class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase">Current</span>' : ''}
+            ${isLocked ? '<span class="text-gray-600 text-sm">🔒</span>' : (!isCurrent ? '<span class="text-green-500 text-sm font-bold">✓</span>' : '')}
+        </div>`;
+    });
+    html += `</div>`;
+    
+    container.innerHTML = html;
+}
+
 async function loadFriendsView() {
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     const friends = await apiCall('/api/db/get', { path: `friends/${profile.user_id}` }) || {}; 
@@ -554,7 +648,7 @@ async function loadFriendsView() {
     for(let fId in friends) { 
         const u = allUsers[fId]; 
         if(!u) continue; 
-        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`; 
+        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors shadow"><span>@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-sm font-bold">Profile ></span></div>`; 
     }
 }
 
@@ -568,7 +662,7 @@ async function loadGymsView() {
     for(let gId in gyms) { 
         const g = gyms[gId]; 
         if(!g || !g.id) continue; 
-        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold">Enter ></span></div>`; 
+        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow"><div><h3 class="font-bold text-lg">${g.name}</h3><p class="text-gray-400 text-xs">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold">Enter ></span></div>`; 
     }
 }
 
@@ -771,7 +865,7 @@ async function loadGallery() {
             
             const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
             const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sector: ${gymSectors[b.sector_id]}` : '';
-            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
+            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg cursor-pointer flex justify-between items-center transition-colors mb-2 shadow"><div><h4 class="font-bold text-lg">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-xs">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-xs mt-1 font-bold">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
         }
     }
     if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6">No routes found.</p>`;
@@ -896,8 +990,9 @@ async function loadGymClimbers() {
         const history = normArr(allAscents[uid]);
         const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
         const maxGradeIdx = grades.length ? Math.max(...grades.map(g => ALL_GRADES.indexOf(g))) : -1;
+        const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : "1";
         const points = getPoints(history); 
-        currentClimbersData.push({ uid: uid, user: u, points: points, maxGrade: maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : '-', totalAscents: grades.length });
+        currentClimbersData.push({ uid: uid, user: u, points: points, maxGrade: maxGrade, totalAscents: grades.length });
     }
     currentClimbersData.sort((a, b) => { 
         if (b.points !== a.points) return b.points - a.points; 
@@ -916,13 +1011,12 @@ function renderClimbers() {
     
     currentClimbersData.forEach(c => {
         const nameStr = (c.user.nickname || c.user.name || 'User').toLowerCase();
-        const realStr = ((c.user.first_name || '') + ' ' + (c.user.last_name || '')).toLowerCase();
-        const emailStr = (c.user.email || '').toLowerCase();
         
-        if (nameStr.includes(q) || realStr.includes(q) || emailStr.includes(q)) {
+        if (nameStr.includes(q)) {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
-            const rankData = getRank(c.points);
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5">Max: <span class="text-red-400">${c.maxGrade}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
+            const league = getLeagueInfo(c.points, c.maxGrade);
+            const rankData = league.current;
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded-lg flex justify-between items-center cursor-pointer mb-2 hover:bg-gray-700 transition-colors"><div class="flex items-center space-x-3"><span class="w-6 text-center text-lg ${rankNumColor}">#${rank}</span><div><p class="font-bold">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[10px] uppercase font-bold tracking-wider mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points} PTS)</span></div><p class="text-xs text-gray-400 mt-0.5">Max: <span class="text-red-400">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-sm font-bold">></span></div>`;
         } 
         rank++;
     });
@@ -941,18 +1035,20 @@ async function loadAdminPanel() {
     }
 }
 
-async function searchUsersForAdmin() {
+function searchUsersForAdmin() {
     const q = document.getElementById('admin-search-input').value.toLowerCase(); 
-    const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
-    const list = document.getElementById('admin-search-results'); 
-    list.innerHTML = '';
-    
-    for(let uid in allUsers) { 
-        const u = allUsers[uid]; 
-        if(u && ((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) {
-            list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors">Make Setter</button></div>`; 
+    apiCall('/api/db/get', { path: `users` }).then(allUsers => {
+        allUsers = allUsers || {};
+        const list = document.getElementById('admin-search-results'); 
+        list.innerHTML = '';
+        
+        for(let uid in allUsers) { 
+            const u = allUsers[uid]; 
+            if(u && ((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) {
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-700 p-3 rounded mb-2"><span>@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded text-xs font-bold transition-colors">Make Setter</button></div>`; 
+            }
         }
-    }
+    });
 }
 
 async function setGymRole(uid, role) { 
@@ -1056,7 +1152,7 @@ async function saveRouteEdit() {
     activeBoulder.description = document.getElementById('edit-rt-desc').value;
     
     const res = await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
-    if (!res) return;
+    if (!res) return; 
     
     showNotify("Route updated!"); 
     toggleEditRouteForm(); 
@@ -1066,7 +1162,7 @@ async function saveRouteEdit() {
 async function deleteRoute() {
     if(!confirm("Are you sure you want to delete this route permanently?")) return;
     const res = await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, method: 'DELETE' }); 
-    if (!res) return;
+    if (!res) return; 
     
     if(activeBoulder.image_url) apiCall('/api/delete_image', { url: activeBoulder.image_url }); 
     showNotify("Route deleted!"); 
@@ -1089,14 +1185,14 @@ async function openOtherProfile(uid, source = 'home') {
     const history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${uid}` })); 
     document.getElementById('op-stat-total').innerText = history.length;
     const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
-    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "-"; 
-    document.getElementById('op-stat-max').innerText = maxGrade; 
+    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "1"; 
+    document.getElementById('op-stat-max').innerText = grades.length ? maxGrade : "-"; 
     
     const totalPoints = getPoints(history); 
-    const rankData = getRank(totalPoints); 
+    const league = getLeagueInfo(totalPoints, maxGrade); 
     const rankEl = document.getElementById('op-rank');
-    rankEl.innerHTML = `<div class="flex items-center justify-center">${rankData.svg} <span>${rankData.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`; 
-    rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${rankData.color}`;
+    rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-xs ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`; 
+    rankEl.className = `text-sm font-bold mt-1 uppercase tracking-widest ${league.current.color}`;
     
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${uid}` }) || {}; 
     isOpLiked = likes[profile.user_id] === true;
