@@ -1255,6 +1255,46 @@ async function deleteAccount() {
     showNotify("Account deleted");
 }
 
+async function searchUserForDirector() {
+    const q = document.getElementById('sa-search-input').value.toLowerCase().trim(); 
+    if (!q) return;
+    
+    const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+    const list = document.getElementById('sa-search-results'); 
+    list.innerHTML = ''; 
+    let found = false;
+    
+    for(let uid in allUsers) {
+        const u = allUsers[uid]; 
+        if(!u) continue;
+        
+        const emailMatch = (u.email || '').toLowerCase().includes(q);
+        const nameMatch = (u.nickname || u.name || '').toLowerCase().includes(q);
+        
+        if(emailMatch || nameMatch) {
+            found = true; 
+            const isDir = u.can_create_gyms ? '<span class="text-green-500 text-[8px] font-bold ml-2 uppercase tracking-widest border border-green-800 px-1 py-0.5 rounded bg-green-900 bg-opacity-30">Director</span>' : '';
+            
+            list.innerHTML += `
+            <div class="flex justify-between items-center bg-gray-900 border border-gray-800 p-3 rounded mb-2 shadow">
+                <div class="flex flex-col">
+                    <span class="font-bold text-xs uppercase tracking-wider">@${u.nickname || u.name} ${isDir}</span>
+                    <span class="text-[10px] text-gray-500 mt-0.5 tracking-wider">${u.email}</span>
+                </div>
+                <button onclick="makeGymDirector('${uid}')" class="bg-purple-900 hover:bg-purple-800 border border-purple-700 px-3 py-1.5 rounded text-[10px] font-bold transition-colors uppercase tracking-widest text-purple-100 shadow">Grant Rights</button>
+            </div>`;
+        }
+    }
+    if(!found) list.innerHTML = '<p class="text-gray-500 text-[10px] uppercase tracking-widest text-center mt-4">User not found</p>';
+}
+
+async function makeGymDirector(uid) { 
+    const res = await apiCall('/api/db/save', { path: `users/${uid}/can_create_gyms`, payload: true }); 
+    if(res) { 
+        showNotify("Rights granted"); 
+        searchUserForDirector(); 
+    } 
+}
 window.onload = () => {
     const profileStr = localStorage.getItem('user_profile');
     if(profileStr) { 
