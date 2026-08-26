@@ -37,27 +37,22 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
-// 🔥 КОСМЕТИКА 🔥
+// 🔥 КОСМЕТИКА: БАЗА ПРЕДМЕТОВ (40 ШТУК) 🔥
 let currentStoreTab = 'backgrounds';
 let currentInvTab = 'backgrounds';
 let currentGiftItemId = null;
 
 const STORE_ITEMS = [
-    // Backgrounds (15 шт)
+    // Backgrounds (10 шт)
     { id: 'bg_dark', type: 'backgrounds', name: 'Dark Slate', rarity: 'Common', price: 5000, cssClass: 'bg-dark-slate', color: 'text-gray-400' },
     { id: 'bg_chalk', type: 'backgrounds', name: 'Chalk Dust', rarity: 'Common', price: 5000, cssClass: 'bg-chalk', color: 'text-gray-400' },
     { id: 'bg_ocean', type: 'backgrounds', name: 'Deep Ocean', rarity: 'Rare', price: 15000, cssClass: 'bg-ocean', color: 'text-blue-400' },
     { id: 'bg_hex', type: 'backgrounds', name: 'Hexagon', rarity: 'Rare', price: 15000, cssClass: 'bg-hex', color: 'text-blue-400' },
-    { id: 'bg_blood', type: 'backgrounds', name: 'Crimson Blood', rarity: 'Rare', price: 15000, cssClass: 'bg-blood', color: 'text-blue-400' },
-    { id: 'bg_jungle', type: 'backgrounds', name: 'Deep Jungle', rarity: 'Rare', price: 15000, cssClass: 'bg-jungle', color: 'text-blue-400' },
     { id: 'bg_topo', type: 'backgrounds', name: 'Topographic Map', rarity: 'Epic', price: 50000, cssClass: 'bg-topo', color: 'text-purple-400' },
     { id: 'bg_neon', type: 'backgrounds', name: 'Neon Cyber-Grid', rarity: 'Epic', price: 50000, cssClass: 'bg-neon', color: 'text-purple-400' },
     { id: 'bg_matrix', type: 'backgrounds', name: 'Hacker Rain', rarity: 'Epic', price: 50000, cssClass: 'bg-matrix', color: 'text-purple-400' },
-    { id: 'bg_toxicbg', type: 'backgrounds', name: 'Toxic Hazard', rarity: 'Epic', price: 50000, cssClass: 'bg-toxic-bg', color: 'text-purple-400' },
     { id: 'bg_ember', type: 'backgrounds', name: 'Ember Particles', rarity: 'Legendary', price: 150000, cssClass: 'bg-ember', color: 'text-yellow-400' },
     { id: 'bg_void', type: 'backgrounds', name: 'Abyssal Void', rarity: 'Legendary', price: 150000, cssClass: 'bg-void', color: 'text-yellow-400' },
-    { id: 'bg_magmabg', type: 'backgrounds', name: 'Molten Magma', rarity: 'Legendary', price: 150000, cssClass: 'bg-magma-bg', color: 'text-yellow-400' },
-    { id: 'bg_vipgold', type: 'backgrounds', name: 'VIP Gold', rarity: 'Legendary', price: 150000, cssClass: 'bg-vipgold', color: 'text-yellow-400' },
     { id: 'bg_rgb', type: 'backgrounds', name: 'RGB Synthwave', rarity: 'Mythic', price: 300000, cssClass: 'bg-rgb', color: 'text-red-500' },
 
     // Borders (10 шт)
@@ -82,7 +77,19 @@ const STORE_ITEMS = [
     { id: 'n_neon', type: 'names', name: 'Neon Pink', rarity: 'Epic', price: 50000, cssClass: 'n-neon', color: 'text-purple-400' },
     { id: 'n_ghost', type: 'names', name: 'Ghost', rarity: 'Legendary', price: 150000, cssClass: 'n-ghost', color: 'text-yellow-400' },
     { id: 'n_gold', type: 'names', name: 'VIP Gold', rarity: 'Legendary', price: 150000, cssClass: 'n-gold', color: 'text-yellow-400' },
-    { id: 'n_rgb', type: 'names', name: 'Rainbow RGB', rarity: 'Mythic', price: 300000, cssClass: 'n-rgb', color: 'text-red-500' }
+    { id: 'n_rgb', type: 'names', name: 'Rainbow RGB', rarity: 'Mythic', price: 300000, cssClass: 'n-rgb', color: 'text-red-500' },
+
+    // Cards / Panels (10 шт)
+    { id: 'c_iron', type: 'cards', name: 'Iron Slate', rarity: 'Common', price: 5000, cssClass: 'c-iron', color: 'text-gray-400' },
+    { id: 'c_chalk', type: 'cards', name: 'Chalk Outline', rarity: 'Common', price: 5000, cssClass: 'c-chalk', color: 'text-gray-400' },
+    { id: 'c_neon', type: 'cards', name: 'Neon Edge', rarity: 'Rare', price: 15000, cssClass: 'c-neon', color: 'text-blue-400' },
+    { id: 'c_crimson', type: 'cards', name: 'Crimson Glow', rarity: 'Rare', price: 15000, cssClass: 'c-crimson', color: 'text-blue-400' },
+    { id: 'c_jungle', type: 'cards', name: 'Overgrown Vines', rarity: 'Epic', price: 50000, cssClass: 'c-jungle', color: 'text-purple-400' },
+    { id: 'c_cyber', type: 'cards', name: 'Cyber Circuit', rarity: 'Epic', price: 50000, cssClass: 'c-cyber', color: 'text-purple-400' },
+    { id: 'c_gold', type: 'cards', name: 'Golden Frame', rarity: 'Legendary', price: 150000, cssClass: 'c-gold', color: 'text-yellow-400' },
+    { id: 'c_magma', type: 'cards', name: 'Magma Crack', rarity: 'Legendary', price: 150000, cssClass: 'c-magma', color: 'text-yellow-400' },
+    { id: 'c_void', type: 'cards', name: 'Void Edge', rarity: 'Legendary', price: 150000, cssClass: 'c-void', color: 'text-yellow-400' },
+    { id: 'c_rgb', type: 'cards', name: 'RGB Gamer', rarity: 'Mythic', price: 300000, cssClass: 'c-rgb', color: 'text-red-500' }
 ];
 
 const RANKS = [
@@ -211,10 +218,12 @@ function getPoints(history) {
     return total;
 }
 
+// 🔥 ГЛОБАЛЬНАЯ ПРИМЕНЯЛКА КОСМЕТИКИ 🔥
 function applyCosmetics(profileObj, avatarEl, nameEl) {
     if(!profileObj) return;
     if(!profileObj.equipped) profileObj.equipped = {};
     
+    // Background Global
     const bgApp = document.getElementById('app-bg');
     if(bgApp) {
         bgApp.className = "fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none bg-default";
@@ -224,6 +233,7 @@ function applyCosmetics(profileObj, avatarEl, nameEl) {
         }
     }
 
+    // Avatar
     if(avatarEl) {
         avatarEl.className = "w-24 h-24 rounded-full object-cover bg-black shadow-lg transition-all duration-300 border-2 border-gray-700";
         if(profileObj.equipped.borders) {
@@ -231,6 +241,8 @@ function applyCosmetics(profileObj, avatarEl, nameEl) {
             if(item) avatarEl.className = `w-24 h-24 rounded-full object-cover bg-black shadow-lg transition-all duration-300 ${item.cssClass}`;
         }
     }
+
+    // Name
     if(nameEl) {
         nameEl.className = "text-xl font-black uppercase tracking-wider text-center transition-all duration-300 text-white";
         if(profileObj.equipped.names) {
@@ -238,6 +250,27 @@ function applyCosmetics(profileObj, avatarEl, nameEl) {
             if(item) nameEl.className = `text-xl font-black uppercase tracking-wider text-center transition-all duration-300 ${item.cssClass}`;
         }
     }
+
+    // Cards (Серые Квадратики)
+    const cards = document.querySelectorAll('.cosmetic-card');
+    cards.forEach(card => {
+        let baseClass = card.getAttribute('data-base-class');
+        if (!baseClass) {
+            baseClass = card.className;
+            card.setAttribute('data-base-class', baseClass);
+        }
+        
+        if (profileObj.equipped && profileObj.equipped.cards) {
+            const item = STORE_ITEMS.find(i => i.id === profileObj.equipped.cards);
+            if(item) {
+                card.className = baseClass + ' ' + item.cssClass;
+            } else {
+                card.className = baseClass;
+            }
+        } else {
+            card.className = baseClass;
+        }
+    });
 }
 
 function toggleMenu() { 
@@ -535,9 +568,6 @@ async function loadHomeView() {
     localStorage.setItem('user_profile', JSON.stringify(localProfile));
     let profile = localProfile;
     
-    const coinsEl = document.getElementById('profile-coins');
-    if(coinsEl) coinsEl.innerText = profile.coins;
-    
     const appbarCoinsEl = document.getElementById('appbar-coins');
     if(appbarCoinsEl) appbarCoinsEl.innerText = profile.coins;
     
@@ -571,7 +601,6 @@ async function loadHomeView() {
     rankEl.className = `text-xs font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
     rankEl.onclick = () => navigate('league'); 
     
-    // ВОССТАНОВИЛ ЛАЙКИ
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${profile.user_id}` }) || {}; 
     const likeKeys = Object.keys(likes).filter(k => likes[k]);
     document.getElementById('my-likes-count').innerText = likeKeys.length;
@@ -641,9 +670,10 @@ async function acceptFriend(senderId, accept) {
     loadFriendRequests();
 }
 
+// 🔥 ИНВЕНТАРЬ (ГАРДЕРОБ) 🔥
 function switchInventoryTab(tab) {
     currentInvTab = tab;
-    ['backgrounds', 'borders', 'names'].forEach(t => {
+    ['backgrounds', 'borders', 'names', 'cards'].forEach(t => {
         const btn = document.getElementById(`inv-tab-${t}`);
         if(btn) {
             if(t === tab) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800', 'border-gray-700'); }
@@ -684,6 +714,7 @@ function renderInventoryItems() {
         if (item.type === 'backgrounds') previewHtml = `<div class="w-full h-16 rounded-t-lg bg-gray-900 ${item.cssClass} mb-3 border-b border-gray-700"></div>`;
         else if (item.type === 'borders') previewHtml = `<div class="w-12 h-12 rounded-full bg-gray-900 ${item.cssClass} mx-auto mb-2 mt-2"></div>`;
         else if (item.type === 'names') previewHtml = `<div class="text-center font-black text-sm mb-2 mt-4 uppercase tracking-widest ${item.cssClass}">Example</div>`;
+        else if (item.type === 'cards') previewHtml = `<div class="w-full h-12 rounded bg-gray-800 ${item.cssClass} mb-3 flex items-center justify-center"><span class="text-[8px] text-gray-500 uppercase tracking-widest font-bold">Panel</span></div>`;
 
         list.innerHTML += `
         <div class="bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-700 flex flex-col ${isEquipped ? 'ring-2 ring-blue-500' : ''}">
@@ -711,9 +742,10 @@ async function equipItem(itemId, type, equip) {
     showNotify(equip ? "Equipped" : "Unequipped");
 }
 
+// 🔥 ЛОГИКА МАГАЗИНА (STORE) 🔥
 function switchStoreTab(tab) {
     currentStoreTab = tab;
-    ['backgrounds', 'borders', 'names'].forEach(t => {
+    ['backgrounds', 'borders', 'names', 'cards'].forEach(t => {
         const btn = document.getElementById(`store-tab-${t}`);
         if(btn) {
             if(t === tab) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800', 'border-gray-700'); }
@@ -760,6 +792,7 @@ function renderStoreItems() {
         if (item.type === 'backgrounds') previewHtml = `<div class="w-full h-16 rounded-t-lg bg-gray-900 ${item.cssClass} mb-3 border-b border-gray-700"></div>`;
         else if (item.type === 'borders') previewHtml = `<div class="w-12 h-12 rounded-full bg-gray-900 ${item.cssClass} mx-auto mb-2 mt-2"></div>`;
         else if (item.type === 'names') previewHtml = `<div class="text-center font-black text-sm mb-2 mt-4 uppercase tracking-widest ${item.cssClass}">Example</div>`;
+        else if (item.type === 'cards') previewHtml = `<div class="w-full h-12 rounded bg-gray-800 ${item.cssClass} mb-3 flex items-center justify-center"><span class="text-[8px] text-gray-500 uppercase tracking-widest font-bold">Panel</span></div>`;
 
         list.innerHTML += `
         <div class="bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-700 flex flex-col">

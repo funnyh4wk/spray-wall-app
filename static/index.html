@@ -25,15 +25,13 @@
         .bg-ember { background: radial-gradient(circle at 50% 100%, #450a0a, #000); }
         .bg-void { background: radial-gradient(circle at 50% 50%, #2e1065, #000); animation: pulse-void 8s infinite alternate; }
         .bg-rgb { background: linear-gradient(270deg, #3b0000, #003b00, #00003b); background-size: 400% 400%; animation: rgb-bg 15s ease infinite; }
-        
-        /* НОВЫЕ ФОНЫ */
         .bg-blood { background-color: #000; box-shadow: inset 0 0 150px #7f1d1d; }
         .bg-jungle { background-color: #000; box-shadow: inset 0 50px 150px #064e3b; }
         .bg-toxic-bg { background-color: #000; box-shadow: inset 0 -50px 150px #166534; animation: pulse-toxic-bg 3s infinite alternate; }
         .bg-magma-bg { background-color: #000; animation: pulse-magma 3s infinite alternate; }
         .bg-vipgold { background: linear-gradient(135deg, #000 0%, #422006 50%, #000 100%); background-size: 200% 200%; animation: rgb-bg 10s ease infinite; }
 
-        /* 🔥 BORDERS (РАМКИ) 🔥 */
+        /* 🔥 BORDERS (РАМКИ АВАТАРКИ) 🔥 */
         .b-white { border: 2px solid #fff !important; }
         .b-steel { border: 2px solid #9ca3af !important; }
         .b-ruby { border: 2px solid #e11d48 !important; box-shadow: 0 0 10px #e11d48; }
@@ -57,6 +55,19 @@
         .n-gold { background: linear-gradient(to right, #fde047, #b45309); -webkit-background-clip: text; color: transparent !important; text-shadow: 0px 2px 4px rgba(0,0,0,0.4); font-weight: 900; }
         .n-rgb { background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); background-size: 200% auto; -webkit-background-clip: text; color: transparent !important; animation: rgb-text 3s linear infinite; }
 
+        /* 🔥 PANELS (ОБВОДКА КАРТОЧЕК / КВАДРАТОВ) 🔥 */
+        .c-iron { border-color: #cbd5e1 !important; }
+        .c-chalk { border: 2px dashed #9ca3af !important; }
+        .c-neon { border-color: #06b6d4 !important; box-shadow: 0 0 10px rgba(6,182,212,0.5), inset 0 0 10px rgba(6,182,212,0.2) !important; }
+        .c-crimson { border-color: #e11d48 !important; box-shadow: 0 0 10px rgba(225,29,72,0.5), inset 0 0 10px rgba(225,29,72,0.2) !important; }
+        .c-jungle { border: 2px dashed #22c55e !important; box-shadow: 0 0 15px rgba(21,128,61,0.6), inset 0 0 20px rgba(21,128,61,0.2) !important; background-color: rgba(6,78,59,0.3) !important; }
+        .c-cyber { border-color: #a855f7 !important; box-shadow: -2px 0 10px #a855f7, 2px 0 10px #06b6d4, inset 0 0 10px rgba(168,85,247,0.3) !important; border-radius: 0 !important; }
+        .c-gold { border-color: #fbbf24 !important; box-shadow: 0 0 15px rgba(251,191,36,0.5), inset 0 0 15px rgba(251,191,36,0.3) !important; }
+        .c-magma { animation: p-magma 2s infinite alternate !important; }
+        .c-void { animation: p-void 3s infinite alternate !important; }
+        .c-rgb { animation: p-rgb 3s linear infinite !important; }
+
+        /* АНИМАЦИИ */
         @keyframes pulse-void { 0% { background-color: #2e1065; } 100% { background-color: #000; } }
         @keyframes rgb-bg { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes pulse-glow { 0% { box-shadow: 0 0 5px currentColor; } 100% { box-shadow: 0 0 20px currentColor; } }
@@ -64,6 +75,10 @@
         @keyframes glitch-border { 0% { border-color: #0ff; transform: translate(1px, 1px); } 50% { border-color: #f0f; transform: translate(-1px, -1px); } 100% { border-color: #fff; transform: translate(0); } }
         @keyframes pulse-magma { 0% { box-shadow: inset 0 -50px 100px #7f1d1d; } 100% { box-shadow: inset 0 -100px 200px #dc2626; } }
         @keyframes pulse-toxic-bg { 0% { box-shadow: inset 0 -50px 100px #14532d; } 100% { box-shadow: inset 0 -100px 150px #16a34a; } }
+        
+        @keyframes p-magma { 0% { border-color: #ef4444; box-shadow: 0 0 5px #ef4444, inset 0 0 5px #ef4444; } 100% { border-color: #f97316; box-shadow: 0 0 15px #f97316, inset 0 0 10px #f97316; } }
+        @keyframes p-void { 0% { border-color: #4c1d95; box-shadow: 0 0 5px #4c1d95, inset 0 0 5px #4c1d95; } 100% { border-color: #c084fc; box-shadow: 0 0 15px #c084fc, inset 0 0 10px #c084fc; } }
+        @keyframes p-rgb { 0% { border-color: #ff0000; box-shadow: 0 0 10px #ff0000, inset 0 0 5px #ff0000; } 33% { border-color: #00ff00; box-shadow: 0 0 10px #00ff00, inset 0 0 5px #00ff00; } 66% { border-color: #0000ff; box-shadow: 0 0 10px #0000ff, inset 0 0 5px #0000ff; } 100% { border-color: #ff0000; box-shadow: 0 0 10px #ff0000, inset 0 0 5px #ff0000; } }
     </style>
 </head>
 <body class="text-white min-h-screen relative">
@@ -144,8 +159,8 @@
         <!-- HOME VIEW -->
         <div id="view-home" class="w-full p-4 hidden-view pb-20">
             
-            <!-- Profile Info -->
-            <div id="profile-display" class="flex flex-col items-center mb-6 bg-gray-800 bg-opacity-70 p-5 rounded-lg border border-gray-700 shadow-xl backdrop-blur-sm">
+            <!-- Profile Info (ДОБАВЛЕН КЛАСС cosmetic-card) -->
+            <div id="profile-display" class="cosmetic-card flex flex-col items-center mb-6 bg-gray-800 bg-opacity-70 p-5 rounded-lg border border-gray-700 shadow-xl backdrop-blur-sm transition-all duration-300">
                 <label class="cursor-pointer relative group mb-3 inline-block">
                     <img id="profile-avatar" src="" class="w-24 h-24 rounded-full object-cover border-2 border-gray-700 bg-black shadow-lg transition-all duration-300">
                     <div class="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1.5 border border-gray-900 transition-colors shadow">
@@ -165,8 +180,8 @@
                 </div>
             </div>
             
-            <!-- Edit Profile Form -->
-            <div id="profile-edit" class="flex flex-col w-full mb-6 hidden-view bg-gray-800 p-4 rounded border border-gray-700 shadow-xl">
+            <!-- Edit Profile Form (ДОБАВЛЕН КЛАСС cosmetic-card) -->
+            <div id="profile-edit" class="cosmetic-card flex flex-col w-full mb-6 hidden-view bg-gray-800 p-4 rounded border border-gray-700 shadow-xl transition-all duration-300">
                 <h3 class="font-bold mb-3 text-center uppercase tracking-widest text-xs text-gray-300">Edit Profile</h3>
                 <input type="text" id="edit-realname" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none border border-gray-700" placeholder="Real Name">
                 <input type="text" id="edit-name" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none border border-gray-700" placeholder="Nickname">
@@ -177,20 +192,20 @@
                 </div>
             </div>
 
-            <!-- Stats -->
+            <!-- Stats (ДОБАВЛЕН КЛАСС cosmetic-card) -->
             <div class="grid grid-cols-2 gap-3 mb-5">
-                <div class="bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700">
+                <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700 transition-all duration-300">
                     <span class="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-1">Max Grade</span>
                     <span id="stat-max" class="text-2xl font-black text-red-400">-</span>
                 </div>
-                <div class="bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700">
+                <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700 transition-all duration-300">
                     <span class="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-1">Total Ascents</span>
                     <span id="stat-total" class="text-2xl font-black text-green-400">0</span>
                 </div>
             </div>
 
-            <!-- ВОССТАНОВЛЕННЫЕ ЛАЙКИ -->
-            <div class="bg-gray-800 bg-opacity-80 p-3 rounded mb-5 shadow border border-gray-700">
+            <!-- ВОССТАНОВЛЕННЫЕ ЛАЙКИ (ДОБАВЛЕН КЛАСС cosmetic-card) -->
+            <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded mb-5 shadow border border-gray-700 transition-all duration-300">
                 <div class="text-center mb-2">
                     <span class="font-bold tracking-widest text-[9px] uppercase text-pink-500">Likes</span>
                     <span id="my-likes-count" class="block text-2xl font-black text-pink-500">0</span>
@@ -201,20 +216,20 @@
                 <div id="my-likes-list" class="space-y-1 mt-2 hidden-view bg-gray-900 p-2 rounded max-h-24 overflow-y-auto text-xs"></div>
             </div>
 
-            <!-- Chart -->
-            <div class="bg-gray-800 bg-opacity-80 p-3 rounded mb-5 shadow border border-gray-700">
+            <!-- Chart (ДОБАВЛЕН КЛАСС cosmetic-card) -->
+            <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded mb-5 shadow border border-gray-700 transition-all duration-300">
                 <h3 class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Grade Pyramid</h3>
                 <div id="stat-chart" class="flex items-end justify-center h-24 w-full overflow-x-auto pb-1"></div>
             </div>
 
-            <!-- ВОССТАНОВЛЕННЫЙ КАЛЕНДАРЬ -->
-            <div class="bg-gray-800 bg-opacity-80 p-3 rounded mb-5 shadow border border-gray-700">
+            <!-- ВОССТАНОВЛЕННЫЙ КАЛЕНДАРЬ (ДОБАВЛЕН КЛАСС cosmetic-card) -->
+            <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded mb-5 shadow border border-gray-700 transition-all duration-300">
                 <h3 class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Logbook (7 Days)</h3>
                 <div id="logbook-days" class="flex justify-between space-x-1 mb-3 overflow-x-auto pb-1"></div>
                 <div id="logbook-entries" class="space-y-2"></div>
             </div>
 
-            <div id="friend-requests-box" class="bg-gray-800 p-3 rounded mb-5 shadow border border-blue-900 hidden-view">
+            <div id="friend-requests-box" class="cosmetic-card bg-gray-800 p-3 rounded mb-5 shadow border border-blue-900 hidden-view transition-all duration-300">
                 <h3 class="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-2">Friend Requests</h3>
                 <div id="friend-requests-list" class="space-y-2"></div>
             </div>
@@ -233,6 +248,8 @@
                     <button id="inv-tab-backgrounds" onclick="switchInventoryTab('backgrounds')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-blue-600 whitespace-nowrap uppercase tracking-widest">Backgrounds</button>
                     <button id="inv-tab-borders" onclick="switchInventoryTab('borders')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest border border-gray-700">Borders</button>
                     <button id="inv-tab-names" onclick="switchInventoryTab('names')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest border border-gray-700">Names</button>
+                    <!-- НОВАЯ ВКЛАДКА PANELS -->
+                    <button id="inv-tab-cards" onclick="switchInventoryTab('cards')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest border border-gray-700">Panels</button>
                 </div>
             </div>
             <div id="inventory-list" class="p-4 space-y-3"></div>
@@ -246,13 +263,14 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                     </button>
                     <h2 class="text-lg font-black uppercase tracking-widest text-yellow-400 flex-1">Store</h2>
-                    <!-- СЧЕТЧИК МАГАЗИНА -->
                     <span class="font-black text-yellow-400 flex items-center text-sm bg-gray-900 px-2 py-1 rounded border border-yellow-700 shadow"><span id="store-coins-display">0</span> <span class="text-[8px] ml-1 text-yellow-600">COINS</span></span>
                 </div>
                 <div class="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar">
                     <button id="store-tab-backgrounds" onclick="switchStoreTab('backgrounds')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-blue-600 whitespace-nowrap uppercase tracking-widest">Backgrounds</button>
                     <button id="store-tab-borders" onclick="switchStoreTab('borders')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest border border-gray-700">Borders</button>
                     <button id="store-tab-names" onclick="switchStoreTab('names')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest border border-gray-700">Names</button>
+                    <!-- НОВАЯ ВКЛАДКА PANELS -->
+                    <button id="store-tab-cards" onclick="switchStoreTab('cards')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest border border-gray-700">Panels</button>
                 </div>
             </div>
             <div id="store-list" class="p-4 space-y-3"></div>
@@ -440,12 +458,12 @@
             </div>
             
             <div id="wizard-step-3" class="hidden-view p-4 pt-6">
-                <h3 class="text-sm font-bold mb-4 text-center uppercase tracking-widest text-gray-400">Step 3: Details</h3>
+                <h3 class="text-xs font-bold mb-4 text-center uppercase tracking-widest text-gray-400">Step 3: Details</h3>
                 <input type="text" id="route-name" placeholder="Route Name" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm focus:outline-none border border-gray-700">
                 <select id="route-grade" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm appearance-none font-bold text-center focus:outline-none border border-gray-700"></select>
                 <select id="route-sector" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm appearance-none font-bold text-center hidden-view focus:outline-none border border-gray-700"></select>
                 <textarea id="route-desc" placeholder="Description / Rules (Optional)" class="w-full bg-gray-800 p-3 rounded mb-6 text-sm h-20 focus:outline-none border border-gray-700"></textarea>
-                <button onclick="saveNewRoute()" class="w-full bg-green-600 hover:bg-green-500 py-3 rounded text-sm font-bold uppercase tracking-widest shadow">Create Route</button>
+                <button onclick="saveNewRoute()" class="w-full bg-green-600 hover:bg-green-500 py-3 rounded text-xs font-bold uppercase tracking-widest shadow">Create Route</button>
             </div>
         </div>
 
@@ -492,7 +510,7 @@
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                 Back
             </button>
-            <div class="flex flex-col items-center mb-5 bg-gray-800 bg-opacity-70 p-5 rounded-lg border border-gray-700 shadow-xl backdrop-blur-sm">
+            <div class="cosmetic-card flex flex-col items-center mb-5 bg-gray-800 bg-opacity-70 p-5 rounded-lg border border-gray-700 shadow-xl backdrop-blur-sm transition-all duration-300">
                 <img id="op-avatar" src="" class="w-24 h-24 rounded-full object-cover border-2 border-gray-700 bg-black mb-3 shadow transition-all duration-300">
                 <div id="op-rank" class="mb-2"></div>
                 <h2 id="op-realname" class="text-xl font-black uppercase tracking-wider text-center transition-all duration-300 text-white"></h2>
@@ -506,17 +524,17 @@
             </div>
             
             <div class="grid grid-cols-2 gap-3 mb-5">
-                <div class="bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700">
+                <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700 transition-all duration-300">
                     <span class="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-1">Max Grade</span>
                     <span id="op-stat-max" class="text-2xl font-black text-red-400">-</span>
                 </div>
-                <div class="bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700">
+                <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded flex flex-col items-center justify-center shadow border border-gray-700 transition-all duration-300">
                     <span class="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-1">Total Ascents</span>
                     <span id="op-stat-total" class="text-2xl font-black text-green-400">0</span>
                 </div>
             </div>
             
-            <div class="bg-gray-800 bg-opacity-80 p-3 rounded shadow border border-gray-700">
+            <div class="cosmetic-card bg-gray-800 bg-opacity-80 p-3 rounded shadow border border-gray-700 transition-all duration-300">
                 <h3 class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Grade Pyramid</h3>
                 <div id="op-stat-chart" class="flex items-end justify-center h-24 w-full overflow-x-auto pb-1"></div>
             </div>
