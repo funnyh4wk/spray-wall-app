@@ -37,21 +37,47 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
-// 🔥 ИНВЕНТАРЬ И МАГАЗИН 🔥
-let currentStoreTab = 'borders';
+// 🔥 КОСМЕТИКА: БАЗА ПРЕДМЕТОВ (30 ШТУК) 🔥
+let currentStoreTab = 'backgrounds';
+let currentInvTab = 'backgrounds';
 let currentGiftItemId = null;
 
 const STORE_ITEMS = [
+    // Backgrounds
+    { id: 'bg_dark', type: 'backgrounds', name: 'Dark Slate', rarity: 'Common', price: 5000, cssClass: 'bg-dark-slate', color: 'text-gray-400' },
+    { id: 'bg_chalk', type: 'backgrounds', name: 'Chalk Dust', rarity: 'Common', price: 5000, cssClass: 'bg-chalk', color: 'text-gray-400' },
+    { id: 'bg_ocean', type: 'backgrounds', name: 'Deep Ocean', rarity: 'Rare', price: 15000, cssClass: 'bg-ocean', color: 'text-blue-400' },
+    { id: 'bg_hex', type: 'backgrounds', name: 'Hexagon', rarity: 'Rare', price: 15000, cssClass: 'bg-hex', color: 'text-blue-400' },
+    { id: 'bg_topo', type: 'backgrounds', name: 'Topographic Map', rarity: 'Epic', price: 50000, cssClass: 'bg-topo', color: 'text-purple-400' },
+    { id: 'bg_neon', type: 'backgrounds', name: 'Neon Cyber-Grid', rarity: 'Epic', price: 50000, cssClass: 'bg-neon', color: 'text-purple-400' },
+    { id: 'bg_matrix', type: 'backgrounds', name: 'Hacker Rain', rarity: 'Epic', price: 50000, cssClass: 'bg-matrix', color: 'text-purple-400' },
+    { id: 'bg_ember', type: 'backgrounds', name: 'Ember Particles', rarity: 'Legendary', price: 150000, cssClass: 'bg-ember', color: 'text-yellow-400' },
+    { id: 'bg_void', type: 'backgrounds', name: 'Abyssal Void', rarity: 'Legendary', price: 150000, cssClass: 'bg-void', color: 'text-yellow-400' },
+    { id: 'bg_rgb', type: 'backgrounds', name: 'RGB Synthwave', rarity: 'Mythic', price: 300000, cssClass: 'bg-rgb', color: 'text-red-500' },
+
     // Borders
-    { id: 'b_ruby', type: 'borders', name: 'Ruby Ring', rarity: 'Common', price: 5000, cssClass: 'cosmetic-border-ruby', color: 'text-gray-400' },
-    { id: 'b_neon', type: 'borders', name: 'Cyber Neon', rarity: 'Rare', price: 15000, cssClass: 'cosmetic-border-neon', color: 'text-blue-400' },
-    { id: 'b_toxic', type: 'borders', name: 'Toxic Hazard', rarity: 'Epic', price: 50000, cssClass: 'cosmetic-border-toxic', color: 'text-purple-400' },
-    { id: 'b_gold', type: 'borders', name: 'Golden Aura', rarity: 'Legendary', price: 150000, cssClass: 'cosmetic-border-gold', color: 'text-yellow-400' },
+    { id: 'b_white', type: 'borders', name: 'Chalk White', rarity: 'Common', price: 5000, cssClass: 'b-white', color: 'text-gray-400' },
+    { id: 'b_steel', type: 'borders', name: 'Steel Ring', rarity: 'Common', price: 5000, cssClass: 'b-steel', color: 'text-gray-400' },
+    { id: 'b_ruby', type: 'borders', name: 'Ruby Red', rarity: 'Rare', price: 15000, cssClass: 'b-ruby', color: 'text-blue-400' },
+    { id: 'b_emerald', type: 'borders', name: 'Emerald Glow', rarity: 'Rare', price: 15000, cssClass: 'b-emerald', color: 'text-blue-400' },
+    { id: 'b_sapphire', type: 'borders', name: 'Sapphire Pulse', rarity: 'Epic', price: 50000, cssClass: 'b-sapphire', color: 'text-purple-400' },
+    { id: 'b_toxic', type: 'borders', name: 'Toxic Hazard', rarity: 'Epic', price: 50000, cssClass: 'b-toxic', color: 'text-purple-400' },
+    { id: 'b_cyber', type: 'borders', name: 'Cyber Neon', rarity: 'Epic', price: 50000, cssClass: 'b-cyber', color: 'text-purple-400' },
+    { id: 'b_gold', type: 'borders', name: 'Golden Aura', rarity: 'Legendary', price: 150000, cssClass: 'b-gold', color: 'text-yellow-400' },
+    { id: 'b_magma', type: 'borders', name: 'Magma Ring', rarity: 'Legendary', price: 150000, cssClass: 'b-magma', color: 'text-yellow-400' },
+    { id: 'b_glitch', type: 'borders', name: 'Glitch Border', rarity: 'Mythic', price: 300000, cssClass: 'b-glitch', color: 'text-red-500' },
+
     // Names
-    { id: 'n_blood', type: 'names', name: 'Bloodline', rarity: 'Common', price: 5000, cssClass: 'cosmetic-name-blood', color: 'text-gray-400' },
-    { id: 'n_cyber', type: 'names', name: 'Cyberpunk', rarity: 'Rare', price: 15000, cssClass: 'cosmetic-name-cyber', color: 'text-blue-400' },
-    { id: 'n_hacker', type: 'names', name: 'Matrix Terminal', rarity: 'Epic', price: 50000, cssClass: 'cosmetic-name-hacker', color: 'text-purple-400' },
-    { id: 'n_gold', type: 'names', name: 'VIP Gold', rarity: 'Legendary', price: 150000, cssClass: 'cosmetic-name-gold', color: 'text-yellow-400' }
+    { id: 'n_iron', type: 'names', name: 'Iron Slate', rarity: 'Common', price: 5000, cssClass: 'n-iron', color: 'text-gray-400' },
+    { id: 'n_blood', type: 'names', name: 'Crimson Blood', rarity: 'Common', price: 5000, cssClass: 'n-blood', color: 'text-gray-400' },
+    { id: 'n_ocean', type: 'names', name: 'Ocean Wave', rarity: 'Rare', price: 15000, cssClass: 'n-ocean', color: 'text-blue-400' },
+    { id: 'n_forest', type: 'names', name: 'Forest Spirit', rarity: 'Rare', price: 15000, cssClass: 'n-forest', color: 'text-blue-400' },
+    { id: 'n_cyber', type: 'names', name: 'Cyberpunk', rarity: 'Epic', price: 50000, cssClass: 'n-cyber', color: 'text-purple-400' },
+    { id: 'n_hacker', type: 'names', name: 'Hacker Terminal', rarity: 'Epic', price: 50000, cssClass: 'n-hacker', color: 'text-purple-400' },
+    { id: 'n_neon', type: 'names', name: 'Neon Pink', rarity: 'Epic', price: 50000, cssClass: 'n-neon', color: 'text-purple-400' },
+    { id: 'n_ghost', type: 'names', name: 'Ghost', rarity: 'Legendary', price: 150000, cssClass: 'n-ghost', color: 'text-yellow-400' },
+    { id: 'n_gold', type: 'names', name: 'VIP Gold', rarity: 'Legendary', price: 150000, cssClass: 'n-gold', color: 'text-yellow-400' },
+    { id: 'n_rgb', type: 'names', name: 'Rainbow RGB', rarity: 'Mythic', price: 300000, cssClass: 'n-rgb', color: 'text-red-500' }
 ];
 
 const RANKS = [
@@ -70,12 +96,9 @@ function getLeagueInfo(points, maxGrade) {
     let currentRankId = 0;
     for(let i = 1; i < RANKS.length; i++) {
         let reqGradeIdx = ALL_GRADES.indexOf(RANKS[i].minGrade);
-        if (points >= RANKS[i].minPts && maxGradeIdx >= reqGradeIdx) {
-            currentRankId = i;
-        } else {
-            break;
-        }
+        if (points >= RANKS[i].minPts && maxGradeIdx >= reqGradeIdx) { currentRankId = i; } else { break; }
     }
+    
     let current = RANKS[currentRankId];
     let next = currentRankId < RANKS.length - 1 ? RANKS[currentRankId + 1] : null;
     let percent = 100;
@@ -132,10 +155,7 @@ async function directCloudinaryUpload(base64String) {
     formData.append("file", base64String);
     formData.append("upload_preset", "spraywall_preset");
 
-    const res = await fetch("https://api.cloudinary.com/v1_1/hz7ii1gc/image/upload", {
-        method: "POST",
-        body: formData
-    });
+    const res = await fetch("https://api.cloudinary.com/v1_1/hz7ii1gc/image/upload", { method: "POST", body: formData });
     const data = await res.json();
     if (data.secure_url) return data.secure_url;
     throw new Error(data.error?.message || "Cloudinary Error");
@@ -163,11 +183,7 @@ async function getAuthToken() {
 async function apiCall(endpoint, payload = {}) {
     try {
         let token = await getAuthToken();
-        const res = await fetch(endpoint, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, 
-            body: JSON.stringify(payload) 
-        });
+        const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (!res.ok) { showNotify("Error: " + (data.detail || "Server error"), true); return null; }
         return data;
@@ -190,8 +206,18 @@ function getPoints(history) {
     return total;
 }
 
+// 🔥 ГЛОБАЛЬНАЯ ПРИМЕНЯЛКА КОСМЕТИКИ 🔥
 function applyCosmetics(profileObj, avatarEl, nameEl) {
-    if(!profileObj || !profileObj.equipped) return;
+    if(!profileObj || !profileObj.equipped) profileObj.equipped = {};
+    
+    // Background Global
+    const bgApp = document.getElementById('app-bg');
+    bgApp.className = "fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none bg-default";
+    if(profileObj.equipped.backgrounds) {
+        const bgItem = STORE_ITEMS.find(i => i.id === profileObj.equipped.backgrounds);
+        if(bgItem) bgApp.className = `fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none ${bgItem.cssClass}`;
+    }
+
     if(avatarEl) {
         avatarEl.className = "w-24 h-24 rounded-full object-cover bg-black shadow transition-all duration-300 border-2 border-gray-700";
         if(profileObj.equipped.borders) {
@@ -231,6 +257,7 @@ function navigate(viewName) {
     else if(viewName === 'super-admin') { showView('view-super-admin'); }
     else if(viewName === 'league') { loadLeagueView(); showView('view-league'); }
     else if(viewName === 'store') { loadStoreView(); showView('view-store'); }
+    else if(viewName === 'inventory') { loadInventoryView(); showView('view-inventory'); }
 }
 
 let isLoginMode = true;
@@ -469,7 +496,7 @@ function renderLogbook() {
     } else { 
         selectedAscents.forEach(a => { 
             const badge = '<span class="text-green-500 font-bold text-[10px] uppercase tracking-wider border border-green-500 px-1.5 py-0.5 rounded">Done</span>'; 
-            entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><div><p class="font-bold text-xs uppercase tracking-wider">${a.boulder_name || 'Unnamed'}</p><p class="text-[10px] text-gray-400 mt-0.5">Grade: ${a.grade}</p></div>${badge}</div>`; 
+            entriesContainer.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800 shadow"><div><p class="font-bold text-xs uppercase tracking-wider">${a.boulder_name || 'Unnamed'}</p><p class="text-[10px] text-gray-400 mt-0.5">Grade: ${a.grade}</p></div>${badge}</div>`; 
         }); 
     }
 }
@@ -488,6 +515,7 @@ async function loadHomeView() {
     localStorage.setItem('user_profile', JSON.stringify(profile));
     
     document.getElementById('profile-coins').innerText = profile.coins;
+    document.getElementById('appbar-coins').innerText = profile.coins;
     
     const realNameStr = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
     const realNameEl = document.getElementById('profile-realname');
@@ -570,10 +598,82 @@ async function acceptFriend(senderId, accept) {
     loadFriendRequests();
 }
 
-// 🔥 ЛОГИКА МАГАЗИНА И КОСМЕТИКИ 🔥
+// 🔥 ИНВЕНТАРЬ (ГАРДЕРОБ) 🔥
+function switchInventoryTab(tab) {
+    currentInvTab = tab;
+    ['backgrounds', 'borders', 'names'].forEach(t => {
+        const btn = document.getElementById(`inv-tab-${t}`);
+        if(btn) {
+            if(t === tab) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800', 'border-gray-700'); }
+            else { btn.classList.add('bg-gray-800', 'border', 'border-gray-700'); btn.classList.remove('bg-blue-600'); }
+        }
+    });
+    renderInventoryItems();
+}
+
+function loadInventoryView() {
+    switchInventoryTab('backgrounds');
+}
+
+function renderInventoryItems() {
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    const list = document.getElementById('inventory-list');
+    list.innerHTML = '';
+    
+    const inv = profile.inventory || [];
+    const itemsToShow = STORE_ITEMS.filter(i => inv.includes(i.id) && i.type === currentInvTab);
+    
+    if(itemsToShow.length === 0) {
+        list.innerHTML = `<p class="text-gray-500 text-center mt-10 uppercase text-[10px] tracking-widest">No ${currentInvTab} in inventory</p>`;
+        return;
+    }
+
+    itemsToShow.forEach(item => {
+        const isEquipped = profile.equipped && profile.equipped[item.type] === item.id;
+        
+        let actionButtons = '';
+        if(isEquipped) {
+            actionButtons = `<button onclick="equipItem('${item.id}', '${item.type}', false)" class="w-full bg-red-900 hover:bg-red-800 border border-red-700 text-red-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 shadow transition-colors">Unequip</button>`;
+        } else {
+            actionButtons = `<button onclick="equipItem('${item.id}', '${item.type}', true)" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 shadow transition-colors">Equip</button>`;
+        }
+
+        let previewHtml = '';
+        if (item.type === 'backgrounds') previewHtml = `<div class="w-full h-16 rounded-t-lg bg-gray-900 ${item.cssClass} mb-3 border-b border-gray-700"></div>`;
+        else if (item.type === 'borders') previewHtml = `<div class="w-12 h-12 rounded-full bg-gray-900 ${item.cssClass} mx-auto mb-2 mt-2"></div>`;
+        else if (item.type === 'names') previewHtml = `<div class="text-center font-black text-sm mb-2 mt-4 uppercase tracking-widest ${item.cssClass}">Example</div>`;
+
+        list.innerHTML += `
+        <div class="bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-700 flex flex-col ${isEquipped ? 'ring-2 ring-blue-500' : ''}">
+            ${previewHtml}
+            <div class="text-center mb-1"><span class="font-black uppercase tracking-wider text-xs text-white">${item.name}</span></div>
+            <div class="text-center mb-1"><span class="text-[8px] uppercase tracking-widest font-bold ${item.color}">${item.rarity}</span></div>
+            ${actionButtons}
+        </div>`;
+    });
+}
+
+async function equipItem(itemId, type, equip) {
+    let profile = JSON.parse(localStorage.getItem('user_profile'));
+    if(!profile.equipped) profile.equipped = {};
+    
+    if(equip) profile.equipped[type] = itemId;
+    else delete profile.equipped[type];
+    
+    await apiCall('/api/db/save', { path: `users/${profile.user_id}/equipped`, payload: profile.equipped });
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+    
+    // Мгновенно применяем
+    applyCosmetics(profile, document.getElementById('profile-avatar'), document.getElementById('profile-realname'));
+    
+    renderInventoryItems();
+    showNotify(equip ? "Equipped" : "Unequipped");
+}
+
+// 🔥 ЛОГИКА МАГАЗИНА (STORE) 🔥
 function switchStoreTab(tab) {
     currentStoreTab = tab;
-    ['borders', 'names', 'inventory'].forEach(t => {
+    ['backgrounds', 'borders', 'names'].forEach(t => {
         const btn = document.getElementById(`store-tab-${t}`);
         if(btn) {
             if(t === tab) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800', 'border-gray-700'); }
@@ -586,7 +686,7 @@ function switchStoreTab(tab) {
 function loadStoreView() {
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     document.getElementById('store-coins-display').innerText = profile.coins || 0;
-    switchStoreTab('borders');
+    switchStoreTab('backgrounds');
 }
 
 function renderStoreItems() {
@@ -594,56 +694,33 @@ function renderStoreItems() {
     const list = document.getElementById('store-list');
     list.innerHTML = '';
     
-    let itemsToShow = [];
-    if(currentStoreTab === 'inventory') {
-        const inv = profile.inventory || [];
-        itemsToShow = STORE_ITEMS.filter(i => inv.includes(i.id));
-        if(itemsToShow.length === 0) {
-            list.innerHTML = '<p class="text-gray-500 text-center mt-10 uppercase text-[10px] tracking-widest">Inventory is empty</p>';
-            return;
-        }
-    } else {
-        itemsToShow = STORE_ITEMS.filter(i => i.type === currentStoreTab);
-    }
+    const itemsToShow = STORE_ITEMS.filter(i => i.type === currentStoreTab);
 
     itemsToShow.forEach(item => {
         const isOwned = (profile.inventory || []).includes(item.id);
-        const isEquipped = profile.equipped && profile.equipped[item.type] === item.id;
-        let displayPrice = profile.is_global_admin ? 'FREE' : `${item.price} PTS`;
+        let displayPrice = profile.is_global_admin ? 'FREE' : `${item.price.toLocaleString()} C`;
         
         let actionButtons = '';
-        if(currentStoreTab === 'inventory') {
-            if(isEquipped) {
-                actionButtons = `<button onclick="equipItem('${item.id}', '${item.type}', false)" class="w-full bg-red-900 border border-red-700 text-red-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 shadow">Unequip</button>`;
-            } else {
-                actionButtons = `<button onclick="equipItem('${item.id}', '${item.type}', true)" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 shadow">Equip</button>`;
-            }
+        if(isOwned) {
+            actionButtons = `<div class="w-full bg-green-900 border border-green-700 text-green-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 text-center shadow">Owned</div>`;
         } else {
-            if(isOwned) {
-                actionButtons = `<div class="w-full bg-green-900 border border-green-700 text-green-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 text-center shadow">Owned</div>`;
-            } else {
-                actionButtons = `
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="buyItem('${item.id}')" class="flex-[2] bg-yellow-600 hover:bg-yellow-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow flex items-center justify-center border border-yellow-500 text-yellow-50"><span class="mr-1 text-[8px]">🛒</span> Buy</button>
-                    <button onclick="openGiftModal('${item.id}')" class="flex-1 bg-pink-600 hover:bg-pink-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow flex items-center justify-center border border-pink-500 text-pink-50">Gift</button>
-                </div>`;
-            }
+            actionButtons = `
+            <div class="flex space-x-2 mt-2">
+                <button onclick="buyItem('${item.id}')" class="flex-[2] bg-yellow-600 hover:bg-yellow-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow border border-yellow-500 text-yellow-50 transition-colors">Buy</button>
+                <button onclick="openGiftModal('${item.id}')" class="flex-1 bg-pink-600 hover:bg-pink-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow border border-pink-500 text-pink-50 transition-colors">Gift</button>
+            </div>`;
         }
 
         let previewHtml = '';
-        if (item.type === 'borders') {
-            previewHtml = `<div class="w-12 h-12 rounded-full bg-gray-900 ${item.cssClass} mx-auto mb-2"></div>`;
-        } else if (item.type === 'names') {
-            previewHtml = `<div class="text-center font-black text-sm mb-2 uppercase tracking-widest ${item.cssClass}">Example</div>`;
-        }
+        if (item.type === 'backgrounds') previewHtml = `<div class="w-full h-16 rounded-t-lg bg-gray-900 ${item.cssClass} mb-3 border-b border-gray-700"></div>`;
+        else if (item.type === 'borders') previewHtml = `<div class="w-12 h-12 rounded-full bg-gray-900 ${item.cssClass} mx-auto mb-2 mt-2"></div>`;
+        else if (item.type === 'names') previewHtml = `<div class="text-center font-black text-sm mb-2 mt-4 uppercase tracking-widest ${item.cssClass}">Example</div>`;
 
         list.innerHTML += `
         <div class="bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-700 flex flex-col">
             ${previewHtml}
-            <div class="text-center mb-1">
-                <span class="font-black uppercase tracking-wider text-sm text-white">${item.name}</span>
-            </div>
-            <div class="flex justify-between items-center px-1 mb-1">
+            <div class="text-center mb-1"><span class="font-black uppercase tracking-wider text-xs text-white">${item.name}</span></div>
+            <div class="flex justify-between items-center px-1 mb-1 mt-1 border-t border-gray-700 pt-2">
                 <span class="text-[8px] uppercase tracking-widest font-bold ${item.color}">${item.rarity}</span>
                 <span class="text-[10px] uppercase tracking-widest font-bold text-yellow-400">${isOwned ? '✓' : displayPrice}</span>
             </div>
@@ -669,21 +746,9 @@ async function buyItem(itemId) {
     
     localStorage.setItem('user_profile', JSON.stringify(profile));
     document.getElementById('store-coins-display').innerText = profile.coins;
+    document.getElementById('appbar-coins').innerText = profile.coins;
     renderStoreItems();
     showNotify("Purchased!");
-}
-
-async function equipItem(itemId, type, equip) {
-    let profile = JSON.parse(localStorage.getItem('user_profile'));
-    if(!profile.equipped) profile.equipped = {};
-    
-    if(equip) profile.equipped[type] = itemId;
-    else delete profile.equipped[type];
-    
-    await apiCall('/api/db/save', { path: `users/${profile.user_id}/equipped`, payload: profile.equipped });
-    localStorage.setItem('user_profile', JSON.stringify(profile));
-    renderStoreItems();
-    showNotify(equip ? "Equipped!" : "Unequipped");
 }
 
 async function openGiftModal(itemId) {
@@ -692,6 +757,18 @@ async function openGiftModal(itemId) {
     document.getElementById('gift-item-name').innerText = item.name;
     
     const profile = JSON.parse(localStorage.getItem('user_profile'));
+    
+    // 🔥 ПРОВЕРКА ЛИГИ ДЛЯ ПОДАРКОВ (Анти-фарм ботами) 🔥
+    const history = profile.ascents_history || [];
+    const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
+    const points = getPoints(history);
+    const league = getLeagueInfo(points, maxOfficialGrade);
+    
+    if (league.current.id < 2 && !profile.is_global_admin) {
+        return showNotify("Reach CRIMPER league to send gifts", true);
+    }
+
     const friends = await apiCall('/api/db/get', { path: `friends/${profile.user_id}` }) || {};
     const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
     
@@ -703,7 +780,8 @@ async function openGiftModal(itemId) {
         const u = allUsers[fId];
         if(!u) continue;
         found = true;
-        list.innerHTML += `<div class="bg-gray-800 p-3 rounded flex justify-between items-center border border-gray-700"><span class="font-bold text-xs uppercase tracking-wider">@${u.nickname || u.name}</span><button onclick="sendGift('${fId}')" class="bg-pink-600 hover:bg-pink-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest shadow">Send</button></div>`;
+        const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN';
+        list.innerHTML += `<div class="bg-gray-800 p-3 rounded flex justify-between items-center border border-gray-700"><div class="flex flex-col"><span class="font-bold text-xs uppercase tracking-wider">${fullName}</span><span class="text-gray-500 text-[10px] uppercase">@${u.nickname || u.name}</span></div><button onclick="sendGift('${fId}')" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow border border-pink-500">Send</button></div>`;
     }
     
     if(!found) list.innerHTML = '<p class="text-gray-500 text-center mt-4 text-[10px] uppercase tracking-widest">No friends to gift</p>';
@@ -737,10 +815,11 @@ async function sendGift(friendId) {
     
     localStorage.setItem('user_profile', JSON.stringify(profile));
     document.getElementById('store-coins-display').innerText = profile.coins;
+    document.getElementById('appbar-coins').innerText = profile.coins;
     
     closeGiftModal();
     renderStoreItems();
-    showNotify("Gift Sent! 🎁");
+    showNotify("Gift Sent!");
 }
 
 function loadLeagueView() {
@@ -757,7 +836,7 @@ function loadLeagueView() {
     let html = `<h2 class="text-xl font-black mb-5 tracking-widest text-center uppercase border-b border-gray-800 pb-3">League Progress</h2>`;
     
     html += `
-    <div class="bg-gray-800 p-4 rounded flex flex-col items-center shadow relative overflow-hidden mb-6 border border-gray-700">
+    <div class="bg-gray-800 bg-opacity-80 p-4 rounded flex flex-col items-center shadow relative overflow-hidden mb-6 border border-gray-700">
         <div class="${league.current.color} transform scale-125 mb-3 mt-2">${league.current.svg}</div>
         <h3 class="text-xl font-black uppercase tracking-widest ${league.current.color}">${league.current.title}</h3>
         <p class="text-gray-400 mt-1.5 font-bold text-sm">${points} PTS</p>
@@ -799,8 +878,8 @@ function loadLeagueView() {
         const isCurrent = r.id === league.current.id;
         const isLocked = r.id > league.current.id;
         
-        let bgClass = isCurrent ? 'bg-gray-700 border border-blue-500 shadow' : 'bg-gray-900 border border-gray-800';
-        if (!isLocked && !isCurrent) bgClass = 'bg-gray-800 border border-gray-700'; 
+        let bgClass = isCurrent ? 'bg-gray-700 bg-opacity-90 border border-blue-500 shadow' : 'bg-gray-900 bg-opacity-70 border border-gray-800';
+        if (!isLocked && !isCurrent) bgClass = 'bg-gray-800 bg-opacity-80 border border-gray-700'; 
         
         html += `
         <div class="${bgClass} p-3 rounded flex items-center justify-between transition-all">
@@ -835,7 +914,14 @@ async function loadFriendsView() {
         const u = allUsers[fId]; 
         if(!u) continue; 
         const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN';
-        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex flex-col"><span class="font-bold tracking-wider text-xs uppercase">${fullName}</span><span class="text-gray-500 text-[10px] uppercase">@${u.nickname || u.name}</span></div><span class="text-blue-400 text-[10px] uppercase tracking-widest font-bold">Profile &gt;</span></div>`; 
+        
+        let nameCss = "";
+        if (u.equipped && u.equipped.names) {
+            const eqItem = STORE_ITEMS.find(i => i.id === u.equipped.names);
+            if (eqItem) nameCss = eqItem.cssClass;
+        }
+
+        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex flex-col"><span class="font-bold tracking-wider text-xs uppercase ${nameCss}">${fullName}</span><span class="text-gray-500 text-[10px] uppercase">@${u.nickname || u.name}</span></div><span class="text-blue-400 text-[10px] uppercase tracking-widest font-bold">Profile &gt;</span></div>`; 
     }
 }
 
@@ -849,7 +935,7 @@ async function loadGymsView() {
     for(let gId in gyms) { 
         const g = gyms[gId]; 
         if(!g || !g.id) continue; 
-        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow border border-gray-700"><div><h3 class="font-bold text-sm uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-[10px] uppercase tracking-widest mt-0.5">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-[10px] tracking-widest">Enter &gt;</span></div>`; 
+        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 bg-opacity-80 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow border border-gray-700"><div><h3 class="font-bold text-sm uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-[10px] uppercase tracking-widest mt-0.5">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-[10px] tracking-widest">Enter &gt;</span></div>`; 
     }
 }
 
@@ -1005,7 +1091,6 @@ async function deleteCurrentGym() {
     navigate('gyms');
 }
 
-// 🔥 ЛОГИКА ВКЛАДКИ NEWS 🔥
 async function loadGymNews() {
     const newsObj = await apiCall('/api/db/get', { path: `gym_news/${currentGymId}` }) || {};
     const feed = document.getElementById('news-feed');
@@ -1017,7 +1102,7 @@ async function loadGymNews() {
         keys.forEach(k => {
             const n = newsObj[k];
             const date = new Date(n.timestamp).toLocaleDateString();
-            feed.innerHTML += `<div class="bg-gray-800 p-3 rounded border border-gray-700 shadow mb-3"><p class="text-[9px] text-blue-400 font-bold mb-1.5 uppercase tracking-widest">${date} • ${n.author}</p><p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${n.text}</p></div>`;
+            feed.innerHTML += `<div class="bg-gray-800 bg-opacity-80 p-3 rounded border border-gray-700 shadow mb-3"><p class="text-[9px] text-blue-400 font-bold mb-1.5 uppercase tracking-widest">${date} • ${n.author}</p><p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${n.text}</p></div>`;
         });
     }
     const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter';
@@ -1085,7 +1170,7 @@ async function loadGallery() {
             
             const bJson = JSON.stringify(b).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
             const secName = b.sector_id && gymSectors[b.sector_id] ? ` | Sec: ${gymSectors[b.sector_id]}` : '';
-            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 hover:bg-gray-700 p-3 rounded cursor-pointer flex justify-between items-center transition-colors mb-2 shadow border border-gray-700"><div><h4 class="font-bold text-sm tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-[10px] mt-1 uppercase tracking-widest">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-[10px] mt-1 font-bold uppercase tracking-widest">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
+            list.innerHTML += `<div onclick="openRouteDetail(JSON.parse('${bJson}'))" class="bg-gray-800 bg-opacity-80 hover:bg-gray-700 p-3 rounded cursor-pointer flex justify-between items-center transition-colors mb-2 shadow border border-gray-700"><div><h4 class="font-bold text-sm tracking-wider uppercase">${b.name || 'Unnamed'}</h4><p class="text-gray-400 text-[10px] mt-1 uppercase tracking-widest">Grade: ${displayGrade} | By: ${b.author || 'Unknown'}${secName}</p><p class="text-blue-400 text-[10px] mt-1 font-bold uppercase tracking-widest">Ascents: ${b.ascents || 0}</p></div>${badge}</div>`;
         }
     }
     if(!found) list.innerHTML = `<p class="text-gray-500 text-center mt-6 uppercase text-[10px] tracking-widest">No routes found</p>`;
@@ -1265,7 +1350,6 @@ function renderClimbers() {
             const rankData = league.current;
             const fullName = `${c.user.first_name || ''} ${c.user.last_name || ''}`.trim() || 'UNKNOWN';
             
-            // Если у юзера экипировано свечение ника
             let nameCss = "";
             if (c.user.equipped && c.user.equipped.names) {
                 const eqItem = STORE_ITEMS.find(i => i.id === c.user.equipped.names);
@@ -1485,13 +1569,13 @@ async function openOtherProfile(uid, source = 'home') {
     const btn = document.getElementById('op-action-btn'); 
     if(isFriend) { 
         btn.innerText = "Remove Friend"; 
-        btn.className = "flex-1 py-2.5 rounded font-bold border border-red-700 text-red-500 bg-gray-800 transition-colors uppercase tracking-widest text-[10px] shadow"; 
+        btn.className = "flex-[2] py-2.5 rounded font-bold border border-red-700 text-red-500 bg-gray-800 transition-colors uppercase tracking-widest text-[10px] shadow"; 
     } else if(sentReq) { 
         btn.innerText = "Request Sent"; 
-        btn.className = "flex-1 py-2.5 rounded font-bold border border-gray-600 text-gray-400 bg-gray-800 uppercase tracking-widest text-[10px] shadow"; 
+        btn.className = "flex-[2] py-2.5 rounded font-bold border border-gray-600 text-gray-400 bg-gray-800 uppercase tracking-widest text-[10px] shadow"; 
     } else { 
         btn.innerText = "Add Friend"; 
-        btn.className = "flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold transition-colors uppercase tracking-widest text-[10px] shadow"; 
+        btn.className = "flex-[2] bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold transition-colors uppercase tracking-widest text-[10px] shadow"; 
     } 
     showView('view-other-profile');
 }
@@ -1516,14 +1600,14 @@ async function handleOpAction() {
         if(!res) return; 
         showNotify("Request sent"); 
         btn.innerText = "REQUEST SENT"; 
-        btn.className = "flex-1 py-2.5 rounded font-bold border border-gray-600 text-gray-400 bg-gray-800 uppercase tracking-widest text-[10px] shadow"; 
+        btn.className = "flex-[2] py-2.5 rounded font-bold border border-gray-600 text-gray-400 bg-gray-800 uppercase tracking-widest text-[10px] shadow"; 
     }
     else if(btn.innerText === "REMOVE FRIEND") { 
         await apiCall('/api/db/save', { path: `friends/${profile.user_id}/${currentOtherUserId}`, method: 'DELETE' }); 
         await apiCall('/api/db/save', { path: `friends/${currentOtherUserId}/${profile.user_id}`, method: 'DELETE' }); 
         showNotify("Removed friend"); 
         btn.innerText = "ADD FRIEND"; 
-        btn.className = "flex-1 bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold transition-colors uppercase tracking-widest text-[10px] shadow"; 
+        btn.className = "flex-[2] bg-blue-600 hover:bg-blue-500 py-2.5 rounded font-bold transition-colors uppercase tracking-widest text-[10px] shadow"; 
     }
 }
 
@@ -1538,13 +1622,19 @@ async function deleteAccount() {
     showNotify("Account deleted");
 }
 
-window.onload = () => {
+window.onload = async () => {
     const profileStr = localStorage.getItem('user_profile');
     if(profileStr) { 
         const profile = JSON.parse(profileStr); 
         if (profile.detail || !profile.user_id) { 
             localStorage.removeItem('user_profile'); showView('view-auth'); return; 
         } 
+        
+        // Применяем фон глобально при старте приложения, если он есть
+        if (profile.equipped && profile.equipped.backgrounds) {
+            applyCosmetics(profile, null, null); 
+        }
+        
         if (!profile.name) showView('view-onboarding'); 
         else { loadHomeView(); showView('view-home'); } 
     } else showView('view-auth');
