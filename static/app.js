@@ -37,7 +37,6 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
-// 🔥 СИСТЕМА ЛИГ (ОЧКИ ДАЮТСЯ ТОЛЬКО ЗА OFFICIAL ТРАССЫ) 🔥
 const RANKS = [
     { id: 0, title: "Rookie", minPts: 0, minGrade: "1", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` },
     { id: 1, title: "Plastic Puller", minPts: 300, minGrade: "4", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` },
@@ -63,6 +62,7 @@ function getLeagueInfo(points, maxGrade) {
     
     let current = RANKS[currentRankId];
     let next = currentRankId < RANKS.length - 1 ? RANKS[currentRankId + 1] : null;
+    
     let percent = 100;
     let isBossLocked = false;
     
@@ -129,7 +129,7 @@ async function directCloudinaryUpload(base64String) {
 function showNotify(msg, isError = false) {
     const box = document.getElementById('notify-box');
     box.innerText = msg;
-    box.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-[100] text-xs uppercase tracking-widest text-center border ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
+    box.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-[100] uppercase tracking-widest text-[10px] border ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
     box.style.opacity = '1'; 
     setTimeout(() => box.style.opacity = '0', 4000);
 }
@@ -168,8 +168,7 @@ async function apiCall(endpoint, payload = {}) {
 function getPoints(history) {
     let total = 0;
     history.forEach(a => {
-        // 🔥 FACEIT MODEL: ANTI-ABUSE 🔥
-        // Custom (Community) routes give ZERO points!
+        // 🔥 АНТИ-АБЬЮЗ: 0 ПТС за Community трассы
         if (a.route_type === 'custom' || a.route_type === 'climbers') return;
 
         const g = a.grade; if (!g) return;
@@ -313,7 +312,7 @@ async function uploadOnboardAvatar(input) {
         localStorage.setItem('user_profile', JSON.stringify(profile));
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         document.getElementById('onboard-avatar').src = imageUrl; 
-        showNotify("Uploaded!");
+        showNotify("Uploaded");
     } catch(err) { 
         showNotify("Upload failed", true); 
     }
@@ -331,7 +330,7 @@ async function uploadAvatar(input) {
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         const profileAvatar = document.getElementById('profile-avatar');
         if (profileAvatar) profileAvatar.src = imageUrl;
-        showNotify("Uploaded!");
+        showNotify("Uploaded");
     } catch(err) { 
         showNotify("Upload failed", true); 
     }
@@ -398,7 +397,7 @@ async function saveProfile() {
     localStorage.setItem('user_profile', JSON.stringify(profile)); 
     loadHomeView(); 
     toggleEditProfile(false); 
-    showNotify("Saved!");
+    showNotify("Saved");
 }
 
 function renderGradeChart(containerId, gradesArray) {
@@ -476,11 +475,9 @@ async function loadHomeView() {
     const history = profile.ascents_history; 
     document.getElementById('stat-total').innerText = history.length;
     
-    // МАКСИМАЛЬНЫЙ ГРЕЙД ДЛЯ ЛИГИ (ТОЛЬКО OFFICIAL ТРАССЫ)
     const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
     const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
     
-    // Отображаем просто макс грейд (из всех трасс) для статистики
     const allGrades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
     const absoluteMaxGrade = allGrades.length ? allGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, allGrades[0]) : "-";
     document.getElementById('stat-max').innerText = absoluteMaxGrade;
@@ -548,7 +545,6 @@ function loadLeagueView() {
     const history = normArr(profile.ascents_history || []);
     const points = getPoints(history);
     
-    // Лига смотрит ТОЛЬКО на официальные трассы
     const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
     const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
     
@@ -562,7 +558,7 @@ function loadLeagueView() {
         <div class="${league.current.color} transform scale-125 mb-3 mt-2">${league.current.svg}</div>
         <h3 class="text-xl font-black uppercase tracking-widest ${league.current.color}">${league.current.title}</h3>
         <p class="text-gray-400 mt-1.5 font-bold text-sm">${points} PTS</p>
-        <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Max Official Grade: <span class="text-white font-bold">${maxOfficialGrade !== "1" ? maxOfficialGrade : "None"}</span></p>
+        <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Max Official: <span class="text-white font-bold">${maxOfficialGrade !== "1" ? maxOfficialGrade : "None"}</span></p>
     </div>`;
     
     if (league.next) {
@@ -1018,7 +1014,6 @@ async function loadGymClimbers() {
         if(!u) continue; 
         const history = normArr(allAscents[uid]);
         
-        // Лидерборд теперь тоже учитывает только Официальные трассы для Макс грейда!
         const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
         const maxGradeIdx = officialGrades.length ? Math.max(...officialGrades.map(g => ALL_GRADES.indexOf(g))) : -1;
         const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : "1";
