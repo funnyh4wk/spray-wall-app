@@ -208,14 +208,16 @@ function getPoints(history) {
 
 // 🔥 ГЛОБАЛЬНАЯ ПРИМЕНЯЛКА КОСМЕТИКИ 🔥
 function applyCosmetics(profileObj, avatarEl, nameEl) {
-    if(!profileObj || !profileObj.equipped) profileObj.equipped = {};
+    if(!profileObj) return;
+    if(!profileObj.equipped) profileObj.equipped = {};
     
-    // Background Global
     const bgApp = document.getElementById('app-bg');
-    bgApp.className = "fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none bg-default";
-    if(profileObj.equipped.backgrounds) {
-        const bgItem = STORE_ITEMS.find(i => i.id === profileObj.equipped.backgrounds);
-        if(bgItem) bgApp.className = `fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none ${bgItem.cssClass}`;
+    if(bgApp) {
+        bgApp.className = "fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none bg-default";
+        if(profileObj.equipped.backgrounds) {
+            const bgItem = STORE_ITEMS.find(i => i.id === profileObj.equipped.backgrounds);
+            if(bgItem) bgApp.className = `fixed inset-0 z-[-1] transition-all duration-1000 pointer-events-none ${bgItem.cssClass}`;
+        }
     }
 
     if(avatarEl) {
@@ -226,7 +228,7 @@ function applyCosmetics(profileObj, avatarEl, nameEl) {
         }
     }
     if(nameEl) {
-        nameEl.className = "text-xl font-black uppercase tracking-wider text-center transition-all duration-300";
+        nameEl.className = "text-xl font-black uppercase tracking-wider text-center transition-all duration-300 text-white";
         if(profileObj.equipped.names) {
             const item = STORE_ITEMS.find(i => i.id === profileObj.equipped.names);
             if(item) nameEl.className = `text-xl font-black uppercase tracking-wider text-center transition-all duration-300 ${item.cssClass}`;
@@ -507,20 +509,38 @@ function selectLogbookDate(t) {
 }
 
 async function loadHomeView() {
-    let profile = await apiCall('/api/db/get', { path: `users/${JSON.parse(localStorage.getItem('user_profile')).user_id}` });
-    profile.ascents_history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${profile.user_id}` }));
-    if (!profile.inventory) profile.inventory = [];
-    if (!profile.equipped) profile.equipped = {};
-    if (profile.coins === undefined) profile.coins = 0;
-    localStorage.setItem('user_profile', JSON.stringify(profile));
+    let localProfile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+    if (!localProfile.user_id) return logout();
     
-    document.getElementById('profile-coins').innerText = profile.coins;
-    document.getElementById('appbar-coins').innerText = profile.coins;
+    try {
+        let dbProfile = await apiCall('/api/db/get', { path: `users/${localProfile.user_id}` });
+        if (dbProfile && !dbProfile.detail) {
+            localProfile = { ...localProfile, ...dbProfile };
+        }
+    } catch(e) {}
     
-    const realNameStr = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    try {
+        let ascents = await apiCall('/api/db/get', { path: `user_ascents/${localProfile.user_id}` });
+        localProfile.ascents_history = normArr(ascents);
+    } catch(e) { localProfile.ascents_history = localProfile.ascents_history || []; }
+    
+    if (!localProfile.inventory) localProfile.inventory = [];
+    if (!localProfile.equipped) localProfile.equipped = {};
+    if (localProfile.coins === undefined) localProfile.coins = 0;
+    
+    localStorage.setItem('user_profile', JSON.stringify(localProfile));
+    let profile = localProfile;
+    
+    const coinsEl = document.getElementById('profile-coins');
+    if(coinsEl) coinsEl.innerText = profile.coins;
+    
+    const appbarCoinsEl = document.getElementById('appbar-coins');
+    if(appbarCoinsEl) appbarCoinsEl.innerText = profile.coins;
+    
+    const realNameStr = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.name || "UNKNOWN CLIMBER";
     const realNameEl = document.getElementById('profile-realname');
-    realNameEl.innerText = realNameStr || "UNKNOWN CLIMBER";
-    document.getElementById('profile-name').innerText = `@${profile.name || "unnamed"}`;
+    realNameEl.innerText = realNameStr;
+    document.getElementById('profile-name').innerText = `@${profile.nickname || profile.name || "user"}`;
     document.getElementById('profile-bio').innerText = profile.bio || "";
     
     const avatarEl = document.getElementById('profile-avatar');
@@ -663,7 +683,6 @@ async function equipItem(itemId, type, equip) {
     await apiCall('/api/db/save', { path: `users/${profile.user_id}/equipped`, payload: profile.equipped });
     localStorage.setItem('user_profile', JSON.stringify(profile));
     
-    // Мгновенно применяем
     applyCosmetics(profile, document.getElementById('profile-avatar'), document.getElementById('profile-realname'));
     
     renderInventoryItems();
@@ -746,7 +765,10 @@ async function buyItem(itemId) {
     
     localStorage.setItem('user_profile', JSON.stringify(profile));
     document.getElementById('store-coins-display').innerText = profile.coins;
-    document.getElementById('appbar-coins').innerText = profile.coins;
+    
+    const appbarCoinsEl = document.getElementById('appbar-coins');
+    if(appbarCoinsEl) appbarCoinsEl.innerText = profile.coins;
+    
     renderStoreItems();
     showNotify("Purchased!");
 }
@@ -758,7 +780,6 @@ async function openGiftModal(itemId) {
     
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     
-    // 🔥 ПРОВЕРКА ЛИГИ ДЛЯ ПОДАРКОВ (Анти-фарм ботами) 🔥
     const history = profile.ascents_history || [];
     const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
     const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
@@ -815,7 +836,9 @@ async function sendGift(friendId) {
     
     localStorage.setItem('user_profile', JSON.stringify(profile));
     document.getElementById('store-coins-display').innerText = profile.coins;
-    document.getElementById('appbar-coins').innerText = profile.coins;
+    
+    const appbarCoinsEl = document.getElementById('appbar-coins');
+    if(appbarCoinsEl) appbarCoinsEl.innerText = profile.coins;
     
     closeGiftModal();
     renderStoreItems();
@@ -1260,7 +1283,6 @@ async function confirmCompleteRoute(isOfficial = false) {
         route_type: activeBoulder.route_type || 'custom'
     });
     
-    // 🔥 НАЧИСЛЕНИЕ МОНЕТ 🔥
     let coinsEarned = 0;
     if (activeBoulder.route_type === 'custom' || activeBoulder.route_type === 'climbers') {
         coinsEarned = 100;
@@ -1630,7 +1652,6 @@ window.onload = async () => {
             localStorage.removeItem('user_profile'); showView('view-auth'); return; 
         } 
         
-        // Применяем фон глобально при старте приложения, если он есть
         if (profile.equipped && profile.equipped.backgrounds) {
             applyCosmetics(profile, null, null); 
         }

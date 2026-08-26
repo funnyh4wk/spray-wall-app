@@ -145,7 +145,7 @@
                     <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
                 </label>
                 <div id="profile-rank" class="mb-2 hover:scale-105 transition-transform" onclick="navigate('league')"></div>
-                <h2 id="profile-realname" class="text-xl font-black uppercase tracking-widest text-center transition-all duration-300"></h2>
+                <h2 id="profile-realname" class="text-xl font-black uppercase tracking-wider text-center transition-all duration-300 text-white"></h2>
                 <p id="profile-name" class="text-gray-400 text-[10px] mb-2 font-bold tracking-widest uppercase"></p>
                 <p id="profile-bio" class="text-gray-300 text-center mb-4 text-[10px] tracking-wider"></p>
                 
@@ -225,6 +225,8 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                     </button>
                     <h2 class="text-lg font-black uppercase tracking-widest text-yellow-400 flex-1">Store</h2>
+                    <!-- 🔥 ВОТ ЭТОТ СЧЕТЧИК Я ЗАБЫЛ В ПРОШЛЫЙ РАЗ 🔥 -->
+                    <span class="font-black text-yellow-400 flex items-center text-sm bg-gray-900 px-2 py-1 rounded border border-yellow-700 shadow"><span id="store-coins-display">0</span> <span class="text-[8px] ml-1 text-yellow-600">COINS</span></span>
                 </div>
                 <div class="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar">
                     <button id="store-tab-backgrounds" onclick="switchStoreTab('backgrounds')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-blue-600 whitespace-nowrap uppercase tracking-widest">Backgrounds</button>
@@ -338,8 +340,8 @@
                 <div id="sector-bar-container" class="mb-4">
                     <div id="sector-filters" class="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar mb-2"></div>
                     <div id="sector-actions" class="hidden-view bg-gray-800 p-2 rounded mb-3 border border-gray-700 flex justify-between">
-                        <button onclick="clearSector()" class="text-orange-400 font-bold text-[9px] px-2 py-1 bg-gray-900 rounded uppercase tracking-widest">Clear Sector</button>
-                        <button onclick="deleteSector()" class="text-red-500 font-bold text-[9px] px-2 py-1 bg-gray-900 rounded uppercase tracking-widest">Delete Sector</button>
+                        <button onclick="clearSector()" class="text-orange-400 font-bold text-[9px] px-2 py-1 bg-gray-900 rounded uppercase tracking-wider">Clear Sector</button>
+                        <button onclick="deleteSector()" class="text-red-500 font-bold text-[9px] px-2 py-1 bg-gray-900 rounded uppercase tracking-wider">Delete Sector</button>
                     </div>
                     <div id="add-sector-form" class="hidden-view bg-gray-800 p-2 rounded mb-3 flex space-x-2 border border-gray-700">
                         <input type="text" id="new-sector-name" class="flex-1 bg-gray-900 p-2 rounded text-xs focus:outline-none border border-gray-700" placeholder="Sector Name">
@@ -385,13 +387,13 @@
         <!-- CREATE ROUTE WIZARD -->
         <div id="view-create-route" class="hidden-view w-full min-h-screen bg-gray-900 absolute top-0 z-50">
             <div class="p-3 bg-black flex justify-between items-center border-b border-gray-800">
-                <button onclick="navigate('gym-routes')" class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Cancel</button>
-                <h2 class="font-black tracking-widest text-xs uppercase">New Route</h2>
+                <button onclick="navigate('gym-routes')" class="text-gray-400 font-bold uppercase tracking-wider text-[10px]">Cancel</button>
+                <h2 class="font-black tracking-widest text-sm uppercase">New Route</h2>
                 <div class="w-10"></div>
             </div>
             
             <div id="wizard-step-1" class="p-4 flex flex-col items-center justify-center min-h-[70vh]">
-                <h3 class="text-xs font-bold mb-4 text-center uppercase tracking-widest text-gray-400">Step 1: Wall Photo</h3>
+                <h3 class="text-sm font-bold mb-4 text-center uppercase tracking-widest text-gray-400">Step 1: Wall Photo</h3>
                 <label class="w-full bg-gray-800 border-2 border-dashed border-gray-600 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors">
                     <span class="text-gray-400 mb-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg></span>
                     <span class="font-bold text-gray-300 uppercase tracking-widest text-[10px]">Take Photo / Upload</span>
@@ -472,7 +474,7 @@
             <div class="flex flex-col items-center mb-5 bg-gray-800 bg-opacity-70 p-5 rounded-lg border border-gray-700 shadow-xl backdrop-blur-sm">
                 <img id="op-avatar" src="" class="w-24 h-24 rounded-full object-cover border-2 border-gray-700 bg-black mb-3 shadow transition-all duration-300">
                 <div id="op-rank" class="mb-2"></div>
-                <h2 id="op-realname" class="text-xl font-black uppercase tracking-wider text-center transition-all duration-300"></h2>
+                <h2 id="op-realname" class="text-xl font-black uppercase tracking-wider text-center transition-all duration-300 text-white"></h2>
                 <p id="op-name" class="text-gray-400 text-[10px] mb-2 font-bold tracking-widest uppercase"></p>
                 <p id="op-bio" class="text-gray-300 text-center mb-4 text-[10px] tracking-wider"></p>
                 
