@@ -37,6 +37,23 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
+// 🔥 ИНВЕНТАРЬ И МАГАЗИН 🔥
+let currentStoreTab = 'borders';
+let currentGiftItemId = null;
+
+const STORE_ITEMS = [
+    // Borders
+    { id: 'b_ruby', type: 'borders', name: 'Ruby Ring', rarity: 'Common', price: 5000, cssClass: 'cosmetic-border-ruby', color: 'text-gray-400' },
+    { id: 'b_neon', type: 'borders', name: 'Cyber Neon', rarity: 'Rare', price: 15000, cssClass: 'cosmetic-border-neon', color: 'text-blue-400' },
+    { id: 'b_toxic', type: 'borders', name: 'Toxic Hazard', rarity: 'Epic', price: 50000, cssClass: 'cosmetic-border-toxic', color: 'text-purple-400' },
+    { id: 'b_gold', type: 'borders', name: 'Golden Aura', rarity: 'Legendary', price: 150000, cssClass: 'cosmetic-border-gold', color: 'text-yellow-400' },
+    // Names
+    { id: 'n_blood', type: 'names', name: 'Bloodline', rarity: 'Common', price: 5000, cssClass: 'cosmetic-name-blood', color: 'text-gray-400' },
+    { id: 'n_cyber', type: 'names', name: 'Cyberpunk', rarity: 'Rare', price: 15000, cssClass: 'cosmetic-name-cyber', color: 'text-blue-400' },
+    { id: 'n_hacker', type: 'names', name: 'Matrix Terminal', rarity: 'Epic', price: 50000, cssClass: 'cosmetic-name-hacker', color: 'text-purple-400' },
+    { id: 'n_gold', type: 'names', name: 'VIP Gold', rarity: 'Legendary', price: 150000, cssClass: 'cosmetic-name-gold', color: 'text-yellow-400' }
+];
+
 const RANKS = [
     { id: 0, title: "Rookie", minPts: 0, minGrade: "1", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` },
     { id: 1, title: "Plastic Puller", minPts: 300, minGrade: "4", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` },
@@ -59,10 +76,8 @@ function getLeagueInfo(points, maxGrade) {
             break;
         }
     }
-    
     let current = RANKS[currentRankId];
     let next = currentRankId < RANKS.length - 1 ? RANKS[currentRankId + 1] : null;
-    
     let percent = 100;
     let isBossLocked = false;
     
@@ -154,26 +169,17 @@ async function apiCall(endpoint, payload = {}) {
             body: JSON.stringify(payload) 
         });
         const data = await res.json();
-        if (!res.ok) { 
-            showNotify("Error: " + (data.detail || "Server error"), true); 
-            return null; 
-        }
+        if (!res.ok) { showNotify("Error: " + (data.detail || "Server error"), true); return null; }
         return data;
-    } catch(e) { 
-        showNotify("Network Error", true); 
-        return null; 
-    }
+    } catch(e) { showNotify("Network Error", true); return null; }
 }
 
 function getPoints(history) {
     let total = 0;
     history.forEach(a => {
-        // 🔥 АНТИ-АБЬЮЗ: 0 ПТС за Community трассы
         if (a.route_type === 'custom' || a.route_type === 'climbers') return;
-
         const g = a.grade; if (!g) return;
         const idx = ALL_GRADES.indexOf(g); if (idx === -1) return;
-        
         if (idx <= ALL_GRADES.indexOf("4")) total += 10;
         else if (idx <= ALL_GRADES.indexOf("5+")) total += 25;
         else if (idx <= ALL_GRADES.indexOf("6B")) total += 50;
@@ -182,6 +188,24 @@ function getPoints(history) {
         else total += 500;
     }); 
     return total;
+}
+
+function applyCosmetics(profileObj, avatarEl, nameEl) {
+    if(!profileObj || !profileObj.equipped) return;
+    if(avatarEl) {
+        avatarEl.className = "w-24 h-24 rounded-full object-cover bg-black shadow transition-all duration-300 border-2 border-gray-700";
+        if(profileObj.equipped.borders) {
+            const item = STORE_ITEMS.find(i => i.id === profileObj.equipped.borders);
+            if(item) avatarEl.className = `w-24 h-24 rounded-full object-cover bg-black shadow transition-all duration-300 ${item.cssClass}`;
+        }
+    }
+    if(nameEl) {
+        nameEl.className = "text-xl font-black uppercase tracking-wider text-center transition-all duration-300";
+        if(profileObj.equipped.names) {
+            const item = STORE_ITEMS.find(i => i.id === profileObj.equipped.names);
+            if(item) nameEl.className = `text-xl font-black uppercase tracking-wider text-center transition-all duration-300 ${item.cssClass}`;
+        }
+    }
 }
 
 function toggleMenu() { 
@@ -206,6 +230,7 @@ function navigate(viewName) {
     else if(viewName === 'settings') { showView('view-settings'); }
     else if(viewName === 'super-admin') { showView('view-super-admin'); }
     else if(viewName === 'league') { loadLeagueView(); showView('view-league'); }
+    else if(viewName === 'store') { loadStoreView(); showView('view-store'); }
 }
 
 let isLoginMode = true;
@@ -238,7 +263,7 @@ async function processAuth() {
             showNotify("Creating account...");
             const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
             await userCred.user.sendEmailVerification();
-            const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: false, can_create_gyms: false };
+            const profile = { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "Bouldering Enthusiast", avatar_url: "", is_global_admin: false, can_create_gyms: false, coins: 0, inventory: [], equipped: {} };
             const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
             if (!res) return;
             localStorage.setItem('user_profile', JSON.stringify(profile)); 
@@ -252,7 +277,7 @@ async function processAuth() {
             if (!userCred.user.emailVerified) return showNotify("Verify your email first!", true);
             let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
             if (!profile || profile.detail || !profile.name) {
-                profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: false, can_create_gyms: false };
+                profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: false, can_create_gyms: false, coins: 0, inventory: [], equipped: {} };
                 localStorage.setItem('user_profile', JSON.stringify(profile)); 
                 showView('view-onboarding'); 
                 return;
@@ -277,7 +302,7 @@ async function googleSignIn() {
         if (!profile || profile.detail) {
             const fallbackName = userCred.user.email ? userCred.user.email.split('@')[0] : "Climber";
             const displayName = userCred.user.displayName || fallbackName;
-            profile = { user_id: userCred.user.uid, email: userCred.user.email, name: fallbackName, first_name: displayName.split(" ")[0] || "", last_name: displayName.split(" ").slice(1).join(" ") || "", bio: "Bouldering Enthusiast", avatar_url: userCred.user.photoURL || "", is_global_admin: false, can_create_gyms: false };
+            profile = { user_id: userCred.user.uid, email: userCred.user.email, name: fallbackName, first_name: displayName.split(" ")[0] || "", last_name: displayName.split(" ").slice(1).join(" ") || "", bio: "Bouldering Enthusiast", avatar_url: userCred.user.photoURL || "", is_global_admin: false, can_create_gyms: false, coins: 0, inventory: [], equipped: {} };
             const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
             if (!res) return;
         }
@@ -313,9 +338,7 @@ async function uploadOnboardAvatar(input) {
         await apiCall('/api/db/save', { path: `users/${profile.user_id}/avatar_url`, payload: imageUrl });
         document.getElementById('onboard-avatar').src = imageUrl; 
         showNotify("Uploaded");
-    } catch(err) { 
-        showNotify("Upload failed", true); 
-    }
+    } catch(err) { showNotify("Upload failed", true); }
 }
 
 async function uploadAvatar(input) {
@@ -331,9 +354,7 @@ async function uploadAvatar(input) {
         const profileAvatar = document.getElementById('profile-avatar');
         if (profileAvatar) profileAvatar.src = imageUrl;
         showNotify("Uploaded");
-    } catch(err) { 
-        showNotify("Upload failed", true); 
-    }
+    } catch(err) { showNotify("Upload failed", true); }
 }
 
 async function loadWallPhoto(input) {
@@ -345,9 +366,7 @@ async function loadWallPhoto(input) {
         document.getElementById('wizard-wall-img').src = imageUrl; 
         document.getElementById('detail-wall-img').src = imageUrl; 
         wizardStep(2); 
-    } catch(err) { 
-        showNotify("Upload failed", true); 
-    }
+    } catch(err) { showNotify("Upload failed", true); }
 }
 
 async function completeOnboarding() {
@@ -397,7 +416,7 @@ async function saveProfile() {
     localStorage.setItem('user_profile', JSON.stringify(profile)); 
     loadHomeView(); 
     toggleEditProfile(false); 
-    showNotify("Saved");
+    showNotify("Saved!");
 }
 
 function renderGradeChart(containerId, gradesArray) {
@@ -461,15 +480,26 @@ function selectLogbookDate(t) {
 }
 
 async function loadHomeView() {
-    let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+    let profile = await apiCall('/api/db/get', { path: `users/${JSON.parse(localStorage.getItem('user_profile')).user_id}` });
     profile.ascents_history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${profile.user_id}` }));
+    if (!profile.inventory) profile.inventory = [];
+    if (!profile.equipped) profile.equipped = {};
+    if (profile.coins === undefined) profile.coins = 0;
     localStorage.setItem('user_profile', JSON.stringify(profile));
     
+    document.getElementById('profile-coins').innerText = profile.coins;
+    
     const realNameStr = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-    document.getElementById('profile-realname').innerText = realNameStr || "UNKNOWN CLIMBER";
+    const realNameEl = document.getElementById('profile-realname');
+    realNameEl.innerText = realNameStr || "UNKNOWN CLIMBER";
     document.getElementById('profile-name').innerText = `@${profile.name || "unnamed"}`;
     document.getElementById('profile-bio').innerText = profile.bio || "";
-    document.getElementById('profile-avatar').src = profile.avatar_url || DEFAULT_AVATAR;
+    
+    const avatarEl = document.getElementById('profile-avatar');
+    avatarEl.src = profile.avatar_url || DEFAULT_AVATAR;
+    
+    applyCosmetics(profile, avatarEl, realNameEl);
+    
     document.getElementById('nav-super-admin').classList.toggle('hidden-view', !profile.is_global_admin);
     
     const history = profile.ascents_history; 
@@ -538,6 +568,179 @@ async function acceptFriend(senderId, accept) {
         showNotify("Friend added"); 
     }
     loadFriendRequests();
+}
+
+// 🔥 ЛОГИКА МАГАЗИНА И КОСМЕТИКИ 🔥
+function switchStoreTab(tab) {
+    currentStoreTab = tab;
+    ['borders', 'names', 'inventory'].forEach(t => {
+        const btn = document.getElementById(`store-tab-${t}`);
+        if(btn) {
+            if(t === tab) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800', 'border-gray-700'); }
+            else { btn.classList.add('bg-gray-800', 'border', 'border-gray-700'); btn.classList.remove('bg-blue-600'); }
+        }
+    });
+    renderStoreItems();
+}
+
+function loadStoreView() {
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    document.getElementById('store-coins-display').innerText = profile.coins || 0;
+    switchStoreTab('borders');
+}
+
+function renderStoreItems() {
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    const list = document.getElementById('store-list');
+    list.innerHTML = '';
+    
+    let itemsToShow = [];
+    if(currentStoreTab === 'inventory') {
+        const inv = profile.inventory || [];
+        itemsToShow = STORE_ITEMS.filter(i => inv.includes(i.id));
+        if(itemsToShow.length === 0) {
+            list.innerHTML = '<p class="text-gray-500 text-center mt-10 uppercase text-[10px] tracking-widest">Inventory is empty</p>';
+            return;
+        }
+    } else {
+        itemsToShow = STORE_ITEMS.filter(i => i.type === currentStoreTab);
+    }
+
+    itemsToShow.forEach(item => {
+        const isOwned = (profile.inventory || []).includes(item.id);
+        const isEquipped = profile.equipped && profile.equipped[item.type] === item.id;
+        let displayPrice = profile.is_global_admin ? 'FREE' : `${item.price} PTS`;
+        
+        let actionButtons = '';
+        if(currentStoreTab === 'inventory') {
+            if(isEquipped) {
+                actionButtons = `<button onclick="equipItem('${item.id}', '${item.type}', false)" class="w-full bg-red-900 border border-red-700 text-red-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 shadow">Unequip</button>`;
+            } else {
+                actionButtons = `<button onclick="equipItem('${item.id}', '${item.type}', true)" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 shadow">Equip</button>`;
+            }
+        } else {
+            if(isOwned) {
+                actionButtons = `<div class="w-full bg-green-900 border border-green-700 text-green-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 text-center shadow">Owned</div>`;
+            } else {
+                actionButtons = `
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="buyItem('${item.id}')" class="flex-[2] bg-yellow-600 hover:bg-yellow-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow flex items-center justify-center border border-yellow-500 text-yellow-50"><span class="mr-1 text-[8px]">🛒</span> Buy</button>
+                    <button onclick="openGiftModal('${item.id}')" class="flex-1 bg-pink-600 hover:bg-pink-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow flex items-center justify-center border border-pink-500 text-pink-50">Gift</button>
+                </div>`;
+            }
+        }
+
+        let previewHtml = '';
+        if (item.type === 'borders') {
+            previewHtml = `<div class="w-12 h-12 rounded-full bg-gray-900 ${item.cssClass} mx-auto mb-2"></div>`;
+        } else if (item.type === 'names') {
+            previewHtml = `<div class="text-center font-black text-sm mb-2 uppercase tracking-widest ${item.cssClass}">Example</div>`;
+        }
+
+        list.innerHTML += `
+        <div class="bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-700 flex flex-col">
+            ${previewHtml}
+            <div class="text-center mb-1">
+                <span class="font-black uppercase tracking-wider text-sm text-white">${item.name}</span>
+            </div>
+            <div class="flex justify-between items-center px-1 mb-1">
+                <span class="text-[8px] uppercase tracking-widest font-bold ${item.color}">${item.rarity}</span>
+                <span class="text-[10px] uppercase tracking-widest font-bold text-yellow-400">${isOwned ? '✓' : displayPrice}</span>
+            </div>
+            ${actionButtons}
+        </div>`;
+    });
+}
+
+async function buyItem(itemId) {
+    let profile = JSON.parse(localStorage.getItem('user_profile'));
+    const item = STORE_ITEMS.find(i => i.id === itemId);
+    const actualPrice = profile.is_global_admin ? 0 : item.price;
+    
+    if(profile.coins < actualPrice) return showNotify("Not enough coins", true);
+    if(!profile.inventory) profile.inventory = [];
+    if(profile.inventory.includes(itemId)) return;
+    
+    profile.coins -= actualPrice;
+    profile.inventory.push(itemId);
+    
+    await apiCall('/api/db/save', { path: `users/${profile.user_id}/coins`, payload: profile.coins });
+    await apiCall('/api/db/save', { path: `users/${profile.user_id}/inventory`, payload: profile.inventory });
+    
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+    document.getElementById('store-coins-display').innerText = profile.coins;
+    renderStoreItems();
+    showNotify("Purchased!");
+}
+
+async function equipItem(itemId, type, equip) {
+    let profile = JSON.parse(localStorage.getItem('user_profile'));
+    if(!profile.equipped) profile.equipped = {};
+    
+    if(equip) profile.equipped[type] = itemId;
+    else delete profile.equipped[type];
+    
+    await apiCall('/api/db/save', { path: `users/${profile.user_id}/equipped`, payload: profile.equipped });
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+    renderStoreItems();
+    showNotify(equip ? "Equipped!" : "Unequipped");
+}
+
+async function openGiftModal(itemId) {
+    currentGiftItemId = itemId;
+    const item = STORE_ITEMS.find(i => i.id === itemId);
+    document.getElementById('gift-item-name').innerText = item.name;
+    
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    const friends = await apiCall('/api/db/get', { path: `friends/${profile.user_id}` }) || {};
+    const allUsers = await apiCall('/api/db/get', { path: `users` }) || {};
+    
+    const list = document.getElementById('gift-friends-list');
+    list.innerHTML = '';
+    
+    let found = false;
+    for(let fId in friends) {
+        const u = allUsers[fId];
+        if(!u) continue;
+        found = true;
+        list.innerHTML += `<div class="bg-gray-800 p-3 rounded flex justify-between items-center border border-gray-700"><span class="font-bold text-xs uppercase tracking-wider">@${u.nickname || u.name}</span><button onclick="sendGift('${fId}')" class="bg-pink-600 hover:bg-pink-500 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest shadow">Send</button></div>`;
+    }
+    
+    if(!found) list.innerHTML = '<p class="text-gray-500 text-center mt-4 text-[10px] uppercase tracking-widest">No friends to gift</p>';
+    
+    document.getElementById('gift-modal').classList.remove('hidden-view');
+}
+
+function closeGiftModal() {
+    currentGiftItemId = null;
+    document.getElementById('gift-modal').classList.add('hidden-view');
+}
+
+async function sendGift(friendId) {
+    let profile = JSON.parse(localStorage.getItem('user_profile'));
+    const item = STORE_ITEMS.find(i => i.id === currentGiftItemId);
+    const actualPrice = profile.is_global_admin ? 0 : item.price;
+    
+    if(profile.coins < actualPrice) return showNotify("Not enough coins", true);
+    
+    let friendInv = await apiCall('/api/db/get', { path: `users/${friendId}/inventory` }) || [];
+    if(friendInv.includes(currentGiftItemId)) {
+        closeGiftModal();
+        return showNotify("Friend already owns this", true);
+    }
+    
+    friendInv.push(currentGiftItemId);
+    profile.coins -= actualPrice;
+    
+    await apiCall('/api/db/save', { path: `users/${profile.user_id}/coins`, payload: profile.coins });
+    await apiCall('/api/db/save', { path: `users/${friendId}/inventory`, payload: friendInv });
+    
+    localStorage.setItem('user_profile', JSON.stringify(profile));
+    document.getElementById('store-coins-display').innerText = profile.coins;
+    
+    closeGiftModal();
+    renderStoreItems();
+    showNotify("Gift Sent! 🎁");
 }
 
 function loadLeagueView() {
@@ -972,13 +1175,29 @@ async function confirmCompleteRoute(isOfficial = false) {
         route_type: activeBoulder.route_type || 'custom'
     });
     
+    // 🔥 НАЧИСЛЕНИЕ МОНЕТ 🔥
+    let coinsEarned = 0;
+    if (activeBoulder.route_type === 'custom' || activeBoulder.route_type === 'climbers') {
+        coinsEarned = 100;
+    } else {
+        const idx = ALL_GRADES.indexOf(gradeToLog);
+        if (idx <= ALL_GRADES.indexOf("4")) coinsEarned = 100;
+        else if (idx <= ALL_GRADES.indexOf("5+")) coinsEarned = 250;
+        else if (idx <= ALL_GRADES.indexOf("6B")) coinsEarned = 500;
+        else if (idx <= ALL_GRADES.indexOf("6C+")) coinsEarned = 1000;
+        else if (idx <= ALL_GRADES.indexOf("7B")) coinsEarned = 2500;
+        else coinsEarned = 5000;
+    }
+    profile.coins = (profile.coins || 0) + coinsEarned;
+    
     profile.ascents_history = history; 
     localStorage.setItem('user_profile', JSON.stringify(profile));
     await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
+    await apiCall('/api/db/save', { path: `users/${profile.user_id}/coins`, payload: profile.coins });
     
     activeBoulder.ascents = (activeBoulder.ascents || 0) + 1;
     await apiCall('/api/db/save', { path: `boulders/${activeBoulder.id}`, payload: activeBoulder }); 
-    showNotify("Ascent logged"); 
+    showNotify(`Ascent logged! +${coinsEarned} COINS`); 
     openRouteDetail(activeBoulder);
 }
 
@@ -1046,7 +1265,14 @@ function renderClimbers() {
             const rankData = league.current;
             const fullName = `${c.user.first_name || ''} ${c.user.last_name || ''}`.trim() || 'UNKNOWN';
             
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex items-center space-x-3"><span class="w-5 text-center text-sm ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-xs">${fullName}</p><div class="flex items-center text-[8px] uppercase font-bold tracking-widest mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points})</span></div><p class="text-[8px] text-gray-400 mt-1 uppercase tracking-widest">Max Off: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-900 bg-gray-900 px-2 py-1 rounded">View</span></div>`;
+            // Если у юзера экипировано свечение ника
+            let nameCss = "";
+            if (c.user.equipped && c.user.equipped.names) {
+                const eqItem = STORE_ITEMS.find(i => i.id === c.user.equipped.names);
+                if (eqItem) nameCss = eqItem.cssClass;
+            }
+            
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex items-center space-x-3"><span class="w-5 text-center text-sm ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-xs ${nameCss}">${fullName}</p><div class="flex items-center text-[8px] uppercase font-bold tracking-widest mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points})</span></div><p class="text-[8px] text-gray-400 mt-1 uppercase tracking-widest">Max Off: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-900 bg-gray-900 px-2 py-1 rounded">View</span></div>`;
         } 
         rank++;
     });
@@ -1214,10 +1440,15 @@ async function openOtherProfile(uid, source = 'home') {
     const u = allUsers[uid] || {};
     
     const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN CLIMBER';
-    document.getElementById('op-realname').innerText = fullName; 
+    const realNameEl = document.getElementById('op-realname');
+    const avatarEl = document.getElementById('op-avatar');
+    
+    realNameEl.innerText = fullName; 
     document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'unnamed'}`; 
     document.getElementById('op-bio').innerText = u.bio || ""; 
-    document.getElementById('op-avatar').src = u.avatar_url || DEFAULT_AVATAR;
+    avatarEl.src = u.avatar_url || DEFAULT_AVATAR;
+    
+    applyCosmetics(u, avatarEl, realNameEl);
     
     const history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${uid}` })); 
     document.getElementById('op-stat-total').innerText = history.length;
