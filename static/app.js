@@ -41,6 +41,7 @@ let isOpLiked = false;
 let currentStoreTab = 'backgrounds';
 let currentInvTab = 'backgrounds';
 let currentGiftItemId = null;
+let currentGiftFriendId = null;
 
 const STORE_ITEMS = [
     // Backgrounds (10 шт)
@@ -176,7 +177,7 @@ async function directCloudinaryUpload(base64String) {
 function showNotify(msg, isError = false) {
     const box = document.getElementById('notify-box');
     box.innerText = msg;
-    box.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-[100] uppercase tracking-widest text-[10px] border ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
+    box.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded font-black shadow-2xl transition-opacity duration-300 z-[100] uppercase tracking-widest text-[11px] text-center border-2 ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
     box.style.opacity = '1'; 
     setTimeout(() => box.style.opacity = '0', 4000);
 }
@@ -545,6 +546,28 @@ function selectLogbookDate(t) {
     renderLogbook(); 
 }
 
+// 🔥 ПРОВЕРКА УВЕДОМЛЕНИЙ (КРАСНЫЕ ТОЧКИ) 🔥
+async function checkNotifications() {
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    if(!profile || !profile.user_id) return;
+    
+    const reqs = await apiCall('/api/db/get', { path: `friend_requests/${profile.user_id}` }) || {};
+    const notifs = await apiCall('/api/db/get', { path: `notifications/${profile.user_id}` }) || {};
+    
+    let hasReqs = Object.keys(reqs).filter(k => reqs[k]).length > 0;
+    let hasNotifs = Object.keys(notifs).length > 0;
+    
+    const menuBadge = document.getElementById('menu-badge');
+    const drawerHome = document.getElementById('drawer-badge-home');
+    const drawerFriends = document.getElementById('drawer-badge-friends');
+    const homeInv = document.getElementById('home-badge-inventory');
+    
+    if(menuBadge) menuBadge.classList.toggle('hidden-view', !(hasReqs || hasNotifs));
+    if(drawerHome) drawerHome.classList.toggle('hidden-view', !hasNotifs);
+    if(drawerFriends) drawerFriends.classList.toggle('hidden-view', !hasReqs);
+    if(homeInv) homeInv.classList.toggle('hidden-view', !hasNotifs);
+}
+
 async function loadHomeView() {
     let localProfile = JSON.parse(localStorage.getItem('user_profile') || '{}');
     if (!localProfile.user_id) return logout();
@@ -626,6 +649,7 @@ async function loadHomeView() {
     renderGradeChart('stat-chart', allGrades); 
     renderLogbook(); 
     loadFriendRequests();
+    checkNotifications();
 }
 
 async function loadFriendRequests() {
@@ -668,8 +692,10 @@ async function acceptFriend(senderId, accept) {
         showNotify("Friend added"); 
     }
     loadFriendRequests();
+    checkNotifications();
 }
 
+// 🔥 ИНВЕНТАРЬ (ГАРДЕРОБ + РАСПАКОВКА ПОДАРКОВ) 🔥
 function switchInventoryTab(tab) {
     currentInvTab = tab;
     ['backgrounds', 'borders', 'names', 'cards'].forEach(t => {
@@ -682,8 +708,30 @@ function switchInventoryTab(tab) {
     renderInventoryItems();
 }
 
-function loadInventoryView() {
+async function loadInventoryView() {
     switchInventoryTab('backgrounds');
+    
+    // ПРОВЕРКА НА НОВЫЕ ПОДАРКИ
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    const notifs = await apiCall('/api/db/get', { path: `notifications/${profile.user_id}` });
+    if (notifs) {
+        let giftCount = 0;
+        let lastMessage = "";
+        for(let nId in notifs) {
+            let n = notifs[nId];
+            if(n && n.type === 'gift') {
+                giftCount++;
+                lastMessage = `🎁 ${n.from} gifted you: ${n.itemName}!`;
+            }
+        }
+        if (giftCount === 1) {
+            showNotify(lastMessage);
+        } else if (giftCount > 1) {
+            showNotify(`🎁 You received ${giftCount} new gifts!`);
+        }
+        await apiCall('/api/db/save', { path: `notifications/${profile.user_id}`, method: 'DELETE' });
+        checkNotifications();
+    }
 }
 
 function renderInventoryItems() {
@@ -741,6 +789,7 @@ async function equipItem(itemId, type, equip) {
     showNotify(equip ? "Equipped" : "Unequipped");
 }
 
+// 🔥 ЛОГИКА МАГАЗИНА (STORE) 🔥
 function switchStoreTab(tab) {
     currentStoreTab = tab;
     ['backgrounds', 'borders', 'names', 'cards'].forEach(t => {
@@ -830,6 +879,7 @@ async function buyItem(itemId) {
     showNotify("Purchased!");
 }
 
+// 🔥 ПОДАРКИ: ШАГ 1 🔥
 async function openGiftModal(itemId) {
     currentGiftItemId = itemId;
     const item = STORE_ITEMS.find(i => i.id === itemId);
@@ -859,27 +909,40 @@ async function openGiftModal(itemId) {
         if(!u) continue;
         found = true;
         const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN';
-        list.innerHTML += `<div class="bg-gray-800 p-3 rounded flex justify-between items-center border border-gray-700"><div class="flex flex-col"><span class="font-bold text-xs uppercase tracking-wider">${fullName}</span><span class="text-gray-500 text-[10px] uppercase">@${u.nickname || u.name}</span></div><button onclick="sendGift('${fId}')" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow border border-pink-500">Send</button></div>`;
+        // Кнопка теперь "SELECT" и ведет на 2 шаг
+        list.innerHTML += `<div class="bg-gray-800 p-3 rounded flex justify-between items-center border border-gray-700"><div class="flex flex-col"><span class="font-bold text-xs uppercase tracking-wider">${fullName}</span><span class="text-gray-500 text-[10px] uppercase">@${u.nickname || u.name}</span></div><button onclick="selectGiftFriend('${fId}')" class="bg-pink-600 hover:bg-pink-500 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow border border-pink-500">Select</button></div>`;
     }
     
     if(!found) list.innerHTML = '<p class="text-gray-500 text-center mt-4 text-[10px] uppercase tracking-widest">No friends to gift</p>';
     
+    document.getElementById('gift-step-1').classList.remove('hidden-view');
+    document.getElementById('gift-step-2').classList.add('hidden-view');
     document.getElementById('gift-modal').classList.remove('hidden-view');
+}
+
+// 🔥 ПОДАРКИ: ШАГ 2 🔥
+function selectGiftFriend(friendId) {
+    currentGiftFriendId = friendId;
+    document.getElementById('gift-step-1').classList.add('hidden-view');
+    document.getElementById('gift-step-2').classList.remove('hidden-view');
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    document.getElementById('gift-sender-name').innerText = `@${profile.nickname || profile.name}`;
 }
 
 function closeGiftModal() {
     currentGiftItemId = null;
+    currentGiftFriendId = null;
     document.getElementById('gift-modal').classList.add('hidden-view');
 }
 
-async function sendGift(friendId) {
+async function confirmSendGift(isAnonymous) {
     let profile = JSON.parse(localStorage.getItem('user_profile'));
     const item = STORE_ITEMS.find(i => i.id === currentGiftItemId);
     const actualPrice = profile.is_global_admin ? 0 : item.price;
     
     if(profile.coins < actualPrice) return showNotify("Not enough coins", true);
     
-    let friendInv = await apiCall('/api/db/get', { path: `users/${friendId}/inventory` }) || [];
+    let friendInv = await apiCall('/api/db/get', { path: `users/${currentGiftFriendId}/inventory` }) || [];
     if(friendInv.includes(currentGiftItemId)) {
         closeGiftModal();
         return showNotify("Friend already owns this", true);
@@ -889,7 +952,15 @@ async function sendGift(friendId) {
     profile.coins -= actualPrice;
     
     await apiCall('/api/db/save', { path: `users/${profile.user_id}/coins`, payload: profile.coins });
-    await apiCall('/api/db/save', { path: `users/${friendId}/inventory`, payload: friendInv });
+    await apiCall('/api/db/save', { path: `users/${currentGiftFriendId}/inventory`, payload: friendInv });
+    
+    // ОТПРАВКА УВЕДОМЛЕНИЯ В БАЗУ ДРУГУ
+    const senderName = isAnonymous ? 'Secret Climber 🥷' : `@${profile.nickname || profile.name}`;
+    const notifId = Date.now().toString();
+    await apiCall('/api/db/save', { 
+        path: `notifications/${currentGiftFriendId}/${notifId}`, 
+        payload: { type: 'gift', itemName: item.name, from: senderName } 
+    });
     
     localStorage.setItem('user_profile', JSON.stringify(profile));
     document.getElementById('store-coins-display').innerText = profile.coins;
@@ -897,7 +968,7 @@ async function sendGift(friendId) {
     
     closeGiftModal();
     renderStoreItems();
-    showNotify("Gift Sent!");
+    showNotify("Gift Sent Successfully! 🎁");
 }
 
 function loadLeagueView() {
