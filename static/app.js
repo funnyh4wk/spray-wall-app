@@ -206,7 +206,6 @@ function getPoints(history) {
     return total;
 }
 
-// 🔥 ГЛОБАЛЬНАЯ ПРИМЕНЯЛКА КОСМЕТИКИ 🔥
 function applyCosmetics(profileObj, avatarEl, nameEl) {
     if(!profileObj) return;
     if(!profileObj.equipped) profileObj.equipped = {};
@@ -683,6 +682,7 @@ async function equipItem(itemId, type, equip) {
     await apiCall('/api/db/save', { path: `users/${profile.user_id}/equipped`, payload: profile.equipped });
     localStorage.setItem('user_profile', JSON.stringify(profile));
     
+    // Мгновенно применяем
     applyCosmetics(profile, document.getElementById('profile-avatar'), document.getElementById('profile-realname'));
     
     renderInventoryItems();
@@ -720,8 +720,14 @@ function renderStoreItems() {
         let displayPrice = profile.is_global_admin ? 'FREE' : `${item.price.toLocaleString()} C`;
         
         let actionButtons = '';
+        
+        // 🔥 ИСПРАВЛЕННАЯ ЛОГИКА ДЛЯ КНОПОК BUY И GIFT 🔥
         if(isOwned) {
-            actionButtons = `<div class="w-full bg-green-900 border border-green-700 text-green-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest mt-2 text-center shadow">Owned</div>`;
+            actionButtons = `
+            <div class="flex space-x-2 mt-2">
+                <div class="flex-[2] bg-green-900 border border-green-700 text-green-100 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow flex items-center justify-center">Owned</div>
+                <button onclick="openGiftModal('${item.id}')" class="flex-1 bg-pink-600 hover:bg-pink-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest shadow border border-pink-500 text-pink-50 transition-colors">Gift</button>
+            </div>`;
         } else {
             actionButtons = `
             <div class="flex space-x-2 mt-2">
@@ -780,6 +786,7 @@ async function openGiftModal(itemId) {
     
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     
+    // 🔥 ПРОВЕРКА ЛИГИ ДЛЯ ПОДАРКОВ (Анти-фарм ботами) 🔥
     const history = profile.ascents_history || [];
     const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
     const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
@@ -836,9 +843,7 @@ async function sendGift(friendId) {
     
     localStorage.setItem('user_profile', JSON.stringify(profile));
     document.getElementById('store-coins-display').innerText = profile.coins;
-    
-    const appbarCoinsEl = document.getElementById('appbar-coins');
-    if(appbarCoinsEl) appbarCoinsEl.innerText = profile.coins;
+    document.getElementById('appbar-coins').innerText = profile.coins;
     
     closeGiftModal();
     renderStoreItems();
