@@ -16,7 +16,7 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
     <!-- Notify Box -->
-    <div id="notify-box" class="opacity-0 pointer-events-none fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-[100] text-xs"></div>
+    <div id="notify-box" class="opacity-0 pointer-events-none fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-[100] text-xs uppercase tracking-widest text-center"></div>
 
     <!-- App Bar -->
     <div id="app-bar" class="bg-black p-3 flex items-center justify-between sticky top-0 z-40 hidden-view border-b border-gray-800">
@@ -84,8 +84,8 @@
                 </div>
                 <input type="file" accept="image/*" class="hidden" onchange="uploadOnboardAvatar(this)">
             </label>
-            <input type="text" id="onb-nickname" placeholder="Nickname (e.g. funnyh4wk)" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm focus:outline-none">
             <input type="text" id="onb-realname" placeholder="Real Name (e.g. Valentyn Fedorov)" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm focus:outline-none">
+            <input type="text" id="onb-nickname" placeholder="Nickname (e.g. funnyh4wk)" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm focus:outline-none">
             <textarea id="onb-bio" placeholder="Bio (e.g. Bouldering Enthusiast)" class="w-full bg-gray-800 p-3 rounded mb-5 h-20 text-sm focus:outline-none"></textarea>
             <button onclick="completeOnboarding()" class="w-full bg-green-600 hover:bg-green-500 p-3 rounded font-bold text-sm shadow uppercase tracking-wider">Save & Continue</button>
         </div>
@@ -99,8 +99,8 @@
                     <input type="file" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
                 </label>
                 <div id="profile-rank" class="mb-2 hover:scale-105 transition-transform" onclick="navigate('league')"></div>
-                <h2 id="profile-name" class="text-xl font-black uppercase tracking-wider"></h2>
-                <p id="profile-realname" class="text-gray-400 text-xs mb-1 uppercase tracking-wider"></p>
+                <h2 id="profile-realname" class="text-xl font-black uppercase tracking-wider text-center"></h2>
+                <p id="profile-name" class="text-gray-400 text-xs mb-2 font-bold tracking-widest"></p>
                 <p id="profile-bio" class="text-gray-300 text-center mb-3 text-sm"></p>
                 <button onclick="toggleEditProfile(true)" class="bg-gray-800 hover:bg-gray-700 px-5 py-2 rounded text-xs font-bold transition-colors shadow uppercase tracking-wider border border-gray-700">Edit Profile</button>
             </div>
@@ -108,9 +108,9 @@
             <!-- Edit Profile Form -->
             <div id="profile-edit" class="flex flex-col w-full mb-5 hidden-view bg-gray-800 p-4 rounded border border-gray-700">
                 <h3 class="font-bold mb-3 text-center uppercase tracking-wider text-sm text-gray-300">Edit Profile</h3>
-                <input type="text" id="edit-name" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none" placeholder="Nickname">
-                <input type="text" id="edit-realname" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none" placeholder="Real Name">
-                <textarea id="edit-bio" class="w-full bg-gray-900 p-2.5 rounded mb-3 text-sm h-16 focus:outline-none" placeholder="Bio"></textarea>
+                <input type="text" id="edit-realname" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none border border-gray-700" placeholder="Real Name">
+                <input type="text" id="edit-name" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none border border-gray-700" placeholder="Nickname">
+                <textarea id="edit-bio" class="w-full bg-gray-900 p-2.5 rounded mb-3 text-sm h-16 focus:outline-none border border-gray-700" placeholder="Bio"></textarea>
                 <div class="flex space-x-2">
                     <button onclick="toggleEditProfile(false)" class="flex-1 bg-gray-700 hover:bg-gray-600 p-2 rounded font-bold transition-colors uppercase text-xs tracking-wider">Cancel</button>
                     <button onclick="saveProfile()" class="flex-1 bg-green-600 hover:bg-green-500 p-2 rounded font-bold transition-colors uppercase text-xs tracking-wider">Save</button>
@@ -129,18 +129,6 @@
                 </div>
             </div>
 
-            <!-- Likes -->
-            <div class="bg-gray-800 p-3 rounded mb-5 shadow border border-gray-700">
-                <div class="text-center mb-2">
-                    <span class="font-bold tracking-widest text-[10px] uppercase text-pink-500">Likes</span>
-                    <span id="my-likes-count" class="block text-2xl font-black text-pink-500">0</span>
-                </div>
-                <div id="my-likes-lock" class="text-center text-[10px] text-gray-500 bg-gray-900 p-2 rounded uppercase font-bold tracking-wider">
-                    Unlock likes by reaching 6B+ or 20 total ascents
-                </div>
-                <div id="my-likes-list" class="space-y-1 mt-2 hidden-view bg-gray-900 p-2 rounded max-h-24 overflow-y-auto text-xs"></div>
-            </div>
-
             <!-- Chart -->
             <div class="bg-gray-800 p-3 rounded mb-5 shadow border border-gray-700">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Grade Pyramid</h3>
@@ -149,7 +137,7 @@
 
             <!-- Logbook -->
             <div class="bg-gray-800 p-3 rounded mb-5 shadow border border-gray-700">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Training Logbook (Last 7 Days)</h3>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 text-center">Training Logbook</h3>
                 <div id="logbook-days" class="flex justify-between space-x-1.5 mb-3 overflow-x-auto pb-1"></div>
                 <div id="logbook-entries" class="space-y-2"></div>
             </div>
@@ -161,7 +149,7 @@
             </div>
         </div>
 
-        <!-- SETTINGS VIEW (NEW!) -->
+        <!-- SETTINGS VIEW -->
         <div id="view-settings" class="hidden-view p-4 w-full">
             <h2 class="text-xl font-black mb-5 tracking-widest text-center uppercase border-b border-gray-800 pb-3">Settings</h2>
             
@@ -189,8 +177,8 @@
             <button id="create-gym-btn" onclick="toggleGymForm(true)" class="w-full bg-green-600 hover:bg-green-500 p-3 rounded font-bold text-sm mb-4 hidden-view shadow uppercase tracking-wider">Add New Gym</button>
             
             <div id="gym-form" class="hidden-view bg-gray-800 p-4 rounded mb-5 border border-gray-700">
-                <input type="text" id="gym-name" placeholder="Gym Name" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none">
-                <input type="text" id="gym-city" placeholder="City" class="w-full bg-gray-900 p-2.5 rounded mb-3 text-sm focus:outline-none">
+                <input type="text" id="gym-name" placeholder="Gym Name" class="w-full bg-gray-900 p-2.5 rounded mb-2 text-sm focus:outline-none border border-gray-700">
+                <input type="text" id="gym-city" placeholder="City" class="w-full bg-gray-900 p-2.5 rounded mb-3 text-sm focus:outline-none border border-gray-700">
                 <div class="flex space-x-2">
                     <button onclick="toggleGymForm(false)" class="flex-1 bg-gray-700 hover:bg-gray-600 p-2.5 rounded font-bold uppercase text-xs tracking-wider">Cancel</button>
                     <button onclick="saveGym()" class="flex-1 bg-green-600 hover:bg-green-500 p-2.5 rounded font-bold uppercase text-xs tracking-wider">Save Gym</button>
@@ -203,12 +191,18 @@
         <!-- GYM ROUTES VIEW -->
         <div id="view-gym-routes" class="hidden-view w-full">
             <div class="bg-black p-3 pb-0 sticky top-[60px] z-30 border-b border-gray-800">
-                <h2 id="gym-title" class="text-lg font-black text-center mb-3 uppercase tracking-widest text-white truncate"></h2>
+                <div class="flex items-center mb-3">
+                    <button onclick="navigate('gyms')" class="text-gray-400 hover:text-white mr-3 flex items-center justify-center p-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <h2 id="gym-title" class="text-lg font-black uppercase tracking-widest text-white truncate flex-1"></h2>
+                </div>
                 <div class="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar">
-                    <button id="tab-official" onclick="switchTab('official')" class="px-3 py-1.5 rounded font-bold text-xs bg-blue-600 whitespace-nowrap uppercase tracking-wider">Official</button>
-                    <button id="tab-custom" onclick="switchTab('custom')" class="px-3 py-1.5 rounded font-bold text-xs bg-gray-800 whitespace-nowrap uppercase tracking-wider">Community</button>
-                    <button id="tab-climbers" onclick="switchTab('climbers')" class="px-3 py-1.5 rounded font-bold text-xs bg-gray-800 whitespace-nowrap uppercase tracking-wider">Climbers</button>
-                    <button id="tab-admin" onclick="switchTab('admin')" class="px-3 py-1.5 rounded font-bold text-xs bg-purple-700 hidden-view whitespace-nowrap uppercase tracking-wider">Admin</button>
+                    <button id="tab-official" onclick="switchTab('official')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-blue-600 whitespace-nowrap uppercase tracking-widest">Official</button>
+                    <button id="tab-custom" onclick="switchTab('custom')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest">Community</button>
+                    <button id="tab-climbers" onclick="switchTab('climbers')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest">Climbers</button>
+                    <button id="tab-news" onclick="switchTab('news')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-gray-800 whitespace-nowrap uppercase tracking-widest">News</button>
+                    <button id="tab-admin" onclick="switchTab('admin')" class="px-3 py-1.5 rounded font-bold text-[10px] bg-purple-700 hidden-view whitespace-nowrap uppercase tracking-widest">Admin</button>
                 </div>
             </div>
 
@@ -220,10 +214,10 @@
                         <button onclick="clearSector()" class="text-orange-400 font-bold text-[10px] px-2 py-1 bg-gray-900 rounded uppercase tracking-wider">Clear Sector</button>
                         <button onclick="deleteSector()" class="text-red-500 font-bold text-[10px] px-2 py-1 bg-gray-900 rounded uppercase tracking-wider">Delete Sector</button>
                     </div>
-                    <div id="add-sector-form" class="hidden-view bg-gray-800 p-2 rounded mb-3 flex space-x-2">
-                        <input type="text" id="new-sector-name" class="flex-1 bg-gray-900 p-2 rounded text-xs focus:outline-none" placeholder="Sector Name">
+                    <div id="add-sector-form" class="hidden-view bg-gray-800 p-2 rounded mb-3 flex space-x-2 border border-gray-700">
+                        <input type="text" id="new-sector-name" class="flex-1 bg-gray-900 p-2 rounded text-xs focus:outline-none border border-gray-700" placeholder="Sector Name">
                         <button onclick="saveSector()" class="bg-green-600 px-3 rounded font-bold text-xs uppercase tracking-wider">Save</button>
-                        <button onclick="toggleSectorForm(false)" class="bg-gray-600 px-3 rounded font-bold text-xs uppercase tracking-wider">X</button>
+                        <button onclick="toggleSectorForm(false)" class="bg-gray-700 px-3 rounded font-bold text-xs uppercase tracking-wider border border-gray-600">X</button>
                     </div>
                     <div id="grade-filters" class="flex space-x-1.5 overflow-x-auto pb-2 hide-scrollbar mb-3"></div>
                     <button id="add-route-btn" onclick="startCreateRoute()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded text-sm font-black shadow mb-1 uppercase tracking-widest">Add Route</button>
@@ -236,6 +230,15 @@
                 <div id="tab-content-climbers" class="hidden-view space-y-2">
                     <input type="text" id="climbers-search" onkeyup="renderClimbers()" placeholder="Search climber..." class="w-full bg-gray-800 p-3 rounded text-sm mb-3 focus:outline-none border border-gray-700">
                     <div id="climbers-list-container" class="space-y-2"></div>
+                </div>
+
+                <!-- News List -->
+                <div id="tab-content-news" class="hidden-view space-y-3">
+                    <div id="news-admin-box" class="hidden-view bg-gray-800 p-3 rounded border border-gray-700 mb-4">
+                        <textarea id="news-input" class="w-full bg-gray-900 p-2 rounded text-sm focus:outline-none border border-gray-700 h-16" placeholder="Write gym announcement..."></textarea>
+                        <button onclick="postGymNews()" class="mt-2 w-full bg-blue-600 hover:bg-blue-500 py-2 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">Post News</button>
+                    </div>
+                    <div id="news-feed" class="space-y-2"></div>
                 </div>
                 
                 <!-- Admin Panel -->
@@ -277,11 +280,23 @@
             </div>
             
             <div id="wizard-step-2" class="hidden-view flex flex-col min-h-[90vh]">
-                <div class="bg-gray-800 p-2 flex justify-center space-x-3 border-b border-gray-700">
-                    <button onclick="setHoldColor('green')" class="w-8 h-8 rounded-full bg-green-500 border-2 border-gray-900 focus:border-white"></button>
-                    <button onclick="setHoldColor('blue')" class="w-8 h-8 rounded-full bg-blue-500 border-2 border-gray-900 focus:border-white"></button>
-                    <button onclick="setHoldColor('red')" class="w-8 h-8 rounded-full bg-red-500 border-2 border-gray-900 focus:border-white"></button>
-                    <button onclick="setHoldColor('erase')" class="w-8 h-8 rounded bg-gray-700 text-white font-bold flex items-center justify-center text-[10px] uppercase">Del</button>
+                <div class="bg-gray-800 p-3 flex justify-center space-x-6 border-b border-gray-700">
+                    <button onclick="setHoldColor('green')" class="flex flex-col items-center group">
+                        <div class="w-8 h-8 rounded-full bg-green-500 border-2 border-gray-900 group-focus:border-white shadow"></div>
+                        <span class="text-[9px] text-green-500 font-bold uppercase tracking-widest mt-1.5">Start</span>
+                    </button>
+                    <button onclick="setHoldColor('blue')" class="flex flex-col items-center group">
+                        <div class="w-8 h-8 rounded-full bg-blue-500 border-2 border-gray-900 group-focus:border-white shadow"></div>
+                        <span class="text-[9px] text-blue-500 font-bold uppercase tracking-widest mt-1.5">Hold</span>
+                    </button>
+                    <button onclick="setHoldColor('red')" class="flex flex-col items-center group">
+                        <div class="w-8 h-8 rounded-full bg-red-500 border-2 border-gray-900 group-focus:border-white shadow"></div>
+                        <span class="text-[9px] text-red-500 font-bold uppercase tracking-widest mt-1.5">Top</span>
+                    </button>
+                    <button onclick="setHoldColor('erase')" class="flex flex-col items-center group">
+                        <div class="w-8 h-8 rounded bg-gray-700 text-gray-300 font-black flex items-center justify-center text-[10px] uppercase border-2 border-gray-900 group-focus:border-white shadow">X</div>
+                        <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">Erase</span>
+                    </button>
                 </div>
                 <div class="relative w-full flex-1 overflow-hidden bg-black flex items-center justify-center">
                     <div id="canvas-container" class="relative inline-block cursor-crosshair">
@@ -289,7 +304,7 @@
                     </div>
                 </div>
                 <div class="p-3 bg-black border-t border-gray-800">
-                    <button onclick="wizardStep(3)" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded text-sm font-bold uppercase tracking-widest">Next Step</button>
+                    <button onclick="wizardStep(3)" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded text-sm font-bold uppercase tracking-widest shadow">Next Step</button>
                 </div>
             </div>
             
@@ -301,7 +316,7 @@
                 </select>
                 <select id="route-sector" class="w-full bg-gray-800 p-3 rounded mb-3 text-sm appearance-none font-bold text-center hidden-view focus:outline-none border border-gray-700"></select>
                 <textarea id="route-desc" placeholder="Description / Rules (Optional)" class="w-full bg-gray-800 p-3 rounded mb-6 text-sm h-20 focus:outline-none border border-gray-700"></textarea>
-                <button onclick="saveNewRoute()" class="w-full bg-green-600 hover:bg-green-500 py-3 rounded text-sm font-bold uppercase tracking-widest">Create Route</button>
+                <button onclick="saveNewRoute()" class="w-full bg-green-600 hover:bg-green-500 py-3 rounded text-sm font-bold uppercase tracking-widest shadow">Create Route</button>
             </div>
         </div>
 
@@ -349,12 +364,15 @@
 
         <!-- OTHER PROFILE VIEW -->
         <div id="view-other-profile" class="hidden-view w-full p-4 pb-20">
-            <button onclick="navigate(profileBackTarget)" class="text-gray-400 hover:text-white font-bold mb-4 uppercase tracking-widest text-[10px]">&lt; Back</button>
+            <button onclick="navigate(profileBackTarget)" class="text-gray-400 hover:text-white font-bold mb-4 uppercase tracking-widest text-[10px] flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                Back
+            </button>
             <div class="flex flex-col items-center mb-5">
                 <img id="op-avatar" src="" class="w-20 h-20 rounded-full object-cover border-2 border-gray-700 mb-3 shadow">
                 <div id="op-rank" class="mb-2"></div>
-                <h2 id="op-name" class="text-xl font-black uppercase tracking-wider"></h2>
-                <p id="op-realname" class="text-gray-400 text-xs mb-1 uppercase tracking-wider"></p>
+                <h2 id="op-realname" class="text-xl font-black uppercase tracking-wider text-center"></h2>
+                <p id="op-name" class="text-gray-400 text-xs mb-2 font-bold tracking-widest"></p>
                 <p id="op-bio" class="text-gray-300 text-center mb-4 text-sm"></p>
                 
                 <div class="flex space-x-2 w-full">

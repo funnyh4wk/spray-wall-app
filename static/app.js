@@ -37,6 +37,7 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
+// 🔥 СИСТЕМА ЛИГ (ОЧКИ ДАЮТСЯ ТОЛЬКО ЗА OFFICIAL ТРАССЫ) 🔥
 const RANKS = [
     { id: 0, title: "Rookie", minPts: 0, minGrade: "1", color: "text-gray-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M5 19L12 5l7 14H5z"/></svg>` },
     { id: 1, title: "Plastic Puller", minPts: 300, minGrade: "4", color: "text-orange-400", svg: `<svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-1.5"><path d="M12 2L3 12l9 10 9-10L12 2zm0 6l4.5 4-4.5 4-4.5-4L12 8z"/></svg>` },
@@ -62,7 +63,6 @@ function getLeagueInfo(points, maxGrade) {
     
     let current = RANKS[currentRankId];
     let next = currentRankId < RANKS.length - 1 ? RANKS[currentRankId + 1] : null;
-    
     let percent = 100;
     let isBossLocked = false;
     
@@ -129,7 +129,7 @@ async function directCloudinaryUpload(base64String) {
 function showNotify(msg, isError = false) {
     const box = document.getElementById('notify-box');
     box.innerText = msg;
-    box.className = `fixed top-5 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-50 uppercase tracking-widest text-[10px] border ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
+    box.className = `fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded font-bold shadow-lg transition-opacity duration-300 z-[100] text-xs uppercase tracking-widest text-center border ${isError ? 'bg-red-900 border-red-500 text-red-100' : 'bg-green-900 border-green-500 text-green-100'}`;
     box.style.opacity = '1'; 
     setTimeout(() => box.style.opacity = '0', 4000);
 }
@@ -168,8 +168,13 @@ async function apiCall(endpoint, payload = {}) {
 function getPoints(history) {
     let total = 0;
     history.forEach(a => {
+        // 🔥 FACEIT MODEL: ANTI-ABUSE 🔥
+        // Custom (Community) routes give ZERO points!
+        if (a.route_type === 'custom' || a.route_type === 'climbers') return;
+
         const g = a.grade; if (!g) return;
         const idx = ALL_GRADES.indexOf(g); if (idx === -1) return;
+        
         if (idx <= ALL_GRADES.indexOf("4")) total += 10;
         else if (idx <= ALL_GRADES.indexOf("5+")) total += 25;
         else if (idx <= ALL_GRADES.indexOf("6B")) total += 50;
@@ -209,7 +214,7 @@ function switchAuthMode() {
     isLoginMode = !isLoginMode; 
     document.getElementById('auth-title').innerText = isLoginMode ? "Login" : "Sign Up";
     document.getElementById('auth-btn').innerText = isLoginMode ? "Login" : "Create Account";
-    document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Login";
+    document.getElementById('auth-switch').innerText = isLoginMode ? "Don't have an account?" : "Already have an account?";
     document.getElementById('confirm-pwd-container').classList.toggle('hidden-view', isLoginMode);
 }
 
@@ -229,7 +234,7 @@ async function processAuth() {
     
     if (!isLoginMode) {
         const pwdConfirm = document.getElementById('auth-password-confirm').value.trim();
-        if (pwd !== pwdConfirm) return showNotify("Passwords do not match!", true);
+        if (pwd !== pwdConfirm) return showNotify("Passwords match failed", true);
         try {
             showNotify("Creating account...");
             const userCred = await auth.createUserWithEmailAndPassword(rawEmail, pwd);
@@ -240,12 +245,12 @@ async function processAuth() {
             localStorage.setItem('user_profile', JSON.stringify(profile)); 
             showNotify("Account created. Verify email.", false); 
             showView('view-onboarding'); 
-        } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
+        } catch (error) { showNotify("Auth Error", true); }
     } else {
         try {
             showNotify("Logging in...");
             const userCred = await auth.signInWithEmailAndPassword(rawEmail, pwd);
-            if (!userCred.user.emailVerified) return showNotify("Please verify your email first!", true);
+            if (!userCred.user.emailVerified) return showNotify("Verify your email first!", true);
             let profile = await apiCall('/api/db/get', { path: `users/${userCred.user.uid}` });
             if (!profile || profile.detail || !profile.name) {
                 profile = profile || { user_id: userCred.user.uid, email: rawEmail, name: "", bio: "", avatar_url: "", is_global_admin: false, can_create_gyms: false };
@@ -261,7 +266,7 @@ async function processAuth() {
             localStorage.setItem('user_profile', JSON.stringify(profile)); 
             loadHomeView(); 
             showView('view-home'); 
-        } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
+        } catch (error) { showNotify("Login Failed", true); }
     }
 }
 
@@ -273,7 +278,7 @@ async function googleSignIn() {
         if (!profile || profile.detail) {
             const fallbackName = userCred.user.email ? userCred.user.email.split('@')[0] : "Climber";
             const displayName = userCred.user.displayName || fallbackName;
-            profile = { user_id: userCred.user.uid, email: userCred.user.email, name: displayName, first_name: displayName.split(" ")[0] || "", last_name: displayName.split(" ").slice(1).join(" ") || "", bio: "Bouldering Enthusiast", avatar_url: userCred.user.photoURL || "", is_global_admin: false, can_create_gyms: false };
+            profile = { user_id: userCred.user.uid, email: userCred.user.email, name: fallbackName, first_name: displayName.split(" ")[0] || "", last_name: displayName.split(" ").slice(1).join(" ") || "", bio: "Bouldering Enthusiast", avatar_url: userCred.user.photoURL || "", is_global_admin: false, can_create_gyms: false };
             const res = await apiCall('/api/db/save', { path: `users/${userCred.user.uid}`, payload: profile });
             if (!res) return;
         }
@@ -285,7 +290,7 @@ async function googleSignIn() {
         localStorage.setItem('user_profile', JSON.stringify(profile)); 
         loadHomeView(); 
         showView('view-home'); 
-    } catch (error) { showNotify(error.message.replace("Firebase: ", ""), true); }
+    } catch (error) { showNotify("Google Auth Failed", true); }
 }
 
 function logout() { 
@@ -348,9 +353,10 @@ async function loadWallPhoto(input) {
 
 async function completeOnboarding() {
     const nickname = document.getElementById('onb-nickname').value.trim(); 
-    if (!nickname) return showNotify("Nickname required", true);
+    const realname = document.getElementById('onb-realname').value.trim(); 
+    if (!nickname || !realname) return showNotify("Name required", true);
     
-    const parts = document.getElementById('onb-realname').value.trim().split(' ');
+    const parts = realname.split(' ');
     let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
     profile.name = nickname; 
     profile.first_name = parts[0] || ''; 
@@ -378,7 +384,7 @@ function toggleEditProfile(show) {
 
 async function saveProfile() {
     const name = document.getElementById('edit-name').value.trim(); 
-    if(!name) return showNotify("Nickname required", true);
+    if(!name) return showNotify("Name required", true);
     
     const parts = document.getElementById('edit-realname').value.trim().split(' ');
     let profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
@@ -460,20 +466,27 @@ async function loadHomeView() {
     profile.ascents_history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${profile.user_id}` }));
     localStorage.setItem('user_profile', JSON.stringify(profile));
     
-    document.getElementById('profile-name').innerText = profile.name || "Unnamed";
-    document.getElementById('profile-realname').innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    const realNameStr = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+    document.getElementById('profile-realname').innerText = realNameStr || "UNKNOWN CLIMBER";
+    document.getElementById('profile-name').innerText = `@${profile.name || "unnamed"}`;
     document.getElementById('profile-bio').innerText = profile.bio || "";
     document.getElementById('profile-avatar').src = profile.avatar_url || DEFAULT_AVATAR;
     document.getElementById('nav-super-admin').classList.toggle('hidden-view', !profile.is_global_admin);
     
     const history = profile.ascents_history; 
     document.getElementById('stat-total').innerText = history.length;
-    const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
-    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "1";
-    document.getElementById('stat-max').innerText = grades.length ? maxGrade : "-";
+    
+    // МАКСИМАЛЬНЫЙ ГРЕЙД ДЛЯ ЛИГИ (ТОЛЬКО OFFICIAL ТРАССЫ)
+    const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
+    
+    // Отображаем просто макс грейд (из всех трасс) для статистики
+    const allGrades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const absoluteMaxGrade = allGrades.length ? allGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, allGrades[0]) : "-";
+    document.getElementById('stat-max').innerText = absoluteMaxGrade;
     
     const totalPoints = getPoints(history); 
-    const league = getLeagueInfo(totalPoints, maxGrade); 
+    const league = getLeagueInfo(totalPoints, maxOfficialGrade); 
     const rankEl = document.getElementById('profile-rank');
     rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-[10px] ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`;
     rankEl.className = `text-xs font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
@@ -483,24 +496,7 @@ async function loadHomeView() {
     const likeKeys = Object.keys(likes).filter(k => likes[k]);
     document.getElementById('my-likes-count').innerText = likeKeys.length;
     
-    const isUnlocked = profile.is_global_admin || history.length >= 20 || ALL_GRADES.indexOf(maxGrade) >= ALL_GRADES.indexOf("6B+");
-    const lockBox = document.getElementById('my-likes-lock'); 
-    const listObj = document.getElementById('my-likes-list');
-    
-    if (isUnlocked) { 
-        lockBox.classList.add('hidden-view'); 
-        if (likeKeys.length > 0) { 
-            listObj.classList.remove('hidden-view'); 
-            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; 
-            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300 font-bold tracking-wider text-[10px] uppercase mb-1">• @${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
-        } else { 
-            listObj.classList.add('hidden-view'); 
-        } 
-    } else { 
-        lockBox.classList.remove('hidden-view'); 
-        listObj.classList.add('hidden-view'); 
-    }
-    renderGradeChart('stat-chart', grades); 
+    renderGradeChart('stat-chart', allGrades); 
     renderLogbook(); 
     loadFriendRequests();
 }
@@ -529,7 +525,7 @@ async function loadFriendRequests() {
             await apiCall('/api/db/save', { path: `friend_requests/${profile.user_id}/${senderId}`, method: "DELETE" }); 
             continue; 
         }
-        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><span class="font-bold tracking-wider text-xs">@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1.5 rounded text-[10px] mr-2 font-bold transition-colors uppercase tracking-wider">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-gray-700 px-3 py-1.5 rounded text-[10px] font-bold transition-colors uppercase tracking-wider border border-gray-600">Decline</button></div></div>`;
+        list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><span class="font-bold tracking-wider text-xs uppercase">@${u.nickname || u.name}</span><div><button onclick="acceptFriend('${senderId}', true)" class="bg-green-600 px-3 py-1.5 rounded text-[10px] mr-2 font-bold transition-colors uppercase tracking-wider">Accept</button><button onclick="acceptFriend('${senderId}', false)" class="bg-gray-700 px-3 py-1.5 rounded text-[10px] font-bold transition-colors uppercase tracking-wider border border-gray-600">Decline</button></div></div>`;
     }
     if(list.innerHTML === '') box.classList.add('hidden-view');
 }
@@ -551,10 +547,12 @@ function loadLeagueView() {
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     const history = normArr(profile.ascents_history || []);
     const points = getPoints(history);
-    const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
-    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "1";
     
-    const league = getLeagueInfo(points, maxGrade);
+    // Лига смотрит ТОЛЬКО на официальные трассы
+    const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
+    
+    const league = getLeagueInfo(points, maxOfficialGrade);
     const container = document.getElementById('league-content');
     
     let html = `<h2 class="text-xl font-black mb-5 tracking-widest text-center uppercase border-b border-gray-800 pb-3">League Progress</h2>`;
@@ -564,7 +562,7 @@ function loadLeagueView() {
         <div class="${league.current.color} transform scale-125 mb-3 mt-2">${league.current.svg}</div>
         <h3 class="text-xl font-black uppercase tracking-widest ${league.current.color}">${league.current.title}</h3>
         <p class="text-gray-400 mt-1.5 font-bold text-sm">${points} PTS</p>
-        <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Max Grade: <span class="text-white font-bold">${maxGrade !== "1" ? maxGrade : "None"}</span></p>
+        <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Max Official Grade: <span class="text-white font-bold">${maxOfficialGrade !== "1" ? maxOfficialGrade : "None"}</span></p>
     </div>`;
     
     if (league.next) {
@@ -575,7 +573,7 @@ function loadLeagueView() {
             html += `
             <div class="bg-gray-900 border border-red-900 p-3 rounded mb-3 shadow">
                 <p class="text-red-500 font-bold text-center text-xs mb-1 uppercase tracking-widest">Requirement Pending</p>
-                <p class="text-gray-400 text-center text-[10px] uppercase tracking-wider mb-3">To enter ${league.next.title}, complete the challenge:</p>
+                <p class="text-gray-400 text-center text-[10px] uppercase tracking-wider mb-3">To enter ${league.next.title}, complete the official challenge:</p>
                 <div class="bg-red-900 border border-red-700 text-red-100 text-center py-2 rounded font-black text-xs shadow uppercase tracking-widest">
                     CLIMB A ${league.next.minGrade} OR HARDER
                 </div>
@@ -589,7 +587,7 @@ function loadLeagueView() {
             <div class="w-full bg-gray-900 rounded-full h-2 mb-2 shadow-inner overflow-hidden border border-gray-800">
                 <div class="bg-blue-500 h-2 rounded-full transition-all duration-1000 shadow-md" style="width: ${league.percent}%"></div>
             </div>
-            <p class="text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-2">Boss Requirement: Climb a ${league.next.minGrade}</p>
+            <p class="text-center text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-2">Boss Requirement: Climb Official ${league.next.minGrade}</p>
             `;
         }
         html += `</div>`;
@@ -637,7 +635,8 @@ async function loadFriendsView() {
     for(let fId in friends) { 
         const u = allUsers[fId]; 
         if(!u) continue; 
-        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><span class="font-bold tracking-wider text-sm uppercase">@${u.nickname || u.name || 'User'}</span><span class="text-blue-400 text-[10px] uppercase tracking-widest font-bold">Profile</span></div>`; 
+        const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN';
+        list.innerHTML += `<div onclick="openOtherProfile('${fId}', 'friends')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex flex-col"><span class="font-bold tracking-wider text-xs uppercase">${fullName}</span><span class="text-gray-500 text-[10px] uppercase">@${u.nickname || u.name}</span></div><span class="text-blue-400 text-[10px] uppercase tracking-widest font-bold">Profile &gt;</span></div>`; 
     }
 }
 
@@ -651,7 +650,7 @@ async function loadGymsView() {
     for(let gId in gyms) { 
         const g = gyms[gId]; 
         if(!g || !g.id) continue; 
-        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div><h3 class="font-bold text-sm uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-[10px] uppercase tracking-widest mt-0.5">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-[10px] tracking-widest">Enter</span></div>`; 
+        list.innerHTML += `<div onclick="openGym('${g.id}', '${g.name}')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors mb-2 shadow border border-gray-700"><div><h3 class="font-bold text-sm uppercase tracking-wider">${g.name}</h3><p class="text-gray-400 text-[10px] uppercase tracking-widest mt-0.5">${g.city || 'Unknown'}</p></div><span class="text-blue-400 font-bold uppercase text-[10px] tracking-widest">Enter &gt;</span></div>`; 
     }
 }
 
@@ -807,25 +806,58 @@ async function deleteCurrentGym() {
     navigate('gyms');
 }
 
+// 🔥 ЛОГИКА ВКЛАДКИ NEWS 🔥
+async function loadGymNews() {
+    const newsObj = await apiCall('/api/db/get', { path: `gym_news/${currentGymId}` }) || {};
+    const feed = document.getElementById('news-feed');
+    feed.innerHTML = '';
+    const keys = Object.keys(newsObj).sort().reverse(); 
+    if(keys.length === 0) {
+        feed.innerHTML = '<p class="text-gray-500 text-center text-[10px] uppercase tracking-widest mt-6">No news yet</p>';
+    } else {
+        keys.forEach(k => {
+            const n = newsObj[k];
+            const date = new Date(n.timestamp).toLocaleDateString();
+            feed.innerHTML += `<div class="bg-gray-800 p-3 rounded border border-gray-700 shadow mb-3"><p class="text-[9px] text-blue-400 font-bold mb-1.5 uppercase tracking-widest">${date} • ${n.author}</p><p class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">${n.text}</p></div>`;
+        });
+    }
+    const canAdmin = currentGymRole === 'admin' || currentGymRole === 'setter';
+    document.getElementById('news-admin-box').classList.toggle('hidden-view', !canAdmin);
+}
+
+async function postGymNews() {
+    const text = document.getElementById('news-input').value.trim();
+    if(!text) return;
+    const profile = JSON.parse(localStorage.getItem('user_profile'));
+    const nId = Date.now().toString();
+    await apiCall('/api/db/save', { path: `gym_news/${currentGymId}/${nId}`, payload: { text: text, author: profile.name, timestamp: Date.now() } });
+    document.getElementById('news-input').value = '';
+    showNotify("News posted");
+    loadGymNews();
+}
+
 function switchTab(tabName) {
     currentTab = tabName;
-    ['official', 'custom', 'climbers', 'admin'].forEach(t => {
+    ['official', 'custom', 'climbers', 'news', 'admin'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if(btn) { 
-            if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800'); btn.classList.remove('border-gray-700'); } 
-            else { btn.classList.add('bg-gray-800'); btn.classList.add('border'); btn.classList.add('border-gray-700'); btn.classList.remove('bg-blue-600'); } 
+            if (t === tabName) { btn.classList.add('bg-blue-600'); btn.classList.remove('bg-gray-800', 'border-gray-700'); } 
+            else { btn.classList.add('bg-gray-800', 'border', 'border-gray-700'); btn.classList.remove('bg-blue-600'); } 
         }
     });
-    document.getElementById('tab-content-gallery').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin');
+    
+    document.getElementById('tab-content-gallery').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin' || tabName === 'news');
     document.getElementById('tab-content-climbers').classList.toggle('hidden-view', tabName !== 'climbers');
+    document.getElementById('tab-content-news').classList.toggle('hidden-view', tabName !== 'news');
     document.getElementById('tab-content-admin').classList.toggle('hidden-view', tabName !== 'admin');
     
     const showSectors = (tabName === 'official' || tabName === 'custom');
     document.getElementById('sector-bar-container').classList.toggle('hidden-view', !showSectors);
-    document.getElementById('add-route-btn').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin' || (tabName === 'official' && currentGymRole === 'user'));
+    document.getElementById('add-route-btn').classList.toggle('hidden-view', tabName === 'climbers' || tabName === 'admin' || tabName === 'news' || (tabName === 'official' && currentGymRole === 'user'));
     
     if(showSectors) renderGradeFilters();
     if(tabName === 'climbers') loadGymClimbers(); 
+    else if(tabName === 'news') loadGymNews();
     else if(tabName === 'admin') loadAdminPanel(); 
     else loadGallery();
 }
@@ -935,7 +967,15 @@ async function confirmCompleteRoute(isOfficial = false) {
         recalcConsensus(activeBoulder); 
     }
     
-    history.push({ boulder_id: activeBoulder.id, boulder_name: activeBoulder.name, grade: gradeToLog, style: 'completed', timestamp: Date.now() });
+    history.push({ 
+        boulder_id: activeBoulder.id, 
+        boulder_name: activeBoulder.name, 
+        grade: gradeToLog, 
+        style: 'completed', 
+        timestamp: Date.now(),
+        route_type: activeBoulder.route_type || 'custom'
+    });
+    
     profile.ascents_history = history; 
     localStorage.setItem('user_profile', JSON.stringify(profile));
     await apiCall('/api/db/save', { path: `user_ascents/${profile.user_id}`, payload: history });
@@ -977,11 +1017,14 @@ async function loadGymClimbers() {
         const u = allUsers[uid]; 
         if(!u) continue; 
         const history = normArr(allAscents[uid]);
-        const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
-        const maxGradeIdx = grades.length ? Math.max(...grades.map(g => ALL_GRADES.indexOf(g))) : -1;
+        
+        // Лидерборд теперь тоже учитывает только Официальные трассы для Макс грейда!
+        const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
+        const maxGradeIdx = officialGrades.length ? Math.max(...officialGrades.map(g => ALL_GRADES.indexOf(g))) : -1;
         const maxGrade = maxGradeIdx > -1 ? ALL_GRADES[maxGradeIdx] : "1";
+        
         const points = getPoints(history); 
-        currentClimbersData.push({ uid: uid, user: u, points: points, maxGrade: maxGrade, totalAscents: grades.length });
+        currentClimbersData.push({ uid: uid, user: u, points: points, maxGrade: maxGrade, totalAscents: history.length });
     }
     currentClimbersData.sort((a, b) => { 
         if (b.points !== a.points) return b.points - a.points; 
@@ -1000,12 +1043,15 @@ function renderClimbers() {
     
     currentClimbersData.forEach(c => {
         const nameStr = (c.user.nickname || c.user.name || 'User').toLowerCase();
+        const realStr = ((c.user.first_name || '') + ' ' + (c.user.last_name || '')).toLowerCase();
         
-        if (nameStr.includes(q)) {
+        if (nameStr.includes(q) || realStr.includes(q)) {
             let rankNumColor = rank === 1 ? "text-yellow-500 font-extrabold" : rank === 2 ? "text-gray-300 font-extrabold" : rank === 3 ? "text-orange-400 font-extrabold" : "text-gray-400";
             const league = getLeagueInfo(c.points, c.maxGrade);
             const rankData = league.current;
-            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex items-center space-x-3"><span class="w-5 text-center text-sm ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-xs">@${c.user.nickname || c.user.name || 'User'}</p><div class="flex items-center text-[8px] uppercase font-bold tracking-widest mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points})</span></div><p class="text-[8px] text-gray-400 mt-1 uppercase tracking-widest">Max: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-900 bg-gray-900 px-2 py-1 rounded">View</span></div>`;
+            const fullName = `${c.user.first_name || ''} ${c.user.last_name || ''}`.trim() || 'UNKNOWN';
+            
+            container.innerHTML += `<div onclick="openOtherProfile('${c.uid}', 'gym-routes')" class="bg-gray-800 p-3 rounded flex justify-between items-center cursor-pointer hover:bg-gray-700 transition-colors shadow border border-gray-700"><div class="flex items-center space-x-3"><span class="w-5 text-center text-sm ${rankNumColor}">#${rank}</span><div><p class="font-bold tracking-wider uppercase text-xs">${fullName}</p><div class="flex items-center text-[8px] uppercase font-bold tracking-widest mt-0.5 ${rankData.color}">${rankData.svg} ${rankData.title} <span class="text-gray-500 ml-1 font-normal">(${c.points})</span></div><p class="text-[8px] text-gray-400 mt-1 uppercase tracking-widest">Max Off: <span class="text-red-400 font-bold">${c.maxGrade !== "1" ? c.maxGrade : "-"}</span> | Ascents: <span class="text-green-400 font-bold">${c.totalAscents}</span></p></div></div><span class="text-blue-400 text-[10px] font-bold uppercase tracking-widest border border-blue-900 bg-gray-900 px-2 py-1 rounded">View</span></div>`;
         } 
         rank++;
     });
@@ -1019,7 +1065,8 @@ async function loadAdminPanel() {
     
     for(let uid in roles) { 
         if(roles[uid] === 'setter' && allUsers[uid]) {
-            list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><span class="font-bold text-xs tracking-wider uppercase">@${allUsers[uid].nickname || allUsers[uid].name || 'User'}</span><button onclick="setGymRole('${uid}', 'user')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-[10px] font-bold transition-colors uppercase tracking-widest">Demote</button></div>`; 
+            const fullName = `${allUsers[uid].first_name || ''} ${allUsers[uid].last_name || ''}`.trim() || 'UNKNOWN';
+            list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 p-2.5 rounded border border-gray-800"><div class="flex flex-col"><span class="font-bold text-xs tracking-wider uppercase">${fullName}</span><span class="text-[10px] text-gray-500 uppercase tracking-widest">@${allUsers[uid].nickname || allUsers[uid].name}</span></div><button onclick="setGymRole('${uid}', 'user')" class="bg-red-900 hover:bg-red-800 border border-red-700 px-2 py-1 rounded text-[10px] font-bold transition-colors uppercase tracking-widest">Demote</button></div>`; 
         }
     }
 }
@@ -1033,8 +1080,13 @@ function searchUsersForAdmin() {
         
         for(let uid in allUsers) { 
             const u = allUsers[uid]; 
-            if(u && ((u.nickname || u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q))) {
-                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-800 p-2.5 rounded"><span class="font-bold text-xs tracking-wider uppercase">@${u.nickname || u.name}</span><button onclick="setGymRole('${uid}', 'setter')" class="bg-blue-900 border border-blue-700 hover:bg-blue-800 px-2 py-1 rounded text-[10px] font-bold transition-colors uppercase tracking-widest">Make Setter</button></div>`; 
+            const realStr = ((u.first_name || '') + ' ' + (u.last_name || '')).toLowerCase();
+            const nickStr = (u.nickname || u.name || '').toLowerCase();
+            const emailStr = (u.email || '').toLowerCase();
+            
+            if(u && (realStr.includes(q) || nickStr.includes(q) || emailStr.includes(q))) {
+                const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN';
+                list.innerHTML += `<div class="flex justify-between items-center bg-gray-900 border border-gray-800 p-2.5 rounded"><div class="flex flex-col"><span class="font-bold text-xs tracking-wider uppercase">${fullName}</span><span class="text-[10px] text-gray-500 uppercase tracking-widest">@${u.nickname || u.name}</span></div><button onclick="setGymRole('${uid}', 'setter')" class="bg-blue-900 border border-blue-700 hover:bg-blue-800 px-2 py-1 rounded text-[10px] font-bold transition-colors uppercase tracking-widest">Make Setter</button></div>`; 
             }
         }
     });
@@ -1166,19 +1218,24 @@ async function openOtherProfile(uid, source = 'home') {
     const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; 
     const u = allUsers[uid] || {};
     
-    document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'User'}`; 
-    document.getElementById('op-realname').innerText = `${u.first_name || ''} ${u.last_name || ''}`.trim(); 
+    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'UNKNOWN CLIMBER';
+    document.getElementById('op-realname').innerText = fullName; 
+    document.getElementById('op-name').innerText = `@${u.nickname || u.name || 'unnamed'}`; 
     document.getElementById('op-bio').innerText = u.bio || ""; 
     document.getElementById('op-avatar').src = u.avatar_url || DEFAULT_AVATAR;
     
     const history = normArr(await apiCall('/api/db/get', { path: `user_ascents/${uid}` })); 
     document.getElementById('op-stat-total').innerText = history.length;
-    const grades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g)); 
-    const maxGrade = grades.length ? grades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, grades[0]) : "1"; 
-    document.getElementById('op-stat-max').innerText = grades.length ? maxGrade : "-"; 
+    
+    const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
+    
+    const allGrades = history.map(a => a.grade).filter(g => ALL_GRADES.includes(g));
+    const absoluteMaxGrade = allGrades.length ? allGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, allGrades[0]) : "-";
+    document.getElementById('op-stat-max').innerText = absoluteMaxGrade; 
     
     const totalPoints = getPoints(history); 
-    const league = getLeagueInfo(totalPoints, maxGrade); 
+    const league = getLeagueInfo(totalPoints, maxOfficialGrade); 
     const rankEl = document.getElementById('op-rank');
     rankEl.innerHTML = `<div class="flex items-center justify-center">${league.current.svg} <span>${league.current.title}</span> <span class="text-gray-500 text-[10px] ml-1.5 font-normal">(${totalPoints} PTS)</span></div>`; 
     rankEl.className = `text-xs font-bold mt-1 uppercase tracking-widest ${league.current.color}`;
@@ -1186,7 +1243,7 @@ async function openOtherProfile(uid, source = 'home') {
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${uid}` }) || {}; 
     isOpLiked = likes[profile.user_id] === true;
     const likeBtn = document.getElementById('op-like-btn'); 
-    likeBtn.innerText = `Like (${Object.keys(likes).filter(k=>likes[k]).length})`;
+    likeBtn.innerText = `${isOpLiked ? 'Liked' : 'Like'} (${Object.keys(likes).filter(k=>likes[k]).length})`;
     if(isOpLiked) { 
         likeBtn.classList.add('bg-pink-500', 'text-white', 'border-pink-500'); 
         likeBtn.classList.remove('text-pink-500', 'bg-gray-800'); 
@@ -1195,7 +1252,7 @@ async function openOtherProfile(uid, source = 'home') {
         likeBtn.classList.add('text-pink-500', 'bg-gray-800'); 
     }
     
-    renderGradeChart('op-stat-chart', grades);
+    renderGradeChart('op-stat-chart', allGrades);
     
     const isFriend = await apiCall('/api/db/get', { path: `friends/${profile.user_id}/${uid}` }); 
     const sentReq = await apiCall('/api/db/get', { path: `friend_requests/${uid}/${profile.user_id}` });
@@ -1255,6 +1312,18 @@ async function deleteAccount() {
     showNotify("Account deleted");
 }
 
+window.onload = () => {
+    const profileStr = localStorage.getItem('user_profile');
+    if(profileStr) { 
+        const profile = JSON.parse(profileStr); 
+        if (profile.detail || !profile.user_id) { 
+            localStorage.removeItem('user_profile'); showView('view-auth'); return; 
+        } 
+        if (!profile.name) showView('view-onboarding'); 
+        else { loadHomeView(); showView('view-home'); } 
+    } else showView('view-auth');
+};
+
 async function searchUserForDirector() {
     const q = document.getElementById('sa-search-input').value.toLowerCase().trim(); 
     if (!q) return;
@@ -1295,14 +1364,3 @@ async function makeGymDirector(uid) {
         searchUserForDirector(); 
     } 
 }
-window.onload = () => {
-    const profileStr = localStorage.getItem('user_profile');
-    if(profileStr) { 
-        const profile = JSON.parse(profileStr); 
-        if (profile.detail || !profile.user_id) { 
-            localStorage.removeItem('user_profile'); showView('view-auth'); return; 
-        } 
-        if (!profile.name) showView('view-onboarding'); 
-        else { loadHomeView(); showView('view-home'); } 
-    } else showView('view-auth');
-};
