@@ -670,7 +670,6 @@ async function acceptFriend(senderId, accept) {
     loadFriendRequests();
 }
 
-// 🔥 ИНВЕНТАРЬ (ГАРДЕРОБ) 🔥
 function switchInventoryTab(tab) {
     currentInvTab = tab;
     ['backgrounds', 'borders', 'names', 'cards'].forEach(t => {
@@ -742,7 +741,6 @@ async function equipItem(itemId, type, equip) {
     showNotify(equip ? "Equipped" : "Unequipped");
 }
 
-// 🔥 ЛОГИКА МАГАЗИНА (STORE) 🔥
 function switchStoreTab(tab) {
     currentStoreTab = tab;
     ['backgrounds', 'borders', 'names', 'cards'].forEach(t => {
