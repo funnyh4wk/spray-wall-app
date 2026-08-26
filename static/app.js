@@ -37,25 +37,30 @@ let profileBackTarget = 'home';
 let logbookSelectedDate = null; 
 let isOpLiked = false; 
 
-// 🔥 КОСМЕТИКА: БАЗА ПРЕДМЕТОВ (30 ШТУК) 🔥
+// 🔥 КОСМЕТИКА 🔥
 let currentStoreTab = 'backgrounds';
 let currentInvTab = 'backgrounds';
 let currentGiftItemId = null;
 
 const STORE_ITEMS = [
-    // Backgrounds
+    // Backgrounds (15 шт)
     { id: 'bg_dark', type: 'backgrounds', name: 'Dark Slate', rarity: 'Common', price: 5000, cssClass: 'bg-dark-slate', color: 'text-gray-400' },
     { id: 'bg_chalk', type: 'backgrounds', name: 'Chalk Dust', rarity: 'Common', price: 5000, cssClass: 'bg-chalk', color: 'text-gray-400' },
     { id: 'bg_ocean', type: 'backgrounds', name: 'Deep Ocean', rarity: 'Rare', price: 15000, cssClass: 'bg-ocean', color: 'text-blue-400' },
     { id: 'bg_hex', type: 'backgrounds', name: 'Hexagon', rarity: 'Rare', price: 15000, cssClass: 'bg-hex', color: 'text-blue-400' },
+    { id: 'bg_blood', type: 'backgrounds', name: 'Crimson Blood', rarity: 'Rare', price: 15000, cssClass: 'bg-blood', color: 'text-blue-400' },
+    { id: 'bg_jungle', type: 'backgrounds', name: 'Deep Jungle', rarity: 'Rare', price: 15000, cssClass: 'bg-jungle', color: 'text-blue-400' },
     { id: 'bg_topo', type: 'backgrounds', name: 'Topographic Map', rarity: 'Epic', price: 50000, cssClass: 'bg-topo', color: 'text-purple-400' },
     { id: 'bg_neon', type: 'backgrounds', name: 'Neon Cyber-Grid', rarity: 'Epic', price: 50000, cssClass: 'bg-neon', color: 'text-purple-400' },
     { id: 'bg_matrix', type: 'backgrounds', name: 'Hacker Rain', rarity: 'Epic', price: 50000, cssClass: 'bg-matrix', color: 'text-purple-400' },
+    { id: 'bg_toxicbg', type: 'backgrounds', name: 'Toxic Hazard', rarity: 'Epic', price: 50000, cssClass: 'bg-toxic-bg', color: 'text-purple-400' },
     { id: 'bg_ember', type: 'backgrounds', name: 'Ember Particles', rarity: 'Legendary', price: 150000, cssClass: 'bg-ember', color: 'text-yellow-400' },
     { id: 'bg_void', type: 'backgrounds', name: 'Abyssal Void', rarity: 'Legendary', price: 150000, cssClass: 'bg-void', color: 'text-yellow-400' },
+    { id: 'bg_magmabg', type: 'backgrounds', name: 'Molten Magma', rarity: 'Legendary', price: 150000, cssClass: 'bg-magma-bg', color: 'text-yellow-400' },
+    { id: 'bg_vipgold', type: 'backgrounds', name: 'VIP Gold', rarity: 'Legendary', price: 150000, cssClass: 'bg-vipgold', color: 'text-yellow-400' },
     { id: 'bg_rgb', type: 'backgrounds', name: 'RGB Synthwave', rarity: 'Mythic', price: 300000, cssClass: 'bg-rgb', color: 'text-red-500' },
 
-    // Borders
+    // Borders (10 шт)
     { id: 'b_white', type: 'borders', name: 'Chalk White', rarity: 'Common', price: 5000, cssClass: 'b-white', color: 'text-gray-400' },
     { id: 'b_steel', type: 'borders', name: 'Steel Ring', rarity: 'Common', price: 5000, cssClass: 'b-steel', color: 'text-gray-400' },
     { id: 'b_ruby', type: 'borders', name: 'Ruby Red', rarity: 'Rare', price: 15000, cssClass: 'b-ruby', color: 'text-blue-400' },
@@ -67,7 +72,7 @@ const STORE_ITEMS = [
     { id: 'b_magma', type: 'borders', name: 'Magma Ring', rarity: 'Legendary', price: 150000, cssClass: 'b-magma', color: 'text-yellow-400' },
     { id: 'b_glitch', type: 'borders', name: 'Glitch Border', rarity: 'Mythic', price: 300000, cssClass: 'b-glitch', color: 'text-red-500' },
 
-    // Names
+    // Names (10 шт)
     { id: 'n_iron', type: 'names', name: 'Iron Slate', rarity: 'Common', price: 5000, cssClass: 'n-iron', color: 'text-gray-400' },
     { id: 'n_blood', type: 'names', name: 'Crimson Blood', rarity: 'Common', price: 5000, cssClass: 'n-blood', color: 'text-gray-400' },
     { id: 'n_ocean', type: 'names', name: 'Ocean Wave', rarity: 'Rare', price: 15000, cssClass: 'n-ocean', color: 'text-blue-400' },
@@ -220,10 +225,10 @@ function applyCosmetics(profileObj, avatarEl, nameEl) {
     }
 
     if(avatarEl) {
-        avatarEl.className = "w-24 h-24 rounded-full object-cover bg-black shadow transition-all duration-300 border-2 border-gray-700";
+        avatarEl.className = "w-24 h-24 rounded-full object-cover bg-black shadow-lg transition-all duration-300 border-2 border-gray-700";
         if(profileObj.equipped.borders) {
             const item = STORE_ITEMS.find(i => i.id === profileObj.equipped.borders);
-            if(item) avatarEl.className = `w-24 h-24 rounded-full object-cover bg-black shadow transition-all duration-300 ${item.cssClass}`;
+            if(item) avatarEl.className = `w-24 h-24 rounded-full object-cover bg-black shadow-lg transition-all duration-300 ${item.cssClass}`;
         }
     }
     if(nameEl) {
@@ -566,9 +571,28 @@ async function loadHomeView() {
     rankEl.className = `text-xs font-bold mt-1 uppercase tracking-widest cursor-pointer ${league.current.color}`;
     rankEl.onclick = () => navigate('league'); 
     
+    // ВОССТАНОВИЛ ЛАЙКИ
     const likes = await apiCall('/api/db/get', { path: `profile_likes/${profile.user_id}` }) || {}; 
     const likeKeys = Object.keys(likes).filter(k => likes[k]);
     document.getElementById('my-likes-count').innerText = likeKeys.length;
+    
+    const isUnlocked = profile.is_global_admin || history.length >= 20 || ALL_GRADES.indexOf(maxOfficialGrade) >= ALL_GRADES.indexOf("6B+");
+    const lockBox = document.getElementById('my-likes-lock'); 
+    const listObj = document.getElementById('my-likes-list');
+    
+    if (isUnlocked) { 
+        lockBox.classList.add('hidden-view'); 
+        if (likeKeys.length > 0) { 
+            listObj.classList.remove('hidden-view'); 
+            const allUsers = await apiCall('/api/db/get', { path: `users` }) || {}; 
+            listObj.innerHTML = likeKeys.map(uid => allUsers[uid] ? `<p class="text-gray-300 font-bold tracking-wider text-[10px] uppercase mb-1">• @${allUsers[uid].nickname || allUsers[uid].name}</p>` : '').join(''); 
+        } else { 
+            listObj.classList.add('hidden-view'); 
+        } 
+    } else { 
+        lockBox.classList.remove('hidden-view'); 
+        listObj.classList.add('hidden-view'); 
+    }
     
     renderGradeChart('stat-chart', allGrades); 
     renderLogbook(); 
@@ -617,7 +641,6 @@ async function acceptFriend(senderId, accept) {
     loadFriendRequests();
 }
 
-// 🔥 ИНВЕНТАРЬ (ГАРДЕРОБ) 🔥
 function switchInventoryTab(tab) {
     currentInvTab = tab;
     ['backgrounds', 'borders', 'names'].forEach(t => {
@@ -682,14 +705,12 @@ async function equipItem(itemId, type, equip) {
     await apiCall('/api/db/save', { path: `users/${profile.user_id}/equipped`, payload: profile.equipped });
     localStorage.setItem('user_profile', JSON.stringify(profile));
     
-    // Мгновенно применяем
     applyCosmetics(profile, document.getElementById('profile-avatar'), document.getElementById('profile-realname'));
     
     renderInventoryItems();
     showNotify(equip ? "Equipped" : "Unequipped");
 }
 
-// 🔥 ЛОГИКА МАГАЗИНА (STORE) 🔥
 function switchStoreTab(tab) {
     currentStoreTab = tab;
     ['backgrounds', 'borders', 'names'].forEach(t => {
@@ -721,7 +742,6 @@ function renderStoreItems() {
         
         let actionButtons = '';
         
-        // 🔥 ИСПРАВЛЕННАЯ ЛОГИКА ДЛЯ КНОПОК BUY И GIFT 🔥
         if(isOwned) {
             actionButtons = `
             <div class="flex space-x-2 mt-2">
@@ -786,7 +806,6 @@ async function openGiftModal(itemId) {
     
     const profile = JSON.parse(localStorage.getItem('user_profile'));
     
-    // 🔥 ПРОВЕРКА ЛИГИ ДЛЯ ПОДАРКОВ (Анти-фарм ботами) 🔥
     const history = profile.ascents_history || [];
     const officialGrades = history.filter(a => a.route_type !== 'custom').map(a => a.grade).filter(g => ALL_GRADES.includes(g));
     const maxOfficialGrade = officialGrades.length ? officialGrades.reduce((max, g) => ALL_GRADES.indexOf(g) > ALL_GRADES.indexOf(max) ? g : max, officialGrades[0]) : "1";
